@@ -10,186 +10,234 @@ const GREEN = '#1a6b3c'
 const PURPLE = '#5c3d8f'
 
 const MODES = [
-  { id: 'all', label: 'הכל', emoji: '✨', categories: null },
-  { id: 'fun', label: 'כיף', emoji: '🎉', categories: ['Funny', 'Creative', 'Weekend'] },
-  { id: 'learn', label: 'ללמוד', emoji: '📚', categories: ['Learning', 'Reading', 'English', 'Hebrew'] },
-  { id: 'help', label: 'לעזור', emoji: '🤝', categories: ['Helping', 'Kindness', 'House'] },
-  { id: 'move', label: 'לזוז', emoji: '🏃', categories: ['Outdoor', 'Health'] },
-  { id: 'family', label: 'משפחה', emoji: '👨‍👩‍👧', categories: ['Family', 'Memory'] },
+  { id: 'all', label: 'הכל', emoji: '✨', categories: null, bg: NAVY },
+  { id: 'fun', label: 'כיף', emoji: '🎉', categories: ['Funny', 'Creative', 'Weekend'], bg: '#c45000' },
+  { id: 'learn', label: 'ללמוד', emoji: '📚', categories: ['Learning', 'Reading', 'English', 'Hebrew'], bg: PURPLE },
+  { id: 'help', label: 'לעזור', emoji: '🤝', categories: ['Helping', 'Kindness', 'House'], bg: GREEN },
+  { id: 'move', label: 'לזוז', emoji: '🏃', categories: ['Outdoor', 'Health'], bg: '#1a6b8a' },
+  { id: 'family', label: 'משפחה', emoji: '👨‍👩‍👧', categories: ['Family', 'Memory'], bg: '#8a3a6b' },
 ]
 
-const LEARNING_CATEGORIES = ['Learning', 'Reading', 'English', 'Hebrew']
+const CATEGORY_VISUAL = {
+  Funny:    { emoji: '😂', bg: '#fff3e0', border: '#f0a030' },
+  Creative: { emoji: '🎨', bg: '#fce4ec', border: '#e91e8c' },
+  Weekend:  { emoji: '🌅', bg: '#e8f5e9', border: '#43a047' },
+  Learning: { emoji: '🧠', bg: '#ede7f6', border: PURPLE },
+  Reading:  { emoji: '📖', bg: '#e8eaf6', border: '#3949ab' },
+  English:  { emoji: '🌍', bg: '#e3f2fd', border: '#1e88e5' },
+  Hebrew:   { emoji: '✡️', bg: '#e8eaf6', border: '#3949ab' },
+  Helping:  { emoji: '🤝', bg: '#e8f5e9', border: GREEN },
+  Kindness: { emoji: '❤️', bg: '#fce4ec', border: '#e91e63' },
+  House:    { emoji: '🏠', bg: '#efebe9', border: '#795548' },
+  Outdoor:  { emoji: '🌿', bg: '#e8f5e9', border: '#00897b' },
+  Health:   { emoji: '💪', bg: '#e0f7fa', border: '#00acc1' },
+  Family:   { emoji: '👨‍👩‍👧', bg: '#fff8e1', border: GOLD },
+  Memory:   { emoji: '📸', bg: '#f3e5f5', border: '#8e24aa' },
+}
 
 const DIFFICULTY = {
-  easy: { label: 'קל', color: GREEN },
-  medium: { label: 'בינוני', color: GOLD },
-  hard: { label: 'קשה', color: '#c45000' },
+  easy:   { label: 'קל',    color: GREEN },
+  medium: { label: 'בינוני', color: '#b07000' },
+  hard:   { label: 'קשה',   color: '#c45000' },
 }
 
 function Avatar({ profile, size = 40, selected = false, onClick }) {
   const [imgError, setImgError] = useState(false)
-  const initials = profile?.name?.charAt(0) || '?'
+  if (!profile) return null
   return (
     <div onClick={onClick} style={{
       width: size, height: size, borderRadius: '50%',
-      border: `2.5px solid ${selected ? GOLD : 'rgba(255,255,255,0.25)'}`,
-      overflow: 'hidden', flexShrink: 0, cursor: onClick ? 'pointer' : 'default',
-      background: '#e8d5a3', display: 'flex', alignItems: 'center',
-      justifyContent: 'center', fontSize: size * 0.38, fontWeight: 700,
-      color: NAVY, transition: 'border-color 0.15s',
-      boxShadow: selected ? `0 0 0 2px ${GOLD}` : 'none'
+      border: `2.5px solid ${selected ? GOLD : '#e0d8c8'}`,
+      overflow: 'hidden', flexShrink: 0,
+      cursor: onClick ? 'pointer' : 'default',
+      background: selected ? '#e8d5a3' : '#f0ebe0',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      fontSize: size * 0.38, fontWeight: 700, color: NAVY,
+      boxShadow: selected ? `0 0 0 2px ${GOLD}` : 'none',
+      transition: 'all 0.15s', position: 'relative'
     }}>
-      {profile?.avatar_url && !imgError
+      {profile.avatar_url && !imgError
         ? <img src={profile.avatar_url} alt={profile.name}
             onError={() => setImgError(true)}
             style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-        : initials}
+        : profile.name?.charAt(0)}
+      {selected && (
+        <div style={{
+          position: 'absolute', bottom: -2, right: -2,
+          background: GOLD, borderRadius: '50%', width: 16, height: 16,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontSize: 9, color: NAVY, fontWeight: 900, border: '1.5px solid white'
+        }}>✓</div>
+      )}
     </div>
   )
 }
 
-function MissionCard({ mission, isParent, currentProfile, children, onAssign, onSelfAssign }) {
-  const [expanded, setExpanded] = useState(false)
-  const [selectedKids, setSelectedKids] = useState([])
+function MissionCard({ mission, isParent, currentProfile, assignableProfiles }) {
+  const [assignedTo, setAssignedTo] = useState([])
+  const [dueDate, setDueDate] = useState('')
   const [assigning, setAssigning] = useState(false)
   const [done, setDone] = useState(false)
 
-  const isLearning = LEARNING_CATEGORIES.includes(mission.category)
-  const accentColor = isLearning ? PURPLE : GREEN
+  const isLearning = ['Learning', 'Reading', 'English', 'Hebrew'].includes(mission.category)
+  const visual = CATEGORY_VISUAL[mission.category] || { emoji: '⭐', bg: '#f7f4ee', border: GOLD }
   const diff = DIFFICULTY[mission.difficulty] || { label: mission.difficulty, color: GOLD }
+  const pointsColor = isLearning ? PURPLE : GREEN
 
-  const toggleKid = (id) => {
-    setSelectedKids(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id])
+  const toggleAssignee = async (profileId) => {
+    if (!isParent) {
+      // Child self-assigns immediately on tap
+      setAssigning(true)
+      await supabase.from('assignments').insert([{
+        mission_id: mission.id,
+        assigned_to: profileId,
+        status: 'active'
+      }])
+      setAssigning(false)
+      setDone(true)
+      setTimeout(() => setDone(false), 3000)
+      return
+    }
+    // Parent toggles selection
+    setAssignedTo(prev =>
+      prev.includes(profileId)
+        ? prev.filter(x => x !== profileId)
+        : [...prev, profileId]
+    )
   }
 
-  const handleAssign = async () => {
-    if (selectedKids.length === 0) return
+  const handleParentAssign = async () => {
+    if (assignedTo.length === 0) return
     setAssigning(true)
-    const assignments = selectedKids.map(kid_id => ({
+    const rows = assignedTo.map(id => ({
       mission_id: mission.id,
-      assigned_to: kid_id,
-      status: 'active'
+      assigned_to: id,
+      status: 'active',
+      ...(dueDate ? { due_date: dueDate } : {})
     }))
-    await supabase.from('assignments').insert(assignments)
+    await supabase.from('assignments').insert(rows)
     setAssigning(false)
     setDone(true)
-    setExpanded(false)
-    setSelectedKids([])
-    setTimeout(() => setDone(false), 2500)
-  }
-
-  const handleSelfAssign = async () => {
-    setAssigning(true)
-    await supabase.from('assignments').insert([{
-      mission_id: mission.id,
-      assigned_to: currentProfile.id,
-      status: 'active'
-    }])
-    setAssigning(false)
-    setDone(true)
-    setTimeout(() => setDone(false), 2500)
+    setAssignedTo([])
+    setDueDate('')
+    setTimeout(() => setDone(false), 3000)
   }
 
   return (
     <div style={{
       background: 'white', borderRadius: 18, overflow: 'hidden',
-      border: '1px solid #e8e0d0', marginBottom: 10,
-      borderTop: `3px solid ${isLearning ? PURPLE : accentColor}`
+      border: `1px solid ${visual.border}30`, marginBottom: 12,
+      width: '100%', boxSizing: 'border-box'
     }}>
-      <div style={{ padding: '14px 16px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6 }}>
-          <div style={{ flex: 1, paddingLeft: 10 }}>
-            <div style={{ fontSize: 15, fontWeight: 700, color: NAVY, lineHeight: 1.3 }}>{mission.title}</div>
-            {mission.description && (
-              <div style={{ fontSize: 12, color: '#6b5e4e', marginTop: 4, lineHeight: 1.5 }}>{mission.description}</div>
-            )}
-          </div>
-          <div style={{
-            fontWeight: 700, fontSize: 13, whiteSpace: 'nowrap',
-            color: isLearning ? PURPLE : GREEN,
-            background: isLearning ? '#f0ebf8' : '#edf7f1',
-            padding: '4px 12px', borderRadius: 20
-          }}>+{mission.points} נק׳</div>
-        </div>
-
-        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 12 }}>
-          <span style={{ fontSize: 11, padding: '3px 10px', borderRadius: 20, background: '#f7f4ee', color: '#6b5e4e', fontWeight: 600 }}>
+      {/* Category visual header */}
+      <div style={{
+        background: visual.bg, padding: '12px 16px',
+        display: 'flex', alignItems: 'center', gap: 10,
+        borderBottom: `1px solid ${visual.border}30`
+      }}>
+        <div style={{
+          width: 44, height: 44, borderRadius: 12, flexShrink: 0,
+          background: 'white', border: `1.5px solid ${visual.border}50`,
+          display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22
+        }}>{visual.emoji}</div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: visual.border, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
             {mission.category}
-          </span>
-          <span style={{ fontSize: 11, padding: '3px 10px', borderRadius: 20, background: '#f7f4ee', color: diff.color, fontWeight: 600 }}>
-            {diff.label}
-          </span>
-          <span style={{ fontSize: 11, padding: '3px 10px', borderRadius: 20, background: '#f7f4ee', color: '#6b5e4e' }}>
-            ⏱ {mission.estimated_minutes} דקות
-          </span>
-          {mission.repeatable && (
-            <span style={{ fontSize: 11, padding: '3px 10px', borderRadius: 20, background: '#edf7f1', color: GREEN, fontWeight: 600 }}>
-              🔁 חוזרת
-            </span>
-          )}
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
+            <span style={{ fontSize: 11, color: '#8a7a60' }}>⏱ {mission.estimated_minutes} דקות</span>
+            <span style={{ color: '#ccc' }}>·</span>
+            <span style={{ fontSize: 11, color: diff.color, fontWeight: 600 }}>{diff.label}</span>
+            {mission.repeatable && <><span style={{ color: '#ccc' }}>·</span><span style={{ fontSize: 11, color: GREEN }}>🔁 חוזרת</span></>}
+          </div>
         </div>
+        {/* BIG points */}
+        <div style={{ textAlign: 'center', flexShrink: 0 }}>
+          <div style={{ fontSize: 28, fontWeight: 900, color: pointsColor, lineHeight: 1 }}>{mission.points}</div>
+          <div style={{ fontSize: 10, fontWeight: 700, color: pointsColor, opacity: 0.7 }}>נקודות</div>
+        </div>
+      </div>
+
+      {/* Mission body */}
+      <div style={{ padding: '14px 16px' }}>
+        <div style={{ fontSize: 16, fontWeight: 800, color: NAVY, marginBottom: 6, lineHeight: 1.3 }}>
+          {mission.title}
+        </div>
+        {mission.description && (
+          <div style={{ fontSize: 13, color: '#6b5e4e', lineHeight: 1.6, marginBottom: 14 }}>
+            {mission.description}
+          </div>
+        )}
 
         {done ? (
           <div style={{
-            textAlign: 'center', padding: '10px', background: '#edf7f1',
-            borderRadius: 12, color: GREEN, fontWeight: 700, fontSize: 14
+            textAlign: 'center', padding: '12px',
+            background: '#edf7f1', borderRadius: 12,
+            color: GREEN, fontWeight: 700, fontSize: 15
           }}>
-            ✅ המשימה הוקצתה!
+            🎉 המשימה נשלחה!
           </div>
-        ) : isParent ? (
+        ) : (
           <>
-            <button onClick={() => setExpanded(!expanded)} style={{
-              width: '100%', padding: '10px', background: expanded ? NAVY : '#f7f4ee',
-              color: expanded ? 'white' : NAVY, border: 'none', borderRadius: 12,
-              cursor: 'pointer', fontWeight: 700, fontSize: 14,
-              fontFamily: 'var(--font-heebo), sans-serif', transition: 'all 0.15s'
-            }}>
-              {expanded ? 'סגור' : 'שלח משימה ←'}
-            </button>
+            {/* Assignee selector */}
+            <div style={{ marginBottom: isParent ? 10 : 0 }}>
+              <div style={{ fontSize: 12, color: '#8a7a60', fontWeight: 600, marginBottom: 8 }}>
+                {isParent ? 'מי מקבל את המשימה? (לחץ לשליחה מיידית)' : 'לחץ לקבל את המשימה:'}
+              </div>
+              <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+                {assignableProfiles.map(p => (
+                  <div key={p.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+                    <Avatar
+                      profile={p}
+                      size={46}
+                      selected={assignedTo.includes(p.id)}
+                      onClick={() => toggleAssignee(p.id)}
+                    />
+                    <span style={{
+                      fontSize: 11, fontWeight: 600,
+                      color: assignedTo.includes(p.id) ? NAVY : '#a09080'
+                    }}>{p.name}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
 
-            {expanded && (
-              <div style={{ marginTop: 12 }}>
-                <div style={{ fontSize: 12, color: '#8a7a60', marginBottom: 8, fontWeight: 600 }}>מי מקבל את המשימה?</div>
-                <div style={{ display: 'flex', gap: 10, marginBottom: 12, alignItems: 'center' }}>
-                  {children.map(child => (
-                    <div key={child.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-                      <Avatar
-                        profile={child}
-                        size={44}
-                        selected={selectedKids.includes(child.id)}
-                        onClick={() => toggleKid(child.id)}
-                      />
-                      <span style={{ fontSize: 11, fontWeight: 600, color: selectedKids.includes(child.id) ? NAVY : '#a09080' }}>
-                        {child.name}
-                      </span>
-                    </div>
-                  ))}
+            {/* Parent: due date + confirm */}
+            {isParent && (
+              <>
+                <div style={{ marginBottom: 10 }}>
+                  <div style={{ fontSize: 12, color: '#8a7a60', fontWeight: 600, marginBottom: 6 }}>
+                    עד תאריך (לא חובה)
+                  </div>
+                  <input
+                    type="date"
+                    value={dueDate}
+                    onChange={e => setDueDate(e.target.value)}
+                    style={{
+                      width: '100%', padding: '9px 12px', borderRadius: 10,
+                      border: '1px solid #e0d8c8', fontSize: 14, color: NAVY,
+                      fontFamily: 'var(--font-heebo), sans-serif',
+                      background: '#faf8f4', boxSizing: 'border-box'
+                    }}
+                  />
                 </div>
                 <button
-                  onClick={handleAssign}
-                  disabled={selectedKids.length === 0 || assigning}
+                  onClick={handleParentAssign}
+                  disabled={assignedTo.length === 0 || assigning}
                   style={{
-                    width: '100%', padding: '10px',
-                    background: selectedKids.length > 0 ? NAVY : '#e8e0d0',
-                    color: selectedKids.length > 0 ? 'white' : '#a09080',
-                    border: 'none', borderRadius: 12, cursor: selectedKids.length > 0 ? 'pointer' : 'default',
-                    fontWeight: 700, fontSize: 14, fontFamily: 'var(--font-heebo), sans-serif'
+                    width: '100%', padding: '12px',
+                    background: assignedTo.length > 0 ? NAVY : '#e8e0d0',
+                    color: assignedTo.length > 0 ? 'white' : '#a09080',
+                    border: 'none', borderRadius: 12, cursor: assignedTo.length > 0 ? 'pointer' : 'default',
+                    fontWeight: 700, fontSize: 15,
+                    fontFamily: 'var(--font-heebo), sans-serif',
+                    boxSizing: 'border-box'
                   }}>
-                  {assigning ? 'שולח...' : `שלח ל-${selectedKids.length > 0 ? selectedKids.length : '?'} ילדים`}
+                  {assigning ? 'שולח...' : assignedTo.length > 0 ? `📤 שלח ל${assignedTo.length === 1 ? '' : '-'}${assignedTo.length} ${assignedTo.length === 1 ? 'אדם' : 'אנשים'}` : 'בחר מישהו'}
                 </button>
-              </div>
+              </>
             )}
           </>
-        ) : (
-          <button onClick={handleSelfAssign} disabled={assigning} style={{
-            width: '100%', padding: '11px',
-            background: isLearning ? PURPLE : NAVY,
-            color: 'white', border: 'none', borderRadius: 12,
-            cursor: 'pointer', fontWeight: 700, fontSize: 14,
-            fontFamily: 'var(--font-heebo), sans-serif'
-          }}>
-            {assigning ? 'שולח...' : 'אני עושה את זה! 🙌'}
-          </button>
         )}
       </div>
     </div>
@@ -215,7 +263,6 @@ export default function MissionsPage() {
     const profile = await getCurrentProfile()
     if (!profile) { router.push('/login'); return }
     setCurrentProfile(profile)
-
     const [{ data: missionData }, { data: profileData }] = await Promise.all([
       supabase.from('missions').select('*').eq('is_active', true).order('points', { ascending: false }),
       supabase.from('profiles').select('*').eq('active', true)
@@ -226,15 +273,23 @@ export default function MissionsPage() {
   }
 
   const isParent = currentProfile?.role === 'parent'
-  const children = profiles.filter(p => p.role === 'child')
-
   const currentMode = MODES.find(m => m.id === activeMode)
+
+  // Parents see all profiles to assign to. Kids only see themselves.
+  const assignableProfiles = isParent
+    ? profiles
+    : profiles.filter(p => p.id === currentProfile?.id)
+
   const filtered = currentMode?.categories
     ? missions.filter(m => currentMode.categories.includes(m.category))
     : missions
 
   if (loading) return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: CREAM, fontFamily: 'var(--font-heebo), sans-serif' }}>
+    <div style={{
+      minHeight: '100vh', display: 'flex', alignItems: 'center',
+      justifyContent: 'center', background: CREAM,
+      fontFamily: 'var(--font-heebo), sans-serif'
+    }}>
       <div style={{ textAlign: 'center' }}>
         <div style={{ fontSize: 32, marginBottom: 8 }}>🎯</div>
         <div style={{ color: '#8a7a60', fontSize: 14 }}>טוענים משימות...</div>
@@ -244,47 +299,51 @@ export default function MissionsPage() {
 
   return (
     <div style={{
-      maxWidth: 480, margin: '0 auto', fontFamily: 'var(--font-heebo), sans-serif',
-      direction: 'rtl', background: CREAM, minHeight: '100vh', paddingBottom: '5.5rem'
+      maxWidth: 480, margin: '0 auto',
+      fontFamily: 'var(--font-heebo), sans-serif',
+      direction: 'rtl', background: CREAM,
+      minHeight: '100vh', paddingBottom: '5.5rem',
+      overflowX: 'hidden'
     }}>
 
       {/* Header */}
-      <div style={{ background: NAVY, padding: '20px 18px 28px', borderRadius: '0 0 28px 28px', marginBottom: 16 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+      <div style={{
+        background: NAVY, padding: '20px 16px 0',
+        borderRadius: '0 0 28px 28px', marginBottom: 16
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
           <div>
             <div style={{ fontSize: 22, fontWeight: 900, color: 'white' }}>🎯 משימות</div>
             <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginTop: 2 }}>
-              {isParent ? 'שלח משימות לילדים' : 'איזו משימה בא לך?'}
+              {isParent ? 'שלח משימות לבני המשפחה' : 'איזו משימה בא לך?'}
             </div>
           </div>
           <a href="/" style={{ color: 'rgba(255,255,255,0.5)', textDecoration: 'none', fontSize: 13 }}>← בית</a>
         </div>
 
-        {/* Mode selector */}
-        <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4 }}>
+        {/* Mode pills */}
+        <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 16,
+          scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
           {MODES.map(mode => (
             <button key={mode.id} onClick={() => setActiveMode(mode.id)} style={{
               display: 'flex', alignItems: 'center', gap: 5,
-              padding: '7px 14px', borderRadius: 20, border: 'none', cursor: 'pointer',
+              padding: '8px 16px', borderRadius: 20, border: 'none', cursor: 'pointer',
               background: activeMode === mode.id ? GOLD : 'rgba(255,255,255,0.1)',
               color: activeMode === mode.id ? NAVY : 'rgba(255,255,255,0.8)',
-              fontWeight: activeMode === mode.id ? 700 : 400,
-              fontSize: 13, whiteSpace: 'nowrap',
+              fontWeight: activeMode === mode.id ? 700 : 500,
+              fontSize: 14, whiteSpace: 'nowrap', flexShrink: 0,
               fontFamily: 'var(--font-heebo), sans-serif',
-              transition: 'all 0.15s'
             }}>
-              <span>{mode.emoji}</span>
-              <span>{mode.label}</span>
+              {mode.emoji} {mode.label}
             </button>
           ))}
         </div>
       </div>
 
-      <div style={{ padding: '0 14px' }}>
-
-        {/* Mode description */}
-        <div style={{ marginBottom: 14, fontSize: 13, color: '#8a7a60', fontWeight: 600 }}>
-          {filtered.length} משימות {currentMode?.id !== 'all' ? `ב${currentMode?.label}` : ''}
+      {/* Mission list */}
+      <div style={{ padding: '0 14px', boxSizing: 'border-box', width: '100%' }}>
+        <div style={{ fontSize: 13, color: '#8a7a60', fontWeight: 600, marginBottom: 12 }}>
+          {filtered.length} משימות{currentMode?.id !== 'all' ? ` — ${currentMode?.label}` : ''}
         </div>
 
         {filtered.length === 0 ? (
@@ -292,19 +351,15 @@ export default function MissionsPage() {
             <div style={{ fontSize: 40, marginBottom: 8 }}>🤔</div>
             <div style={{ fontSize: 14 }}>אין משימות בקטגוריה הזו עדיין</div>
           </div>
-        ) : (
-          filtered.map(mission => (
-            <MissionCard
-              key={mission.id}
-              mission={mission}
-              isParent={isParent}
-              currentProfile={currentProfile}
-              children={children}
-              onAssign={() => {}}
-              onSelfAssign={() => {}}
-            />
-          ))
-        )}
+        ) : filtered.map(mission => (
+          <MissionCard
+            key={mission.id}
+            mission={mission}
+            isParent={isParent}
+            currentProfile={currentProfile}
+            assignableProfiles={assignableProfiles}
+          />
+        ))}
       </div>
 
       {/* Bottom nav */}
@@ -325,22 +380,20 @@ export default function MissionsPage() {
           <a key={item.href} href={item.href} style={{
             display: 'flex', flexDirection: 'column', alignItems: 'center',
             textDecoration: 'none', gap: 2,
-            color: item.active ? GOLD : item.center ? GOLD : 'rgba(255,255,255,0.45)',
+            color: item.active ? GOLD : 'rgba(255,255,255,0.45)',
             fontSize: 10, fontFamily: 'var(--font-heebo), sans-serif'
           }}>
             <span style={{
-              fontSize: item.center ? 20 : 20,
               ...(item.center ? {
                 background: GOLD, borderRadius: '50%', width: 44, height: 44,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                marginTop: -18
-              } : {})
+                fontSize: 20, marginTop: -18
+              } : { fontSize: 20 })
             }}>{item.emoji}</span>
             {item.label}
           </a>
         ))}
       </div>
-
     </div>
   )
 }
