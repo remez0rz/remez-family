@@ -5,7 +5,7 @@ const WEEKLY_BONUS_POINTS = 50
 
 function getLastSunday() {
   const now = new Date()
-  const day = now.getDay() // 0 = Sunday
+  const day = now.getDay()
   const diff = now.getDate() - day
   const sunday = new Date(now.setDate(diff))
   sunday.setHours(0, 0, 0, 0)
@@ -15,7 +15,6 @@ function getLastSunday() {
 export async function checkAndAwardWeeklyBonus(memberId) {
   const lastSunday = getLastSunday()
 
-  // Check if already awarded this week
   const { data: existing } = await supabase
     .from('assignments')
     .select('id')
@@ -25,9 +24,8 @@ export async function checkAndAwardWeeklyBonus(memberId) {
     .gte('completed_at', lastSunday.toISOString())
     .limit(1)
 
-  if (existing?.length > 0) return false // already got it this week
+  if (existing?.length > 0) return false
 
-  // Award it
   const { data: assignment } = await supabase
     .from('assignments')
     .insert({
@@ -41,7 +39,6 @@ export async function checkAndAwardWeeklyBonus(memberId) {
 
   if (!assignment) return false
 
-  // Add points
   await supabase.from('point_events').insert({
     member_id: memberId,
     points: WEEKLY_BONUS_POINTS,
@@ -51,22 +48,12 @@ export async function checkAndAwardWeeklyBonus(memberId) {
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('total_points, name')
+    .select('total_points')
     .eq('id', memberId)
     .single()
 
   const newTotal = (profile?.total_points || 0) + WEEKLY_BONUS_POINTS
   await supabase.from('profiles').update({ total_points: newTotal }).eq('id', memberId)
 
-  await supabase.from('feed_posts').insert({
-    type: 'mission_completed',
-    title: `${profile?.name} קיבל/ה בונוס שבועי ❤️`,
-    content: `אנחנו אוהבים אותך — +${WEEKLY_BONUS_POINTS} נקודות`,
-    participants: [profile?.name],
-    linked_type: 'assignment',
-    linked_id: assignment.id,
-    created_by: memberId
-  })
-
-  return true // awarded
+  return true
 }
