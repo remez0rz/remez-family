@@ -86,14 +86,86 @@ const textareaStyle = {
   minHeight: 80, lineHeight: 1.6
 }
 
+function MediaPreview({ files, onRemove, onSetCover }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+      {/* Cover — first file, large */}
+      {files.length > 0 && (
+        <div style={{ position: 'relative' }}>
+          {files[0].type.startsWith('video/') ? (
+            <video
+              src={files[0].preview}
+              controls
+              style={{ width: '100%', borderRadius: 12, maxHeight: 220, objectFit: 'cover', display: 'block' }}
+            />
+          ) : (
+            <img
+              src={files[0].preview}
+              alt="cover"
+              style={{ width: '100%', borderRadius: 12, maxHeight: 220, objectFit: 'cover', display: 'block' }}
+            />
+          )}
+          <div style={{
+            position: 'absolute', top: 8, right: 8,
+            background: GOLD, color: NAVY,
+            fontSize: 10, fontWeight: 700, padding: '3px 8px',
+            borderRadius: 20
+          }}>תמונת שער</div>
+          <button onClick={() => onRemove(0)} style={{
+            position: 'absolute', top: 8, left: 8,
+            background: 'rgba(10,22,40,0.7)', border: 'none',
+            borderRadius: '50%', width: 28, height: 28,
+            color: 'white', cursor: 'pointer', fontSize: 14,
+            display: 'flex', alignItems: 'center', justifyContent: 'center'
+          }}>✕</button>
+        </div>
+      )}
+
+      {/* Rest — thumbnail row */}
+      {files.length > 1 && (
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          {files.slice(1).map((f, i) => (
+            <div key={i} style={{ position: 'relative', width: 72, height: 72, flexShrink: 0 }}>
+              {f.type.startsWith('video/') ? (
+                <video
+                  src={f.preview}
+                  style={{ width: 72, height: 72, borderRadius: 10, objectFit: 'cover', display: 'block' }}
+                />
+              ) : (
+                <img
+                  src={f.preview}
+                  alt={`media-${i}`}
+                  style={{ width: 72, height: 72, borderRadius: 10, objectFit: 'cover', display: 'block' }}
+                />
+              )}
+              <button onClick={() => onRemove(i + 1)} style={{
+                position: 'absolute', top: -4, left: -4,
+                background: NAVY, border: 'none', borderRadius: '50%',
+                width: 20, height: 20, color: 'white', cursor: 'pointer',
+                fontSize: 10, display: 'flex', alignItems: 'center', justifyContent: 'center'
+              }}>✕</button>
+              <button onClick={() => onSetCover(i + 1)} style={{
+                position: 'absolute', bottom: -4, right: -4,
+                background: GOLD, border: 'none', borderRadius: '50%',
+                width: 20, height: 20, color: NAVY, cursor: 'pointer',
+                fontSize: 10, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontWeight: 900
+              }}>★</button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 function TazkirForm() {
   const [currentProfile, setCurrentProfile] = useState(null)
   const [profiles, setProfiles] = useState([])
   const [loading, setLoading] = useState(false)
   const [saved, setSaved] = useState(false)
-  const [photo, setPhoto] = useState(null)
-  const [photoPreview, setPhotoPreview] = useState(null)
-  const [uploadingPhoto, setUploadingPhoto] = useState(false)
+  const [mediaFiles, setMediaFiles] = useState([])
+  const [uploading, setUploading] = useState(false)
   const [form, setForm] = useState({
     title: '',
     what_happened: '',
@@ -141,32 +213,61 @@ function TazkirForm() {
     )
   }
 
-  const handlePhotoSelect = (e) => {
-    const file = e.target.files[0]
-    if (!file) return
-    setPhoto(file)
-    setPhotoPreview(URL.createObjectURL(file))
+  const handleMediaSelect = (e) => {
+    const selected = Array.from(e.target.files)
+    if (!selected.length) return
+    const newFiles = selected.map(file => ({
+      file,
+      preview: URL.createObjectURL(file),
+      type: file.type,
+      name: file.name,
+    }))
+    setMediaFiles(prev => [...prev, ...newFiles])
+    // reset input so same file can be re-added if needed
+    e.target.value = ''
   }
 
-  const uploadPhoto = async () => {
-    if (!photo) return null
-    setUploadingPhoto(true)
-    const ext = photo.name.split('.').pop()
-    const filename = `tahkirim/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
-    const { error } = await supabase.storage
-      .from('family-media')
-      .upload(filename, photo, { contentType: photo.type })
-    setUploadingPhoto(false)
-    if (error) { console.error(error); return null }
-    const { data } = supabase.storage.from('family-media').getPublicUrl(filename)
-    return data.publicUrl
+  const removeMedia = (index) => {
+    setMediaFiles(prev => {
+      const updated = [...prev]
+      URL.revokeObjectURL(updated[index].preview)
+      updated.splice(index, 1)
+      return updated
+    })
+  }
+
+  const setCover = (index) => {
+    setMediaFiles(prev => {
+      const updated = [...prev]
+      const [item] = updated.splice(index, 1)
+      return [item, ...updated]
+    })
+  }
+
+  const uploadAllMedia = async () => {
+    if (!mediaFiles.length) return []
+    setUploading(true)
+    const urls = []
+    for (const media of mediaFiles) {
+      const ext = media.name.split('.').pop()
+      const filename = `tahkirim/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
+      const { error } = await supabase.storage
+        .from('family-media')
+        .upload(filename, media.file, { contentType: media.type })
+      if (!error) {
+        const { data } = supabase.storage.from('family-media').getPublicUrl(filename)
+        urls.push(data.publicUrl)
+      }
+    }
+    setUploading(false)
+    return urls
   }
 
   const handleSubmit = async () => {
     if (!form.title.trim()) return
     setLoading(true)
 
-    const photoUrl = await uploadPhoto()
+    const mediaUrls = await uploadAllMedia()
 
     const participantNames = profiles
       .filter(p => participants.includes(p.id))
@@ -184,7 +285,7 @@ function TazkirForm() {
         would_repeat: form.would_repeat,
         participants: participantNames,
         created_by: currentProfile.id,
-        media_urls: photoUrl ? [photoUrl] : [],
+        media_urls: mediaUrls,
       })
       .select()
       .single()
@@ -198,7 +299,7 @@ function TazkirForm() {
         linked_type: 'tahkir',
         linked_id: tazkir.id,
         created_by: currentProfile.id,
-        media_urls: photoUrl ? [photoUrl] : [],
+        media_urls: mediaUrls,
       })
     }
 
@@ -275,61 +376,58 @@ function TazkirForm() {
           </div>
         </Field>
 
-        {/* Photo upload */}
-        <Field emoji="📸" label="ראיות מהשטח" sublabel="תמונה אחת שמספרת הכל">
+        {/* Media upload */}
+        <Field emoji="📸" label="ראיות מהשטח" sublabel="תמונות וסרטונים מהמבצע">
           <input
             type="file"
-            accept="image/*"
+            accept="image/*,video/*"
             capture="environment"
-            onChange={handlePhotoSelect}
+            multiple
+            onChange={handleMediaSelect}
             style={{ display: 'none' }}
-            id="photo-upload-camera"
+            id="media-camera"
           />
           <input
             type="file"
-            accept="image/*"
-            onChange={handlePhotoSelect}
+            accept="image/*,video/*"
+            multiple
+            onChange={handleMediaSelect}
             style={{ display: 'none' }}
-            id="photo-upload-gallery"
+            id="media-gallery"
           />
-          {photoPreview ? (
-            <div style={{ position: 'relative' }}>
-              <img
-                src={photoPreview}
-                alt="preview"
-                style={{
-                  width: '100%', borderRadius: 12,
-                  maxHeight: 220, objectFit: 'cover', display: 'block'
-                }}
+
+          {mediaFiles.length > 0 && (
+            <div style={{ marginBottom: 10 }}>
+              <MediaPreview
+                files={mediaFiles}
+                onRemove={removeMedia}
+                onSetCover={setCover}
               />
-              <button
-                onClick={() => { setPhoto(null); setPhotoPreview(null) }}
-                style={{
-                  position: 'absolute', top: 8, left: 8,
-                  background: 'rgba(10,22,40,0.7)', border: 'none',
-                  borderRadius: '50%', width: 28, height: 28,
-                  color: 'white', cursor: 'pointer', fontSize: 14,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center'
-                }}>✕</button>
             </div>
-          ) : (
-            <div style={{ display: 'flex', gap: 10 }}>
-              <label htmlFor="photo-upload-camera" style={{
-                flex: 1, padding: '12px', background: '#f0ebe0',
-                borderRadius: 12, border: '1.5px dashed #c8bfb0',
-                textAlign: 'center', cursor: 'pointer',
-                fontSize: 13, fontWeight: 600, color: '#6b5e4e'
-              }}>
-                📷 מצלמה
-              </label>
-              <label htmlFor="photo-upload-gallery" style={{
-                flex: 1, padding: '12px', background: '#f0ebe0',
-                borderRadius: 12, border: '1.5px dashed #c8bfb0',
-                textAlign: 'center', cursor: 'pointer',
-                fontSize: 13, fontWeight: 600, color: '#6b5e4e'
-              }}>
-                🖼️ גלריה
-              </label>
+          )}
+
+          <div style={{ display: 'flex', gap: 10 }}>
+            <label htmlFor="media-camera" style={{
+              flex: 1, padding: '11px', background: '#f0ebe0',
+              borderRadius: 12, border: '1.5px dashed #c8bfb0',
+              textAlign: 'center', cursor: 'pointer',
+              fontSize: 13, fontWeight: 600, color: '#6b5e4e'
+            }}>
+              📷 מצלמה
+            </label>
+            <label htmlFor="media-gallery" style={{
+              flex: 1, padding: '11px', background: '#f0ebe0',
+              borderRadius: 12, border: '1.5px dashed #c8bfb0',
+              textAlign: 'center', cursor: 'pointer',
+              fontSize: 13, fontWeight: 600, color: '#6b5e4e'
+            }}>
+              🖼️ גלריה
+            </label>
+          </div>
+
+          {mediaFiles.length > 0 && (
+            <div style={{ fontSize: 11, color: '#8a7a60', marginTop: 6, textAlign: 'center' }}>
+              {mediaFiles.length} קבצים · הראשון הוא תמונת השער · לחץ ★ להחלפה
             </div>
           )}
         </Field>
@@ -418,7 +516,7 @@ function TazkirForm() {
             boxSizing: 'border-box', marginTop: 4
           }}>
           {loading
-            ? (uploadingPhoto ? 'מעלה תמונה...' : 'שומר...')
+            ? (uploading ? `מעלה ${mediaFiles.length} קבצים...` : 'שומר...')
             : '📁 שמור לזיכרונות המשפחה'}
         </button>
 
