@@ -91,6 +91,9 @@ function TazkirForm() {
   const [profiles, setProfiles] = useState([])
   const [loading, setLoading] = useState(false)
   const [saved, setSaved] = useState(false)
+  const [photo, setPhoto] = useState(null)
+  const [photoPreview, setPhotoPreview] = useState(null)
+  const [uploadingPhoto, setUploadingPhoto] = useState(false)
   const [form, setForm] = useState({
     title: '',
     what_happened: '',
@@ -120,7 +123,6 @@ function TazkirForm() {
       .from('profiles').select('*').eq('active', true)
     if (profileData) setProfiles(profileData)
 
-    // Prefill from celebration screen URL params
     const missionId = searchParams.get('mission')
     if (missionId) {
       const { data: mission } = await supabase
@@ -139,9 +141,32 @@ function TazkirForm() {
     )
   }
 
+  const handlePhotoSelect = (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+    setPhoto(file)
+    setPhotoPreview(URL.createObjectURL(file))
+  }
+
+  const uploadPhoto = async () => {
+    if (!photo) return null
+    setUploadingPhoto(true)
+    const ext = photo.name.split('.').pop()
+    const filename = `tahkirim/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
+    const { error } = await supabase.storage
+      .from('family-media')
+      .upload(filename, photo, { contentType: photo.type })
+    setUploadingPhoto(false)
+    if (error) { console.error(error); return null }
+    const { data } = supabase.storage.from('family-media').getPublicUrl(filename)
+    return data.publicUrl
+  }
+
   const handleSubmit = async () => {
     if (!form.title.trim()) return
     setLoading(true)
+
+    const photoUrl = await uploadPhoto()
 
     const participantNames = profiles
       .filter(p => participants.includes(p.id))
@@ -159,6 +184,7 @@ function TazkirForm() {
         would_repeat: form.would_repeat,
         participants: participantNames,
         created_by: currentProfile.id,
+        media_urls: photoUrl ? [photoUrl] : [],
       })
       .select()
       .single()
@@ -172,6 +198,7 @@ function TazkirForm() {
         linked_type: 'tahkir',
         linked_id: tazkir.id,
         created_by: currentProfile.id,
+        media_urls: photoUrl ? [photoUrl] : [],
       })
     }
 
@@ -191,9 +218,7 @@ function TazkirForm() {
     }}>
       <div style={{ fontSize: 56 }}>📝</div>
       <div style={{ fontSize: 24, fontWeight: 900, color: 'white' }}>התחקיר נשמר!</div>
-      <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.55)' }}>
-        עובר לפיד המשפחה...
-      </div>
+      <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.55)' }}>עובר לפיד המשפחה...</div>
     </div>
   )
 
@@ -250,6 +275,65 @@ function TazkirForm() {
           </div>
         </Field>
 
+        {/* Photo upload */}
+        <Field emoji="📸" label="ראיות מהשטח" sublabel="תמונה אחת שמספרת הכל">
+          <input
+            type="file"
+            accept="image/*"
+            capture="environment"
+            onChange={handlePhotoSelect}
+            style={{ display: 'none' }}
+            id="photo-upload-camera"
+          />
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handlePhotoSelect}
+            style={{ display: 'none' }}
+            id="photo-upload-gallery"
+          />
+          {photoPreview ? (
+            <div style={{ position: 'relative' }}>
+              <img
+                src={photoPreview}
+                alt="preview"
+                style={{
+                  width: '100%', borderRadius: 12,
+                  maxHeight: 220, objectFit: 'cover', display: 'block'
+                }}
+              />
+              <button
+                onClick={() => { setPhoto(null); setPhotoPreview(null) }}
+                style={{
+                  position: 'absolute', top: 8, left: 8,
+                  background: 'rgba(10,22,40,0.7)', border: 'none',
+                  borderRadius: '50%', width: 28, height: 28,
+                  color: 'white', cursor: 'pointer', fontSize: 14,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center'
+                }}>✕</button>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', gap: 10 }}>
+              <label htmlFor="photo-upload-camera" style={{
+                flex: 1, padding: '12px', background: '#f0ebe0',
+                borderRadius: 12, border: '1.5px dashed #c8bfb0',
+                textAlign: 'center', cursor: 'pointer',
+                fontSize: 13, fontWeight: 600, color: '#6b5e4e'
+              }}>
+                📷 מצלמה
+              </label>
+              <label htmlFor="photo-upload-gallery" style={{
+                flex: 1, padding: '12px', background: '#f0ebe0',
+                borderRadius: 12, border: '1.5px dashed #c8bfb0',
+                textAlign: 'center', cursor: 'pointer',
+                fontSize: 13, fontWeight: 600, color: '#6b5e4e'
+              }}>
+                🖼️ גלריה
+              </label>
+            </div>
+          )}
+        </Field>
+
         {/* What happened */}
         <Field emoji="📖" label="מה קרה?" sublabel="ספרו את הסיפור">
           <textarea
@@ -302,9 +386,11 @@ function TazkirForm() {
               { value: true,  label: 'בהחלט! 🙌' },
               { value: false, label: 'חד פעמי 😅' },
             ].map(opt => (
-              <button key={String(opt.value)} onClick={() => setForm(f => ({ ...f, would_repeat: opt.value }))}
+              <button key={String(opt.value)}
+                onClick={() => setForm(f => ({ ...f, would_repeat: opt.value }))}
                 style={{
-                  flex: 1, padding: '10px', borderRadius: 12, border: 'none', cursor: 'pointer',
+                  flex: 1, padding: '10px', borderRadius: 12,
+                  border: 'none', cursor: 'pointer',
                   background: form.would_repeat === opt.value ? NAVY : '#f0ebe0',
                   color: form.would_repeat === opt.value ? 'white' : '#6b5e4e',
                   fontWeight: 700, fontSize: 14,
@@ -325,12 +411,15 @@ function TazkirForm() {
             width: '100%', padding: '15px',
             background: form.title.trim() ? GOLD : '#e0d8c8',
             color: form.title.trim() ? NAVY : '#a09080',
-            border: 'none', borderRadius: 16, cursor: form.title.trim() ? 'pointer' : 'default',
+            border: 'none', borderRadius: 16,
+            cursor: form.title.trim() ? 'pointer' : 'default',
             fontWeight: 900, fontSize: 17,
             fontFamily: 'var(--font-heebo), sans-serif',
             boxSizing: 'border-box', marginTop: 4
           }}>
-          {loading ? 'שומר...' : '📁 שמור לזיכרונות המשפחה'}
+          {loading
+            ? (uploadingPhoto ? 'מעלה תמונה...' : 'שומר...')
+            : '📁 שמור לזיכרונות המשפחה'}
         </button>
 
       </div>
@@ -341,7 +430,10 @@ function TazkirForm() {
 export default function NewTazkirPage() {
   return (
     <Suspense fallback={
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: CREAM }}>
+      <div style={{
+        minHeight: '100vh', display: 'flex',
+        alignItems: 'center', justifyContent: 'center', background: CREAM
+      }}>
         <div style={{ fontSize: 32 }}>📝</div>
       </div>
     }>
