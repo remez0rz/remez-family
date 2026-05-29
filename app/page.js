@@ -123,7 +123,20 @@ export default function HomePage() {
         setReactions(grouped)
       }
     }
-
+// Weekly bonus check for children
+if (profile.role === 'child') {
+  const { checkAndAwardWeeklyBonus } = await import('./lib/weeklyBonus')
+  const awarded = await checkAndAwardWeeklyBonus(profile.id)
+  if (awarded) {
+    // Refresh to show updated points
+    const { data: updatedProfile } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', profile.id)
+      .single()
+    if (updatedProfile) setCurrentProfile(updatedProfile)
+  }
+}
     setLoading(false)
   }
 
