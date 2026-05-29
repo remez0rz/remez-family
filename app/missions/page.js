@@ -19,6 +19,8 @@ const MODES = [
   { id: 'family', label: 'משפחה', emoji: '👨‍👩‍👧', categories: ['Family', 'Memory'] },
 ]
 
+const CATEGORIES = ['Family', 'Learning', 'Helping', 'Creative', 'Funny', 'Outdoor', 'Reading', 'English', 'Hebrew', 'Kindness', 'House', 'Memory', 'Health', 'Weekend']
+
 const CATEGORY_VISUAL = {
   Funny:    { emoji: '😂', bg: '#fff3e0', accent: '#e07000' },
   Creative: { emoji: '🎨', bg: '#fce4ec', accent: '#c2185b' },
@@ -74,7 +76,189 @@ function Avatar({ profile, size = 44, selected = false, onClick }) {
   )
 }
 
-function EarnCard({ mission, isParent, currentProfile, assignableProfiles }) {
+function MissionFormModal({ mission, onClose, onSaved }) {
+  const isNew = !mission?.id
+  const [form, setForm] = useState({
+    title:              mission?.title              || '',
+    description:        mission?.description        || '',
+    category:           mission?.category           || 'Family',
+    type:               mission?.type               || 'fun',
+    points:             mission?.points             || 30,
+    difficulty:         mission?.difficulty         || 'easy',
+    estimated_minutes:  mission?.estimated_minutes  || 20,
+    repeatable:         mission?.repeatable         ?? true,
+    is_active:          mission?.is_active          ?? true,
+    proof_type:         mission?.proof_type         || 'parent_approval',
+  })
+  const [saving, setSaving] = useState(false)
+
+  const handleSave = async () => {
+    if (!form.title.trim()) return
+    setSaving(true)
+    if (isNew) {
+      await supabase.from('missions').insert(form)
+    } else {
+      await supabase.from('missions').update(form).eq('id', mission.id)
+    }
+    setSaving(false)
+    onSaved()
+  }
+
+  const inputStyle = {
+    width: '100%', padding: '10px 12px',
+    border: '1px solid #e0d8c8', borderRadius: 10,
+    fontSize: 14, color: NAVY, background: '#faf8f4',
+    fontFamily: 'var(--font-heebo), sans-serif',
+    boxSizing: 'border-box', marginBottom: 10, outline: 'none'
+  }
+
+  const labelStyle = {
+    fontSize: 12, fontWeight: 700, color: '#6b5e4e',
+    display: 'block', marginBottom: 4
+  }
+
+  const selectStyle = {
+    ...inputStyle, appearance: 'none', cursor: 'pointer'
+  }
+
+  return (
+    <div style={{
+      position: 'fixed', inset: 0, background: 'rgba(10,22,40,0.88)',
+      zIndex: 1000, display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
+      fontFamily: 'var(--font-heebo), sans-serif', direction: 'rtl'
+    }}>
+      <div style={{
+        background: CREAM, borderRadius: '24px 24px 0 0',
+        padding: '24px 20px 40px', width: '100%', maxWidth: 480,
+        maxHeight: '92vh', overflowY: 'auto'
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+          <div style={{ fontSize: 18, fontWeight: 900, color: NAVY }}>
+            {isNew ? '+ פעילות חדשה' : '✏️ עריכת פעילות'}
+          </div>
+          <button onClick={onClose} style={{
+            background: 'none', border: 'none', fontSize: 20, cursor: 'pointer', color: '#a09080'
+          }}>✕</button>
+        </div>
+
+        <label style={labelStyle}>שם הפעילות *</label>
+        <input value={form.title}
+          onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
+          placeholder="למשל: קראו ספר 20 דקות"
+          style={inputStyle} />
+
+        <label style={labelStyle}>תיאור</label>
+        <input value={form.description}
+          onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
+          placeholder="פרטים נוספים על הפעילות..."
+          style={inputStyle} />
+
+        <label style={labelStyle}>קטגוריה</label>
+        <select value={form.category}
+          onChange={e => setForm(f => ({ ...f, category: e.target.value }))}
+          style={selectStyle}>
+          {CATEGORIES.map(c => (
+            <option key={c} value={c}>
+              {CATEGORY_VISUAL[c]?.emoji} {c}
+            </option>
+          ))}
+        </select>
+
+        <label style={labelStyle}>סוג</label>
+        <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
+          {[
+            { id: 'fun',            label: '🎉 כיף' },
+            { id: 'learning',       label: '📚 לימוד' },
+            { id: 'responsibility', label: '🤝 עזרה' },
+          ].map(t => (
+            <button key={t.id} onClick={() => setForm(f => ({ ...f, type: t.id }))} style={{
+              flex: 1, padding: '8px', borderRadius: 10, border: 'none', cursor: 'pointer',
+              background: form.type === t.id ? NAVY : '#f0ebe0',
+              color: form.type === t.id ? 'white' : '#6b5e4e',
+              fontWeight: 700, fontSize: 12,
+              fontFamily: 'var(--font-heebo), sans-serif'
+            }}>{t.label}</button>
+          ))}
+        </div>
+
+        <div style={{ display: 'flex', gap: 10 }}>
+          <div style={{ flex: 1 }}>
+            <label style={labelStyle}>נקודות</label>
+            <input type="number" value={form.points}
+              onChange={e => setForm(f => ({ ...f, points: parseInt(e.target.value) || 0 }))}
+              style={inputStyle} />
+          </div>
+          <div style={{ flex: 1 }}>
+            <label style={labelStyle}>דקות</label>
+            <input type="number" value={form.estimated_minutes}
+              onChange={e => setForm(f => ({ ...f, estimated_minutes: parseInt(e.target.value) || 0 }))}
+              style={inputStyle} />
+          </div>
+        </div>
+
+        <label style={labelStyle}>רמת קושי</label>
+        <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
+          {[
+            { id: 'easy',   label: 'קל' },
+            { id: 'medium', label: 'בינוני' },
+            { id: 'hard',   label: 'קשה' },
+          ].map(d => (
+            <button key={d.id} onClick={() => setForm(f => ({ ...f, difficulty: d.id }))} style={{
+              flex: 1, padding: '8px', borderRadius: 10, border: 'none', cursor: 'pointer',
+              background: form.difficulty === d.id ? NAVY : '#f0ebe0',
+              color: form.difficulty === d.id ? 'white' : '#6b5e4e',
+              fontWeight: 700, fontSize: 13,
+              fontFamily: 'var(--font-heebo), sans-serif'
+            }}>{d.label}</button>
+          ))}
+        </div>
+
+        <label style={labelStyle}>אישור השלמה</label>
+        <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+          {[
+            { id: 'parent_approval', label: '👨‍👩‍👧 אישור הורה' },
+            { id: 'none',            label: '⚡ אוטומטי' },
+          ].map(p => (
+            <button key={p.id} onClick={() => setForm(f => ({ ...f, proof_type: p.id }))} style={{
+              flex: 1, padding: '8px', borderRadius: 10, border: 'none', cursor: 'pointer',
+              background: form.proof_type === p.id ? NAVY : '#f0ebe0',
+              color: form.proof_type === p.id ? 'white' : '#6b5e4e',
+              fontWeight: 700, fontSize: 12,
+              fontFamily: 'var(--font-heebo), sans-serif'
+            }}>{p.label}</button>
+          ))}
+        </div>
+
+        <div style={{ display: 'flex', gap: 16, marginBottom: 16 }}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: NAVY, fontWeight: 600, cursor: 'pointer' }}>
+            <input type="checkbox" checked={form.repeatable}
+              onChange={e => setForm(f => ({ ...f, repeatable: e.target.checked }))} />
+            פעילות חוזרת
+          </label>
+          <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: NAVY, fontWeight: 600, cursor: 'pointer' }}>
+            <input type="checkbox" checked={form.is_active}
+              onChange={e => setForm(f => ({ ...f, is_active: e.target.checked }))} />
+            פעילות פעילה
+          </label>
+        </div>
+
+        <button onClick={handleSave} disabled={saving || !form.title.trim()} style={{
+          width: '100%', padding: '14px',
+          background: form.title.trim() ? GOLD : '#e0d8c8',
+          color: form.title.trim() ? NAVY : '#a09080',
+          border: 'none', borderRadius: 14,
+          cursor: form.title.trim() ? 'pointer' : 'default',
+          fontWeight: 700, fontSize: 16,
+          fontFamily: 'var(--font-heebo), sans-serif'
+        }}>
+          {saving ? 'שומר...' : isNew ? '+ הוסף פעילות' : 'שמור פעילות'}
+        </button>
+      </div>
+    </div>
+  )
+}
+
+function EarnCard({ mission, isParent, currentProfile, assignableProfiles, onEdit }) {
   const [assignedTo, setAssignedTo] = useState([])
   const [dueDate, setDueDate]       = useState('')
   const [assigning, setAssigning]   = useState(false)
@@ -143,9 +327,18 @@ function EarnCard({ mission, isParent, currentProfile, assignableProfiles }) {
             {mission.repeatable && <span style={{ fontSize: 11, color: GREEN }}>🔁 חוזר</span>}
           </div>
         </div>
-        <div style={{ textAlign: 'center', flexShrink: 0 }}>
-          <div style={{ fontSize: 30, fontWeight: 900, color: ptColor, lineHeight: 1 }}>{mission.points}</div>
-          <div style={{ fontSize: 10, fontWeight: 700, color: ptColor, opacity: 0.7 }}>נק׳</div>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: 30, fontWeight: 900, color: ptColor, lineHeight: 1 }}>{mission.points}</div>
+            <div style={{ fontSize: 10, fontWeight: 700, color: ptColor, opacity: 0.7 }}>נק׳</div>
+          </div>
+          {isParent && (
+            <button onClick={() => onEdit(mission)} style={{
+              background: 'transparent', border: 'none', cursor: 'pointer',
+              fontSize: 11, color: '#a09080', padding: '2px 4px',
+              fontFamily: 'var(--font-heebo), sans-serif'
+            }}>✏️ ערוך</button>
+          )}
         </div>
       </div>
 
@@ -232,7 +425,6 @@ function ActiveEarningTab({ profiles, currentProfile, isParent }) {
       .select('*, mission:missions(*), member:profiles!assignments_assigned_to_fkey(*)')
       .in('status', ['active', 'submitted'])
       .order('created_at', { ascending: false })
-
     if (!isParent) query = query.eq('assigned_to', currentProfile.id)
     const { data } = await query
     if (data) setAssignments(data)
@@ -338,6 +530,8 @@ export default function EarnPointsPage() {
   const [activeMode, setActiveMode]         = useState('all')
   const [activeTab, setActiveTab]           = useState('library')
   const [activeCount, setActiveCount]       = useState(0)
+  const [showForm, setShowForm]             = useState(false)
+  const [editTarget, setEditTarget]         = useState(null)
   const router = useRouter()
 
   useEffect(() => {
@@ -366,6 +560,12 @@ export default function EarnPointsPage() {
     if (params.get('tab') === 'active') setActiveTab('active')
 
     setLoading(false)
+  }
+
+  const handleSaved = () => {
+    setShowForm(false)
+    setEditTarget(null)
+    loadData()
   }
 
   const isParent = currentProfile?.role === 'parent'
@@ -400,6 +600,14 @@ export default function EarnPointsPage() {
       boxSizing: 'border-box', overflowX: 'hidden'
     }}>
 
+      {(showForm || editTarget) && (
+        <MissionFormModal
+          mission={editTarget || null}
+          onClose={() => { setShowForm(false); setEditTarget(null) }}
+          onSaved={handleSaved}
+        />
+      )}
+
       <div style={{
         background: NAVY, padding: '20px 16px 0',
         borderRadius: '0 0 24px 24px', marginBottom: 16
@@ -411,7 +619,17 @@ export default function EarnPointsPage() {
               {isParent ? 'שלח פעילויות לבני המשפחה' : 'בחר איך להרוויח נקודות'}
             </div>
           </div>
-          <a href="/" style={{ color: 'rgba(255,255,255,0.45)', textDecoration: 'none', fontSize: 13 }}>← בית</a>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            {isParent && (
+              <button onClick={() => setShowForm(true)} style={{
+                background: GOLD, color: NAVY, border: 'none',
+                borderRadius: 20, padding: '7px 14px',
+                fontWeight: 700, fontSize: 13, cursor: 'pointer',
+                fontFamily: 'var(--font-heebo), sans-serif'
+              }}>+ פעילות</button>
+            )}
+            <a href="/" style={{ color: 'rgba(255,255,255,0.45)', textDecoration: 'none', fontSize: 13 }}>← בית</a>
+          </div>
         </div>
 
         {/* Tabs */}
@@ -470,6 +688,7 @@ export default function EarnPointsPage() {
                 isParent={isParent}
                 currentProfile={currentProfile}
                 assignableProfiles={assignableProfiles}
+                onEdit={m => setEditTarget(m)}
               />
             ))}
           </>
