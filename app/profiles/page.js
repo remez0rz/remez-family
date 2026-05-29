@@ -72,15 +72,10 @@ function PhotoUploadModal({ profile, onClose, onDone }) {
       zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center',
       padding: 20, fontFamily: 'var(--font-heebo), sans-serif', direction: 'rtl'
     }}>
-      <div style={{
-        background: 'white', borderRadius: 24, padding: 24,
-        width: '100%', maxWidth: 340, textAlign: 'center'
-      }}>
+      <div style={{ background: 'white', borderRadius: 24, padding: 24, width: '100%', maxWidth: 340, textAlign: 'center' }}>
         <div style={{ fontSize: 16, fontWeight: 700, color: NAVY, marginBottom: 20 }}>
           תמונת פרופיל — {profile.name}
         </div>
-
-        {/* Preview */}
         <div style={{
           width: 110, height: 110, borderRadius: '50%',
           border: `3px solid ${GOLD}`, overflow: 'hidden',
@@ -93,7 +88,6 @@ function PhotoUploadModal({ profile, onClose, onDone }) {
             : profile.name?.charAt(0)}
         </div>
 
-        {/* Upload buttons */}
         <input type="file" accept="image/*" capture="environment"
           onChange={handleSelect} style={{ display: 'none' }} id="avatar-camera" />
         <input type="file" accept="image/*"
@@ -134,11 +128,12 @@ function PhotoUploadModal({ profile, onClose, onDone }) {
 }
 
 export default function ProfilesPage() {
-  const [profiles, setProfiles]           = useState([])
+  const [profiles, setProfiles]             = useState([])
   const [currentProfile, setCurrentProfile] = useState(null)
-  const [rewards, setRewards]             = useState([])
-  const [loading, setLoading]             = useState(true)
-  const [uploadTarget, setUploadTarget]   = useState(null)
+  const [rewards, setRewards]               = useState([])
+  const [badges, setBadges]                 = useState([])
+  const [loading, setLoading]               = useState(true)
+  const [uploadTarget, setUploadTarget]     = useState(null)
   const router = useRouter()
 
   useEffect(() => {
@@ -153,12 +148,15 @@ export default function ProfilesPage() {
     if (!profile) { router.push('/login'); return }
     setCurrentProfile(profile)
 
-    const [{ data: profileData }, { data: rewardData }] = await Promise.all([
+    const [{ data: profileData }, { data: rewardData }, { data: badgeData }] = await Promise.all([
       supabase.from('profiles').select('*').eq('active', true).order('created_at'),
-      supabase.from('rewards').select('*').eq('is_active', true).order('points_required')
+      supabase.from('rewards').select('*').eq('is_active', true).order('points_required'),
+      supabase.from('member_badges').select('*, badge:badges(*)').order('awarded_at', { ascending: false })
     ])
+
     if (profileData) setProfiles(profileData)
     if (rewardData) setRewards(rewardData)
+    if (badgeData) setBadges(badgeData)
     setLoading(false)
   }
 
@@ -223,7 +221,7 @@ export default function ProfilesPage() {
 
       <div style={{ padding: '0 12px', boxSizing: 'border-box' }}>
 
-        {/* Children — big cards with points */}
+        {/* Children */}
         {children.length > 0 && (
           <>
             <div style={{ fontSize: 12, fontWeight: 700, color: '#8a7a60', marginBottom: 10, letterSpacing: '0.05em' }}>
@@ -232,15 +230,16 @@ export default function ProfilesPage() {
             {children.map((child, i) => {
               const next = getNextReward(child.total_points)
               const color = childColors[i] || GOLD
+              const childBadges = badges.filter(b => b.member_id === child.id)
+
               return (
                 <div key={child.id} style={{
                   background: 'white', borderRadius: 20,
                   border: '1px solid #e8e0d0', marginBottom: 12, overflow: 'hidden'
                 }}>
-                  {/* Top section — navy */}
+                  {/* Navy top */}
                   <div style={{ background: NAVY, padding: '16px 16px 20px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-                      {/* Avatar with edit */}
                       <div style={{ position: 'relative', flexShrink: 0 }}>
                         <Avatar profile={child} size={64} />
                         {isParent && (
@@ -260,7 +259,7 @@ export default function ProfilesPage() {
                             background: color, color: NAVY,
                             fontSize: 11, fontWeight: 700,
                             padding: '2px 10px', borderRadius: 20
-                          }}>רמה {child.level}</span>
+                          }}>רמה {child.level || 1}</span>
                           {child.age && <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>גיל {child.age}</span>}
                         </div>
                       </div>
@@ -271,12 +270,12 @@ export default function ProfilesPage() {
                     </div>
                   </div>
 
-                  {/* Progress section */}
+                  {/* Progress + badges */}
                   <div style={{ padding: '14px 16px' }}>
                     {next ? (
                       <>
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-                          <span style={{ fontSize: 12, color: '#8a7a60' }}>הפרס הבא</span>
+                          <span style={{ fontSize: 12, color: '#8a7a60' }}>החוויה הבאה</span>
                           <span style={{ fontSize: 12, fontWeight: 700, color }}>
                             עוד {next.points_required - child.total_points} נק׳
                           </span>
@@ -286,7 +285,44 @@ export default function ProfilesPage() {
                       </>
                     ) : (
                       <div style={{ fontSize: 13, color: GREEN, fontWeight: 700, textAlign: 'center' }}>
-                        🏆 השיג את כל הפרסים!
+                        🏆 השיג את כל החוויות!
+                      </div>
+                    )}
+
+                    {/* Level progress */}
+                    <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid #f0ebe0' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                        <span style={{ fontSize: 11, color: '#a09080' }}>רמה {child.level || 1}</span>
+                        <span style={{ fontSize: 11, color: '#a09080' }}>
+                          {500 - (child.total_points % 500)} נק׳ לרמה {(child.level || 1) + 1}
+                        </span>
+                      </div>
+                      <div style={{ background: '#f0ebe0', borderRadius: 4, height: 4 }}>
+                        <div style={{
+                          width: `${(child.total_points % 500) / 500 * 100}%`,
+                          height: '100%', background: color, borderRadius: 4
+                        }} />
+                      </div>
+                    </div>
+
+                    {/* Badges */}
+                    {childBadges.length > 0 && (
+                      <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid #f0ebe0' }}>
+                        <div style={{ fontSize: 11, color: '#8a7a60', marginBottom: 8, fontWeight: 600 }}>
+                          🏅 בדג׳ים שהרווחת
+                        </div>
+                        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                          {childBadges.map(mb => (
+                            <div key={mb.id} style={{
+                              background: '#f7f4ee', borderRadius: 10,
+                              padding: '6px 10px', display: 'flex', alignItems: 'center', gap: 5,
+                              border: '1px solid #e8e0d0'
+                            }} title={mb.badge?.description}>
+                              <span style={{ fontSize: 16 }}>{mb.badge?.icon}</span>
+                              <span style={{ fontSize: 11, fontWeight: 600, color: NAVY }}>{mb.badge?.title}</span>
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     )}
                   </div>
@@ -296,7 +332,7 @@ export default function ProfilesPage() {
           </>
         )}
 
-        {/* Parents — simpler cards */}
+        {/* Parents */}
         {parents.length > 0 && (
           <>
             <div style={{ fontSize: 12, fontWeight: 700, color: '#8a7a60', marginBottom: 10, marginTop: 4, letterSpacing: '0.05em' }}>

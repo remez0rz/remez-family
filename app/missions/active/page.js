@@ -75,7 +75,7 @@ function StarRating({ value, onChange }) {
   )
 }
 
-function CelebrationScreen({ assignment, newTotal, nextReward, feedPostId, leveledUp, newLevel, onClose, onTazkir }) {
+function CelebrationScreen({ assignment, newTotal, nextReward, feedPostId, leveledUp, newLevel, newBadges, onClose, onTazkir }) {
   const router = useRouter()
   const [show, setShow]               = useState(false)
   const [step, setStep]               = useState('celebrate')
@@ -147,7 +147,7 @@ function CelebrationScreen({ assignment, newTotal, nextReward, feedPostId, level
             <div style={{ fontSize: 24, fontWeight: 900, color: 'white', marginBottom: 6, lineHeight: 1.2 }}>
               {assignment.member.name}! 🎉
             </div>
-            <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.65)', marginBottom: 24, lineHeight: 1.5 }}>
+            <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.65)', marginBottom: 16, lineHeight: 1.5 }}>
               {assignment.mission.title}
             </div>
 
@@ -158,24 +158,46 @@ function CelebrationScreen({ assignment, newTotal, nextReward, feedPostId, level
                 borderRadius: 16, padding: '12px 20px', marginBottom: 16
               }}>
                 <div style={{ fontSize: 28 }}>🚀</div>
-                <div style={{ fontSize: 16, fontWeight: 900, color: NAVY, marginTop: 4 }}>
-                  עלית רמה!
-                </div>
-                <div style={{ fontSize: 13, color: NAVY, opacity: 0.7 }}>
-                  ברוך הבא לרמה {newLevel}
-                </div>
+                <div style={{ fontSize: 16, fontWeight: 900, color: NAVY, marginTop: 4 }}>עלית רמה!</div>
+                <div style={{ fontSize: 13, color: NAVY, opacity: 0.7 }}>ברוך הבא לרמה {newLevel}</div>
               </div>
             )}
 
+            {/* Points */}
             <div style={{
               background: isLearning ? PURPLE : GREEN,
-              borderRadius: 20, padding: '16px 24px', marginBottom: 20
+              borderRadius: 20, padding: '16px 24px', marginBottom: 16
             }}>
               <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.7)', fontWeight: 700, marginBottom: 4 }}>צברת</div>
               <div style={{ fontSize: 52, fontWeight: 900, color: 'white', lineHeight: 1 }}>+{points}</div>
               <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', marginTop: 2 }}>נקודות</div>
             </div>
 
+            {/* New badges */}
+            {newBadges?.length > 0 && (
+              <div style={{ marginBottom: 16 }}>
+                <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', marginBottom: 8, fontWeight: 600 }}>
+                  🏅 בדג׳ חדש!
+                </div>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center' }}>
+                  {newBadges.map(badge => (
+                    <div key={badge.id} style={{
+                      background: 'rgba(255,255,255,0.08)', borderRadius: 12,
+                      padding: '8px 12px', display: 'flex', alignItems: 'center', gap: 6,
+                      border: `1px solid ${GOLD}40`
+                    }}>
+                      <span style={{ fontSize: 20 }}>{badge.icon}</span>
+                      <div style={{ textAlign: 'right' }}>
+                        <div style={{ fontSize: 12, fontWeight: 700, color: GOLD }}>{badge.title}</div>
+                        <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)' }}>{badge.description}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Next reward progress */}
             {nextReward && (
               <div style={{ marginBottom: 24 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
@@ -312,12 +334,16 @@ export default function ActiveEarningPage() {
     const { data: profile } = await supabase
       .from('profiles').select('total_points, level').eq('id', memberId).single()
 
-    const oldLevel = profile?.level || 1
-    const newTotal = (profile?.total_points || 0) + points
-    const newLevel = Math.floor(newTotal / 500) + 1
+    const oldLevel  = profile?.level || 1
+    const newTotal  = (profile?.total_points || 0) + points
+    const newLevel  = Math.floor(newTotal / 500) + 1
     const leveledUp = newLevel > oldLevel
 
     await supabase.from('profiles').update({ total_points: newTotal }).eq('id', memberId)
+
+    // Check badges
+    const { checkAndAwardBadges } = await import('../../lib/badges')
+    const newBadges = await checkAndAwardBadges(memberId)
 
     const { data: feedPost } = await supabase.from('feed_posts').insert({
       type: 'mission_completed',
@@ -330,7 +356,7 @@ export default function ActiveEarningPage() {
     }).select().single()
 
     const nextReward = getNextReward(newTotal)
-    setCelebration({ assignment, newTotal, nextReward, feedPostId: feedPost?.id, leveledUp, newLevel })
+    setCelebration({ assignment, newTotal, nextReward, feedPostId: feedPost?.id, leveledUp, newLevel, newBadges })
     loadData()
   }
 
@@ -387,6 +413,7 @@ export default function ActiveEarningPage() {
           feedPostId={celebration.feedPostId}
           leveledUp={celebration.leveledUp}
           newLevel={celebration.newLevel}
+          newBadges={celebration.newBadges}
           onClose={closeCelebration}
           onTazkir={openTazkir}
         />
