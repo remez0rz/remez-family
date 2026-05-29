@@ -21,6 +21,23 @@ const MODES = [
 
 const CATEGORIES = ['Family', 'Learning', 'Helping', 'Creative', 'Funny', 'Outdoor', 'Reading', 'English', 'Hebrew', 'Kindness', 'House', 'Memory', 'Health', 'Weekend']
 
+const CATEGORY_LABELS = {
+  Family:   'משפחה',
+  Learning: 'לומדים בכיף',
+  Helping:  'עוזרים בבית',
+  Creative: 'יצירה',
+  Funny:    'מצחיקים',
+  Outdoor:  'בחוץ',
+  Reading:  'קריאה',
+  English:  'אנגלית',
+  Hebrew:   'עברית',
+  Kindness: 'מעשים טובים',
+  House:    'הבית שלנו',
+  Memory:   'זיכרונות',
+  Health:   'בריאות',
+  Weekend:  'סופ״ש',
+}
+
 const CATEGORY_VISUAL = {
   Funny:    { emoji: '😂', bg: '#fff3e0', accent: '#e07000' },
   Creative: { emoji: '🎨', bg: '#fce4ec', accent: '#c2185b' },
@@ -319,8 +336,8 @@ function EarnCard({ mission, isParent, currentProfile, assignableProfiles, onEdi
         }}>{visual.emoji}</div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontSize: 10, fontWeight: 700, color: visual.accent, letterSpacing: '0.06em' }}>
-            {mission.category}
-          </div>
+  {CATEGORY_LABELS[mission.category] || mission.category}
+</div>
           <div style={{ display: 'flex', gap: 8, marginTop: 3, flexWrap: 'wrap' }}>
             <span style={{ fontSize: 11, color: '#8a7a60' }}>⏱ {mission.estimated_minutes} דק׳</span>
             <span style={{ fontSize: 11, color: diff.color, fontWeight: 600 }}>{diff.label}</span>
