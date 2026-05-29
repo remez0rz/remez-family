@@ -335,52 +335,33 @@ export default function HomePage() {
           </Card>
         )}
 
-        {/* Recent feed with reactions */}
-        {recentFeed.length > 0 && (
-          <Card>
-            <SectionHeader title="📖 זיכרונות אחרונים" href="/feed" />
-            {recentFeed.map((post, i) => {
-              const postReactions = reactions[post.id] || {}
-              const hasReactions = Object.keys(postReactions).length > 0
-              return (
-                <div key={post.id} style={{
-                  paddingBottom: i < recentFeed.length - 1 ? 14 : 0,
-                  borderBottom: i < recentFeed.length - 1 ? '1px solid #f5f0e8' : 'none',
-                  marginBottom: i < recentFeed.length - 1 ? 14 : 0
-                }}>
-                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
-                    <div style={{ fontSize: 28 }}>
-                      {post.type === 'tahkir' ? '📝' : post.type === 'mission_completed' ? '✅' : '📸'}
-                    </div>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: 14, fontWeight: 700, color: NAVY }}>{post.title}</div>
-                      {post.content && <div style={{ fontSize: 12, color: '#6b5e4e', marginTop: 2, lineHeight: 1.4 }}>{post.content}</div>}
-                      <div style={{ fontSize: 11, color: '#b0a090', marginTop: 3 }}>{timeAgo(post.created_at)}</div>
-                    </div>
-                  </div>
-                  {/* Reactions */}
-                  <div style={{ display: 'flex', gap: 6, marginTop: 10, flexWrap: 'wrap' }}>
-                    {REACTIONS.map(r => (
-                      <button key={r.type} onClick={() => handleReaction(post.id, r.type)} style={{
-                        background: postReactions[r.type] ? '#faf6ec' : '#f7f4ee',
-                        border: postReactions[r.type] ? `1px solid ${GOLD}` : '1px solid #e8e0d0',
-                        borderRadius: 20, padding: '4px 10px', cursor: 'pointer',
-                        display: 'flex', alignItems: 'center', gap: 4,
-                        fontFamily: 'var(--font-heebo), sans-serif'
-                      }}>
-                        <span style={{ fontSize: 14 }}>{r.emoji}</span>
-                        {postReactions[r.type] > 0 && (
-                          <span style={{ fontSize: 11, fontWeight: 700, color: NAVY }}>{postReactions[r.type]}</span>
-                        )}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )
-            })}
-          </Card>
-        )}
-
+        {/* Recent feed */}
+{recentFeed.length > 0 && (
+  <Card>
+    <SectionHeader title="📖 זיכרונות אחרונים" href="/feed" />
+    {recentFeed.map((post, i) => {
+      const coverPhoto = post.media_urls?.[0]
+      const isVideo = url => /\.(mp4|mov|webm|avi)(\?|$)/i.test(url)
+      return (
+        <div key={post.id} style={{
+          paddingBottom: i < recentFeed.length - 1 ? 12 : 0,
+          borderBottom: i < recentFeed.length - 1 ? '1px solid #f5f0e8' : 'none',
+          marginBottom: i < recentFeed.length - 1 ? 12 : 0
+        }}>
+          {coverPhoto && !isVideo(coverPhoto) && (
+            <img src={coverPhoto} alt="cover" style={{
+              width: '100%', height: 140, objectFit: 'cover',
+              borderRadius: 12, marginBottom: 8, display: 'block'
+            }} />
+          )}
+          <div style={{ fontSize: 14, fontWeight: 700, color: NAVY }}>{post.title}</div>
+          {post.content && <div style={{ fontSize: 12, color: '#a09080', marginTop: 2 }}>{post.content}</div>}
+          <div style={{ fontSize: 11, color: '#b0a090', marginTop: 3 }}>{timeAgo(post.created_at)}</div>
+        </div>
+      )
+    })}
+  </Card>
+)}
         {/* Parent only: quick approve section */}
         {isParent && activeAssignments.filter(a => a.status === 'submitted').length > 0 && (
           <a href="/missions/active" style={{ textDecoration: 'none' }}>
