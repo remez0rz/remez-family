@@ -1,121 +1,375 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { supabase } from '../lib/supabase'
+import { supabase, getCurrentProfile } from '../lib/supabase'
 import { useRouter } from 'next/navigation'
 
+const NAVY = '#0a1628'
+const GOLD = '#c9a84c'
+const CREAM = '#f7f4ee'
+const GREEN = '#1a6b3c'
+const PURPLE = '#5c3d8f'
+
+function Avatar({ profile, size = 64 }) {
+  const [imgError, setImgError] = useState(false)
+  return (
+    <div style={{
+      width: size, height: size, borderRadius: '50%',
+      border: `3px solid ${profile.role === 'parent' ? 'rgba(255,255,255,0.3)' : GOLD}`,
+      overflow: 'hidden', flexShrink: 0,
+      background: '#e8d5a3', display: 'flex', alignItems: 'center',
+      justifyContent: 'center', fontSize: size * 0.38, fontWeight: 700, color: NAVY
+    }}>
+      {profile.avatar_url && !imgError
+        ? <img src={profile.avatar_url} alt={profile.name}
+            onError={() => setImgError(true)}
+            style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+        : profile.name?.charAt(0)}
+    </div>
+  )
+}
+
+function ProgressBar({ value, max, color = GOLD }) {
+  const pct = max > 0 ? Math.min(Math.round((value / max) * 100), 100) : 100
+  return (
+    <div style={{ background: '#f0ebe0', borderRadius: 6, height: 6 }}>
+      <div style={{ width: `${pct}%`, height: '100%', background: color, borderRadius: 6, transition: 'width 0.4s ease' }} />
+    </div>
+  )
+}
+
+function PhotoUploadModal({ profile, onClose, onDone }) {
+  const [preview, setPreview] = useState(profile.avatar_url || null)
+  const [file, setFile] = useState(null)
+  const [uploading, setUploading] = useState(false)
+
+  const handleSelect = (e) => {
+    const f = e.target.files[0]
+    if (!f) return
+    setFile(f)
+    setPreview(URL.createObjectURL(f))
+  }
+
+  const handleUpload = async () => {
+    if (!file) return
+    setUploading(true)
+    const ext = file.name.split('.').pop()
+    const filename = `avatars/${profile.id}-${Date.now()}.${ext}`
+    const { error: uploadError } = await supabase.storage
+      .from('family-media')
+      .upload(filename, file, { contentType: file.type, upsert: true })
+    if (uploadError) { console.error(uploadError); setUploading(false); return }
+    const { data } = supabase.storage.from('family-media').getPublicUrl(filename)
+    const publicUrl = data.publicUrl
+    await supabase.from('profiles').update({ avatar_url: publicUrl }).eq('id', profile.id)
+    setUploading(false)
+    onDone(publicUrl)
+  }
+
+  return (
+    <div style={{
+      position: 'fixed', inset: 0, background: 'rgba(10,22,40,0.85)',
+      zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center',
+      padding: 20, fontFamily: 'var(--font-heebo), sans-serif', direction: 'rtl'
+    }}>
+      <div style={{
+        background: 'white', borderRadius: 24, padding: 24,
+        width: '100%', maxWidth: 340, textAlign: 'center'
+      }}>
+        <div style={{ fontSize: 16, fontWeight: 700, color: NAVY, marginBottom: 20 }}>
+          תמונת פרופיל — {profile.name}
+        </div>
+
+        {/* Preview */}
+        <div style={{
+          width: 110, height: 110, borderRadius: '50%',
+          border: `3px solid ${GOLD}`, overflow: 'hidden',
+          margin: '0 auto 20px', background: '#e8d5a3',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontSize: 40, fontWeight: 700, color: NAVY
+        }}>
+          {preview
+            ? <img src={preview} alt="preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            : profile.name?.charAt(0)}
+        </div>
+
+        {/* Upload buttons */}
+        <input type="file" accept="image/*" capture="environment"
+          onChange={handleSelect} style={{ display: 'none' }} id="avatar-camera" />
+        <input type="file" accept="image/*"
+          onChange={handleSelect} style={{ display: 'none' }} id="avatar-gallery" />
+
+        <div style={{ display: 'flex', gap: 10, marginBottom: 16 }}>
+          <label htmlFor="avatar-camera" style={{
+            flex: 1, padding: '10px', background: '#f0ebe0',
+            borderRadius: 12, border: '1.5px dashed #c8bfb0',
+            cursor: 'pointer', fontSize: 13, fontWeight: 600, color: '#6b5e4e'
+          }}>📷 מצלמה</label>
+          <label htmlFor="avatar-gallery" style={{
+            flex: 1, padding: '10px', background: '#f0ebe0',
+            borderRadius: 12, border: '1.5px dashed #c8bfb0',
+            cursor: 'pointer', fontSize: 13, fontWeight: 600, color: '#6b5e4e'
+          }}>🖼️ גלריה</label>
+        </div>
+
+        <button onClick={handleUpload} disabled={!file || uploading} style={{
+          width: '100%', padding: '12px',
+          background: file ? GOLD : '#e0d8c8',
+          color: file ? NAVY : '#a09080',
+          border: 'none', borderRadius: 12, cursor: file ? 'pointer' : 'default',
+          fontWeight: 700, fontSize: 15, marginBottom: 10,
+          fontFamily: 'var(--font-heebo), sans-serif'
+        }}>
+          {uploading ? 'מעלה...' : 'שמור תמונה'}
+        </button>
+
+        <button onClick={onClose} style={{
+          width: '100%', padding: '10px', background: 'transparent',
+          border: 'none', cursor: 'pointer', color: '#a09080',
+          fontSize: 13, fontFamily: 'var(--font-heebo), sans-serif'
+        }}>ביטול</button>
+      </div>
+    </div>
+  )
+}
+
 export default function ProfilesPage() {
-  const [profiles, setProfiles] = useState([])
-  const [loading, setLoading] = useState(true)
+  const [profiles, setProfiles]           = useState([])
+  const [currentProfile, setCurrentProfile] = useState(null)
+  const [rewards, setRewards]             = useState([])
+  const [loading, setLoading]             = useState(true)
+  const [uploadTarget, setUploadTarget]   = useState(null)
   const router = useRouter()
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!session) router.push('/login')
-      else loadProfiles()
+      else loadData()
     })
   }, [])
 
-  const loadProfiles = async () => {
-    const { data } = await supabase
-      .from('profiles')
-      .select('*')
-      .order('created_at', { ascending: true })
-    if (data) setProfiles(data)
+  const loadData = async () => {
+    const profile = await getCurrentProfile()
+    if (!profile) { router.push('/login'); return }
+    setCurrentProfile(profile)
+
+    const [{ data: profileData }, { data: rewardData }] = await Promise.all([
+      supabase.from('profiles').select('*').eq('active', true).order('created_at'),
+      supabase.from('rewards').select('*').eq('is_active', true).order('points_required')
+    ])
+    if (profileData) setProfiles(profileData)
+    if (rewardData) setRewards(rewardData)
     setLoading(false)
   }
 
-  const getInitials = (name) => name.split(' ').map(n => n[0]).join('').toUpperCase()
+  const getNextReward = (points) => rewards.find(r => r.points_required > points)
 
-  const getLevelColor = (role) => role === 'parent' ? '#4285f4' : '#34a853'
+  const isParent = currentProfile?.role === 'parent'
+
+  const handlePhotoDone = (profileId, url) => {
+    setProfiles(prev => prev.map(p => p.id === profileId ? { ...p, avatar_url: url } : p))
+    setUploadTarget(null)
+  }
+
+  const parents  = profiles.filter(p => p.role === 'parent')
+  const children = profiles.filter(p => p.role === 'child').sort((a, b) => b.total_points - a.total_points)
+  const childColors = [GOLD, PURPLE, GREEN]
+
+  if (loading) return (
+    <div style={{
+      minHeight: '100vh', display: 'flex', alignItems: 'center',
+      justifyContent: 'center', background: CREAM,
+      fontFamily: 'var(--font-heebo), sans-serif'
+    }}>
+      <div style={{ textAlign: 'center' }}>
+        <div style={{ fontSize: 32, marginBottom: 8 }}>👨‍👩‍👧</div>
+        <div style={{ color: '#8a7a60', fontSize: 14 }}>טוענים פרופילים...</div>
+      </div>
+    </div>
+  )
 
   return (
-    <div style={{ maxWidth: '600px', margin: '0 auto', padding: '1rem', fontFamily: 'sans-serif' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-        <h1 style={{ fontSize: '1.5rem', margin: 0 }}>Family Profiles</h1>
-        <a href="/" style={{ color: '#666', textDecoration: 'none', fontSize: '0.9rem' }}>← Home</a>
-      </div>
+    <div style={{
+      width: '100%', maxWidth: 480, margin: '0 auto',
+      fontFamily: 'var(--font-heebo), sans-serif',
+      direction: 'rtl', background: CREAM,
+      minHeight: '100vh', paddingBottom: '5.5rem',
+      boxSizing: 'border-box', overflowX: 'hidden'
+    }}>
 
-      {loading && <p style={{ color: '#999', textAlign: 'center' }}>Loading...</p>}
-
-      {!loading && profiles.length === 0 && (
-        <div style={{ textAlign: 'center', padding: '2rem', color: '#999' }}>
-          <p>No profiles yet.</p>
-          <button
-            onClick={() => router.push('/profiles/new')}
-            style={{ marginTop: '1rem', padding: '10px 24px', background: '#4285f4', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer' }}
-          >
-            Add first family member
-          </button>
-        </div>
+      {uploadTarget && (
+        <PhotoUploadModal
+          profile={uploadTarget}
+          onClose={() => setUploadTarget(null)}
+          onDone={(url) => handlePhotoDone(uploadTarget.id, url)}
+        />
       )}
 
-      <div style={{ display: 'grid', gap: '1rem' }}>
-        {profiles.map(profile => (
-          <div key={profile.id} style={{
-            background: 'white',
-            border: '1px solid #eee',
-            borderRadius: '16px',
-            padding: '1.25rem',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '1rem',
-            cursor: 'pointer'
-          }}
-            onClick={() => router.push(`/profiles/${profile.id}`)}
-          >
-            <div style={{
-              width: '56px',
-              height: '56px',
-              borderRadius: '50%',
-              background: getLevelColor(profile.role),
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: 'white',
-              fontWeight: '700',
-              fontSize: '1.2rem',
-              flexShrink: 0,
-              overflow: 'hidden'
-            }}>
-              {profile.avatar_url
-                ? <img src={profile.avatar_url} alt={profile.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                : getInitials(profile.name)
-              }
-            </div>
-
-            <div style={{ flex: 1 }}>
-              <div style={{ fontWeight: '600', fontSize: '1.1rem' }}>{profile.name}</div>
-              <div style={{ color: '#888', fontSize: '0.85rem' }}>
-                {profile.role === 'parent' ? 'Parent' : `Level ${profile.level} · Age ${profile.age}`}
-              </div>
-            </div>
-
-            <div style={{ textAlign: 'right' }}>
-              <div style={{ fontWeight: '700', fontSize: '1.3rem', color: '#4285f4' }}>{profile.total_points}</div>
-              <div style={{ color: '#aaa', fontSize: '0.75rem' }}>points</div>
+      {/* Header */}
+      <div style={{
+        background: NAVY, padding: '20px 16px 24px',
+        borderRadius: '0 0 24px 24px', marginBottom: 16
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            <div style={{ fontSize: 22, fontWeight: 900, color: 'white' }}>👨‍👩‍👧 המשפחה</div>
+            <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginTop: 2 }}>
+              {profiles.length} בני משפחה
             </div>
           </div>
-        ))}
+          <a href="/" style={{ color: 'rgba(255,255,255,0.45)', textDecoration: 'none', fontSize: 13 }}>← בית</a>
+        </div>
       </div>
 
-      {profiles.length > 0 && (
-        <button
-          onClick={() => router.push('/profiles/new')}
-          style={{
-            width: '100%',
-            marginTop: '1rem',
-            padding: '12px',
-            background: 'white',
-            border: '2px dashed #ddd',
-            borderRadius: '12px',
-            color: '#888',
-            cursor: 'pointer',
-            fontSize: '0.95rem'
-          }}
-        >
-          + Add family member
-        </button>
-      )}
+      <div style={{ padding: '0 12px', boxSizing: 'border-box' }}>
+
+        {/* Children — big cards with points */}
+        {children.length > 0 && (
+          <>
+            <div style={{ fontSize: 12, fontWeight: 700, color: '#8a7a60', marginBottom: 10, letterSpacing: '0.05em' }}>
+              ילדים
+            </div>
+            {children.map((child, i) => {
+              const next = getNextReward(child.total_points)
+              const color = childColors[i] || GOLD
+              return (
+                <div key={child.id} style={{
+                  background: 'white', borderRadius: 20,
+                  border: '1px solid #e8e0d0', marginBottom: 12, overflow: 'hidden'
+                }}>
+                  {/* Top section — navy */}
+                  <div style={{ background: NAVY, padding: '16px 16px 20px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                      {/* Avatar with edit */}
+                      <div style={{ position: 'relative', flexShrink: 0 }}>
+                        <Avatar profile={child} size={64} />
+                        {isParent && (
+                          <button onClick={() => setUploadTarget(child)} style={{
+                            position: 'absolute', bottom: -2, right: -2,
+                            background: GOLD, border: '2px solid white',
+                            borderRadius: '50%', width: 24, height: 24,
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            cursor: 'pointer', fontSize: 11
+                          }}>📷</button>
+                        )}
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: 18, fontWeight: 900, color: 'white' }}>{child.name}</div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4 }}>
+                          <span style={{
+                            background: color, color: NAVY,
+                            fontSize: 11, fontWeight: 700,
+                            padding: '2px 10px', borderRadius: 20
+                          }}>רמה {child.level}</span>
+                          {child.age && <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>גיל {child.age}</span>}
+                        </div>
+                      </div>
+                      <div style={{ textAlign: 'center' }}>
+                        <div style={{ fontSize: 32, fontWeight: 900, color, lineHeight: 1 }}>{child.total_points}</div>
+                        <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.5)', fontWeight: 600 }}>נקודות</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Progress section */}
+                  <div style={{ padding: '14px 16px' }}>
+                    {next ? (
+                      <>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+                          <span style={{ fontSize: 12, color: '#8a7a60' }}>הפרס הבא</span>
+                          <span style={{ fontSize: 12, fontWeight: 700, color }}>
+                            עוד {next.points_required - child.total_points} נק׳
+                          </span>
+                        </div>
+                        <ProgressBar value={child.total_points} max={next.points_required} color={color} />
+                        <div style={{ fontSize: 11, color: '#a09080', marginTop: 4 }}>{next.title}</div>
+                      </>
+                    ) : (
+                      <div style={{ fontSize: 13, color: GREEN, fontWeight: 700, textAlign: 'center' }}>
+                        🏆 השיג את כל הפרסים!
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )
+            })}
+          </>
+        )}
+
+        {/* Parents — simpler cards */}
+        {parents.length > 0 && (
+          <>
+            <div style={{ fontSize: 12, fontWeight: 700, color: '#8a7a60', marginBottom: 10, marginTop: 4, letterSpacing: '0.05em' }}>
+              הורים
+            </div>
+            {parents.map(parent => (
+              <div key={parent.id} style={{
+                background: NAVY, borderRadius: 18,
+                border: '1px solid rgba(255,255,255,0.08)',
+                marginBottom: 10, padding: '14px 16px',
+                display: 'flex', alignItems: 'center', gap: 14
+              }}>
+                <div style={{ position: 'relative', flexShrink: 0 }}>
+                  <Avatar profile={parent} size={52} />
+                  {isParent && (
+                    <button onClick={() => setUploadTarget(parent)} style={{
+                      position: 'absolute', bottom: -2, right: -2,
+                      background: GOLD, border: '2px solid ' + NAVY,
+                      borderRadius: '50%', width: 22, height: 22,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      cursor: 'pointer', fontSize: 10
+                    }}>📷</button>
+                  )}
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 16, fontWeight: 700, color: 'white' }}>{parent.name}</div>
+                  <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)', marginTop: 2 }}>הורה</div>
+                </div>
+                <div style={{
+                  background: 'rgba(201,168,76,0.15)', borderRadius: 20,
+                  padding: '4px 12px', fontSize: 12, fontWeight: 700, color: GOLD
+                }}>
+                  מנהל
+                </div>
+              </div>
+            ))}
+          </>
+        )}
+
+      </div>
+
+      {/* Bottom nav */}
+      <div style={{
+        position: 'fixed', bottom: 0, left: 0, right: 0,
+        background: NAVY, borderTop: '1px solid rgba(255,255,255,0.08)',
+        display: 'flex', justifyContent: 'space-around',
+        padding: '10px 0 16px', zIndex: 100,
+        fontFamily: 'var(--font-heebo), sans-serif'
+      }}>
+        {[
+          { href: '/',           label: 'בית',    emoji: '🏠' },
+          { href: '/missions',   label: 'משימות', emoji: '🎯' },
+          { href: '/tazkir/new', label: 'תחקיר',  emoji: '📝', center: true },
+          { href: '/rewards',    label: 'פרסים',  emoji: '🏆' },
+          { href: '/feed',       label: 'פיד',    emoji: '📖' },
+        ].map(item => (
+          <a key={item.href} href={item.href} style={{
+            display: 'flex', flexDirection: 'column', alignItems: 'center',
+            textDecoration: 'none', gap: 2,
+            color: 'rgba(255,255,255,0.45)',
+            fontSize: 10, fontFamily: 'var(--font-heebo), sans-serif'
+          }}>
+            <span style={{
+              ...(item.center ? {
+                background: GOLD, borderRadius: '50%',
+                width: 44, height: 44, fontSize: 20,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                marginTop: -18
+              } : { fontSize: 20 })
+            }}>{item.emoji}</span>
+            {item.label}
+          </a>
+        ))}
+      </div>
     </div>
   )
 }
