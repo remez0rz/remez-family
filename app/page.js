@@ -3,6 +3,13 @@ import { useEffect, useState } from 'react'
 import { supabase } from './lib/supabase'
 import { useRouter } from 'next/navigation'
 
+const COLORS = {
+  missions: '#2d4a9e',
+  complete: '#1e8c52',
+  tazkir: '#c45000',
+  rewards: '#7b2d8b',
+}
+
 export default function HomePage() {
   const [profiles, setProfiles] = useState([])
   const [activeAssignments, setActiveAssignments] = useState([])
@@ -43,92 +50,93 @@ export default function HomePage() {
     router.push('/login')
   }
 
-  const getNextReward = (points) => {
-    return rewards.find(r => r.points_required > points)
+  const getNextReward = (points) => rewards.find(r => r.points_required > points)
+
+  const children = profiles
+    .filter(p => p.role === 'child')
+    .sort((a, b) => b.total_points - a.total_points)
+
+  const childColors = ['#2d4a9e', '#c45000', '#1e8c52']
+
+  const timeAgo = (dateStr) => {
+    const diff = Math.floor((Date.now() - new Date(dateStr)) / 86400000)
+    if (diff === 0) return 'היום'
+    if (diff === 1) return 'אתמול'
+    return `לפני ${diff} ימים`
   }
 
-  const children = profiles.filter(p => p.role === 'child')
-
   if (loading) return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'sans-serif' }}>
-      <p style={{ color: '#999' }}>Loading...</p>
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-heebo), sans-serif' }}>
+      <p style={{ color: '#8a7a60', fontSize: '1rem' }}>טוען...</p>
     </div>
   )
 
   return (
-    <div style={{ maxWidth: '600px', margin: '0 auto', padding: '1rem', fontFamily: 'sans-serif', paddingBottom: '5rem' }}>
+    <div style={{
+      maxWidth: '600px', margin: '0 auto', padding: '0',
+      fontFamily: 'var(--font-heebo), sans-serif',
+      paddingBottom: '5rem', direction: 'rtl',
+      minHeight: '100vh', background: '#f5f0e8'
+    }}>
 
       {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+      <div style={{ padding: '20px 18px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <div>
-          <h1 style={{ margin: 0, fontSize: '1.5rem', fontWeight: '700' }}>Remez Family HQ</h1>
-          <p style={{ margin: 0, color: '#888', fontSize: '0.85rem' }}>What are we doing today?</p>
+          <h1 style={{ margin: 0, fontSize: '1.7rem', fontWeight: 900, color: '#1a1208', lineHeight: 1.1 }}>משפחת רמז 🏡</h1>
+          <p style={{ margin: '3px 0 0', color: '#8a7a60', fontSize: '0.875rem' }}>מה עושים היום?</p>
         </div>
-        <button onClick={handleSignOut} style={{ padding: '6px 14px', border: '1px solid #ddd', borderRadius: '8px', cursor: 'pointer', background: 'white', color: '#666', fontSize: '0.85rem' }}>
-          Sign out
+        <button onClick={handleSignOut} style={{
+          padding: '5px 14px', border: '1px solid #e0d8c8', borderRadius: '20px',
+          cursor: 'pointer', background: 'white', color: '#8a7a60',
+          fontSize: '0.8rem', fontFamily: 'var(--font-heebo), sans-serif'
+        }}>
+          יציאה
         </button>
       </div>
 
-      {/* Primary actions */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginBottom: '1.5rem' }}>
-        <a href="/missions" style={{
-          display: 'block', padding: '1.25rem', background: '#4285f4', borderRadius: '14px',
-          color: 'white', textDecoration: 'none', textAlign: 'center'
-        }}>
-          <div style={{ fontSize: '1.75rem', marginBottom: '0.25rem' }}>🎯</div>
-          <div style={{ fontWeight: '600', fontSize: '0.95rem' }}>Choose Mission</div>
-          <div style={{ fontSize: '0.75rem', opacity: 0.85, marginTop: '0.15rem' }}>Pick something fun</div>
-        </a>
-
-        <a href="/missions/active" style={{
-          display: 'block', padding: '1.25rem', background: '#34a853', borderRadius: '14px',
-          color: 'white', textDecoration: 'none', textAlign: 'center'
-        }}>
-          <div style={{ fontSize: '1.75rem', marginBottom: '0.25rem' }}>✅</div>
-          <div style={{ fontWeight: '600', fontSize: '0.95rem' }}>Complete Mission</div>
-          <div style={{ fontSize: '0.75rem', opacity: 0.85, marginTop: '0.15rem' }}>
-            {activeAssignments.length > 0 ? `${activeAssignments.length} active` : 'None active'}
-          </div>
-        </a>
-
-        <a href="/tazkir/new" style={{
-          display: 'block', padding: '1.25rem', background: '#ff6d00', borderRadius: '14px',
-          color: 'white', textDecoration: 'none', textAlign: 'center'
-        }}>
-          <div style={{ fontSize: '1.75rem', marginBottom: '0.25rem' }}>📝</div>
-          <div style={{ fontWeight: '600', fontSize: '0.95rem' }}>תחקיר</div>
-          <div style={{ fontSize: '0.75rem', opacity: 0.85, marginTop: '0.15rem' }}>Save a memory</div>
-        </a>
-
-        <a href="/rewards" style={{
-          display: 'block', padding: '1.25rem', background: '#8e24aa', borderRadius: '14px',
-          color: 'white', textDecoration: 'none', textAlign: 'center'
-        }}>
-          <div style={{ fontSize: '1.75rem', marginBottom: '0.25rem' }}>🏆</div>
-          <div style={{ fontWeight: '600', fontSize: '0.95rem' }}>Rewards</div>
-          <div style={{ fontSize: '0.75rem', opacity: 0.85, marginTop: '0.15rem' }}>Points & prizes</div>
-        </a>
+      {/* Action grid */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', padding: '4px 18px 16px' }}>
+        {[
+          { href: '/missions', bg: COLORS.missions, icon: '🎯', title: 'בחר משימה', sub: 'בחר משהו כיפי' },
+          { href: '/missions/active', bg: COLORS.complete, icon: '✅', title: 'סיים משימה', sub: activeAssignments.length > 0 ? `${activeAssignments.length} פעילות` : 'אין פעילות' },
+          { href: '/tazkir/new', bg: COLORS.tazkir, icon: '📝', title: 'תחקיר', sub: 'שמור זיכרון' },
+          { href: '/rewards', bg: COLORS.rewards, icon: '🏆', title: 'פרסים', sub: 'נקודות ופרסים' },
+        ].map(item => (
+          <a key={item.href} href={item.href} style={{
+            display: 'block', padding: '16px 14px 14px', background: item.bg,
+            borderRadius: '18px', textDecoration: 'none'
+          }}>
+            <div style={{ fontSize: '1.75rem', marginBottom: '4px' }}>{item.icon}</div>
+            <div style={{ fontWeight: 700, fontSize: '0.95rem', color: 'white' }}>{item.title}</div>
+            <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.78)', marginTop: '2px' }}>{item.sub}</div>
+          </a>
+        ))}
       </div>
 
-      {/* Family points leaderboard */}
+      {/* Leaderboard */}
       {children.length > 0 && (
-        <div style={{ background: 'white', border: '1px solid #eee', borderRadius: '14px', padding: '1rem', marginBottom: '1rem' }}>
-          <div style={{ fontWeight: '600', marginBottom: '0.75rem', fontSize: '0.95rem' }}>⭐ Points leaderboard</div>
-          {children.sort((a, b) => b.total_points - a.total_points).map(child => {
+        <div style={{ margin: '0 18px 12px', background: 'white', borderRadius: '18px', padding: '14px 16px' }}>
+          <div style={{ fontWeight: 700, fontSize: '0.9rem', color: '#1a1208', marginBottom: '14px' }}>⭐ טבלת נקודות</div>
+          {children.map((child, i) => {
             const nextReward = getNextReward(child.total_points)
-            const progress = nextReward ? Math.round((child.total_points / nextReward.points_required) * 100) : 100
+            const progress = nextReward
+              ? Math.min(Math.round((child.total_points / nextReward.points_required) * 100), 100)
+              : 100
+            const color = childColors[i] || '#888'
             return (
-              <div key={child.id} style={{ marginBottom: '0.75rem' }} onClick={() => router.push(`/profiles/${child.id}`)} >
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
-                  <span style={{ fontWeight: '500', fontSize: '0.9rem' }}>{child.name}</span>
-                  <span style={{ fontWeight: '700', color: '#4285f4', fontSize: '0.9rem' }}>{child.total_points} pts</span>
+              <div key={child.id} style={{ marginBottom: i < children.length - 1 ? '14px' : 0 }}
+                onClick={() => router.push(`/profiles/${child.id}`)}
+                role="button" style={{ cursor: 'pointer', marginBottom: i < children.length - 1 ? '14px' : 0 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
+                  <span style={{ fontWeight: 600, fontSize: '0.9rem', color: '#1a1208' }}>{child.name}</span>
+                  <span style={{ fontWeight: 700, color, fontSize: '0.9rem' }}>{child.total_points} נק׳</span>
                 </div>
-                <div style={{ background: '#f0f0f0', borderRadius: '4px', height: '6px' }}>
-                  <div style={{ width: `${progress}%`, height: '100%', background: '#4285f4', borderRadius: '4px' }} />
+                <div style={{ background: '#f0ebe0', borderRadius: '6px', height: '8px' }}>
+                  <div style={{ width: `${progress}%`, height: '100%', background: color, borderRadius: '6px', transition: 'width 0.4s ease' }} />
                 </div>
                 {nextReward && (
-                  <div style={{ color: '#aaa', fontSize: '0.72rem', marginTop: '0.2rem' }}>
-                    {nextReward.points_required - child.total_points} pts until {nextReward.title}
+                  <div style={{ color: '#a09080', fontSize: '0.72rem', marginTop: '3px' }}>
+                    עוד {nextReward.points_required - child.total_points} נקודות עד {nextReward.title}
                   </div>
                 )}
               </div>
@@ -139,18 +147,23 @@ export default function HomePage() {
 
       {/* Active missions */}
       {activeAssignments.length > 0 && (
-        <div style={{ background: 'white', border: '1px solid #eee', borderRadius: '14px', padding: '1rem', marginBottom: '1rem' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
-            <div style={{ fontWeight: '600', fontSize: '0.95rem' }}>🎯 Active missions</div>
-            <a href="/missions/active" style={{ color: '#4285f4', fontSize: '0.8rem', textDecoration: 'none' }}>See all</a>
+        <div style={{ margin: '0 18px 12px', background: 'white', borderRadius: '18px', padding: '14px 16px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+            <div style={{ fontWeight: 700, fontSize: '0.9rem', color: '#1a1208' }}>🎯 משימות פעילות</div>
+            <a href="/missions/active" style={{ color: '#2d4a9e', fontSize: '0.8rem', textDecoration: 'none' }}>הכל ←</a>
           </div>
-          {activeAssignments.slice(0, 3).map(a => (
-            <div key={a.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+          {activeAssignments.slice(0, 3).map((a, i) => (
+            <div key={a.id} style={{
+              display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+              paddingBottom: i < 2 ? '10px' : 0,
+              borderBottom: i < 2 ? '1px solid #f5f0e8' : 'none',
+              marginBottom: i < 2 ? '10px' : 0
+            }}>
               <div>
-                <div style={{ fontSize: '0.875rem', fontWeight: '500' }}>{a.mission.title}</div>
-                <div style={{ fontSize: '0.75rem', color: '#888' }}>{a.member.name}</div>
+                <div style={{ fontSize: '0.875rem', fontWeight: 600, color: '#1a1208' }}>{a.mission.title}</div>
+                <div style={{ fontSize: '0.75rem', color: '#a09080' }}>{a.member.name}</div>
               </div>
-              <div style={{ color: '#4285f4', fontWeight: '600', fontSize: '0.85rem' }}>+{a.mission.points}</div>
+              <div style={{ fontWeight: 700, fontSize: '0.875rem', color: '#1e8c52' }}>+{a.mission.points}</div>
             </div>
           ))}
         </div>
@@ -158,18 +171,20 @@ export default function HomePage() {
 
       {/* Recent feed */}
       {recentFeed.length > 0 && (
-        <div style={{ background: 'white', border: '1px solid #eee', borderRadius: '14px', padding: '1rem', marginBottom: '1rem' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
-            <div style={{ fontWeight: '600', fontSize: '0.95rem' }}>📖 Recent memories</div>
-            <a href="/feed" style={{ color: '#4285f4', fontSize: '0.8rem', textDecoration: 'none' }}>See all</a>
+        <div style={{ margin: '0 18px 12px', background: 'white', borderRadius: '18px', padding: '14px 16px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+            <div style={{ fontWeight: 700, fontSize: '0.9rem', color: '#1a1208' }}>📖 זיכרונות אחרונים</div>
+            <a href="/feed" style={{ color: '#2d4a9e', fontSize: '0.8rem', textDecoration: 'none' }}>הכל ←</a>
           </div>
-          {recentFeed.map(post => (
-            <div key={post.id} style={{ marginBottom: '0.5rem', paddingBottom: '0.5rem', borderBottom: '1px solid #f5f5f5' }}>
-              <div style={{ fontSize: '0.875rem', fontWeight: '500' }}>{post.title}</div>
-              {post.content && <div style={{ fontSize: '0.75rem', color: '#888' }}>{post.content}</div>}
-              <div style={{ fontSize: '0.7rem', color: '#bbb', marginTop: '0.15rem' }}>
-                {new Date(post.created_at).toLocaleDateString()}
-              </div>
+          {recentFeed.map((post, i) => (
+            <div key={post.id} style={{
+              paddingBottom: i < recentFeed.length - 1 ? '10px' : 0,
+              borderBottom: i < recentFeed.length - 1 ? '1px solid #f5f0e8' : 'none',
+              marginBottom: i < recentFeed.length - 1 ? '10px' : 0
+            }}>
+              <div style={{ fontSize: '0.875rem', fontWeight: 600, color: '#1a1208' }}>{post.title}</div>
+              {post.content && <div style={{ fontSize: '0.75rem', color: '#a09080', marginTop: '2px' }}>{post.content}</div>}
+              <div style={{ fontSize: '0.7rem', color: '#b0a090', marginTop: '3px' }}>{timeAgo(post.created_at)}</div>
             </div>
           ))}
         </div>
@@ -178,20 +193,21 @@ export default function HomePage() {
       {/* Bottom nav */}
       <div style={{
         position: 'fixed', bottom: 0, left: 0, right: 0,
-        background: 'white', borderTop: '1px solid #eee',
+        background: 'white', borderTop: '1px solid #e8e0d0',
         display: 'flex', justifyContent: 'space-around',
-        padding: '0.75rem 0', zIndex: 100
+        padding: '10px 0 14px', zIndex: 100,
+        fontFamily: 'var(--font-heebo), sans-serif'
       }}>
         {[
-          { href: '/', label: 'Home', emoji: '🏠' },
-          { href: '/missions', label: 'Missions', emoji: '🎯' },
-          { href: '/profiles', label: 'Family', emoji: '👨‍👩‍👧' },
-          { href: '/rewards', label: 'Rewards', emoji: '🏆' },
-          { href: '/feed', label: 'Feed', emoji: '📖' },
+          { href: '/', label: 'בית', emoji: '🏠' },
+          { href: '/missions', label: 'משימות', emoji: '🎯' },
+          { href: '/profiles', label: 'משפחה', emoji: '👨‍👩‍👧' },
+          { href: '/rewards', label: 'פרסים', emoji: '🏆' },
+          { href: '/feed', label: 'פיד', emoji: '📖' },
         ].map(item => (
           <a key={item.href} href={item.href} style={{
             display: 'flex', flexDirection: 'column', alignItems: 'center',
-            textDecoration: 'none', color: '#666', fontSize: '0.7rem', gap: '2px'
+            textDecoration: 'none', color: '#a09080', fontSize: '0.68rem', gap: '2px'
           }}>
             <span style={{ fontSize: '1.3rem' }}>{item.emoji}</span>
             {item.label}
