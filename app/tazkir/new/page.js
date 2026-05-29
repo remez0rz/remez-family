@@ -89,7 +89,6 @@ const textareaStyle = {
 function MediaPreview({ files, onRemove, onSetCover }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-      {/* Cover — first file, large */}
       {files.length > 0 && (
         <div style={{ position: 'relative' }}>
           {files[0].type.startsWith('video/') ? (
@@ -120,8 +119,6 @@ function MediaPreview({ files, onRemove, onSetCover }) {
           }}>✕</button>
         </div>
       )}
-
-      {/* Rest — thumbnail row */}
       {files.length > 1 && (
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           {files.slice(1).map((f, i) => (
@@ -223,7 +220,6 @@ function TazkirForm() {
       name: file.name,
     }))
     setMediaFiles(prev => [...prev, ...newFiles])
-    // reset input so same file can be re-added if needed
     e.target.value = ''
   }
 
@@ -332,7 +328,6 @@ function TazkirForm() {
       boxSizing: 'border-box', overflowX: 'hidden'
     }}>
 
-      {/* Header */}
       <div style={{
         background: NAVY, padding: '20px 16px 24px',
         borderRadius: '0 0 24px 24px', marginBottom: 16
@@ -348,7 +343,6 @@ function TazkirForm() {
 
       <div style={{ padding: '0 12px', boxSizing: 'border-box' }}>
 
-        {/* Mission name */}
         <Field emoji="🎯" label="שם המבצע" sublabel="איך נקרא למה שעשיתם?">
           <input
             value={form.title}
@@ -358,7 +352,6 @@ function TazkirForm() {
           />
         </Field>
 
-        {/* Participants */}
         <Field emoji="👥" label="צוות המבצע" sublabel="מי היה שם?">
           <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
             {profiles.map(p => (
@@ -376,13 +369,11 @@ function TazkirForm() {
           </div>
         </Field>
 
-        {/* Media upload */}
         <Field emoji="📸" label="ראיות מהשטח" sublabel="תמונות וסרטונים מהמבצע">
           <input
             type="file"
             accept="image/*,video/*"
             capture="environment"
-            multiple
             onChange={handleMediaSelect}
             style={{ display: 'none' }}
             id="media-camera"
@@ -432,7 +423,6 @@ function TazkirForm() {
           )}
         </Field>
 
-        {/* What happened */}
         <Field emoji="📖" label="מה קרה?" sublabel="ספרו את הסיפור">
           <textarea
             value={form.what_happened}
@@ -442,7 +432,6 @@ function TazkirForm() {
           />
         </Field>
 
-        {/* Best moment */}
         <Field emoji="🌟" label="רגע השיא" sublabel="הרגע הכי טוב">
           <input
             value={form.best_moment}
@@ -452,7 +441,6 @@ function TazkirForm() {
           />
         </Field>
 
-        {/* Funny moment */}
         <Field emoji="😂" label="תקלה מצחיקה" sublabel="מה גרם לכולם לצחוק?">
           <input
             value={form.funny_moment}
@@ -462,7 +450,6 @@ function TazkirForm() {
           />
         </Field>
 
-        {/* Quote */}
         <Field emoji="💬" label="משפט שחייבים לזכור" sublabel="ציטוט מהמבצע">
           <input
             value={form.quote}
@@ -472,12 +459,10 @@ function TazkirForm() {
           />
         </Field>
 
-        {/* Rating */}
         <Field emoji="⭐" label="כמה כוכבים קיבל המבצע?">
           <StarRating value={form.rating} onChange={v => setForm(f => ({ ...f, rating: v }))} />
         </Field>
 
-        {/* Would repeat */}
         <Field emoji="🔁" label="האם נחזור על זה?">
           <div style={{ display: 'flex', gap: 10 }}>
             {[
@@ -501,7 +486,6 @@ function TazkirForm() {
           </div>
         </Field>
 
-        {/* Submit */}
         <button
           onClick={handleSubmit}
           disabled={loading || !form.title.trim()}
