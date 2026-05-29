@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react'
 import { supabase, getCurrentProfile } from '../lib/supabase'
 import { useRouter } from 'next/navigation'
+import BottomNav from '../components/BottomNav'
 
 const NAVY = '#0a1628'
 const GOLD = '#c9a84c'
@@ -10,9 +11,9 @@ const GREEN = '#1a6b3c'
 const PURPLE = '#5c3d8f'
 
 const TYPE_CONFIG = {
-  experience: { label: 'חוויה',    bg: '#fff8e1', color: '#9a6500' },
-  gift:       { label: 'מתנה',     bg: '#fce4ec', color: '#ad1457' },
-  privilege:  { label: 'פריבילגיה', bg: '#ede7f6', color: PURPLE },
+  experience: { label: 'חוויה משפחתית', bg: '#fff8e1', color: '#9a6500' },
+  gift:       { label: 'פינוק',          bg: '#fce4ec', color: '#ad1457' },
+  privilege:  { label: 'בונוס מיוחד',   bg: '#ede7f6', color: PURPLE },
 }
 
 const REWARD_GRADIENTS = [
@@ -52,7 +53,7 @@ function Avatar({ profile, size = 44, selected = false, onClick }) {
   )
 }
 
-function RewardCard({ reward, index, currentPoints, isParent, onClaim, onEdit }) {
+function ExperienceCard({ reward, index, currentPoints, isParent, onClaim, onEdit }) {
   const unlocked  = currentPoints >= reward.points_required
   const progress  = Math.min(Math.round((currentPoints / reward.points_required) * 100), 100)
   const remaining = reward.points_required - currentPoints
@@ -74,54 +75,35 @@ function RewardCard({ reward, index, currentPoints, isParent, onClaim, onEdit })
         display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between',
         minHeight: 110, position: 'relative'
       }}>
-        {/* Overlay for readability */}
         {!reward.image_url && (
-          <div style={{
-            position: 'absolute', inset: 0,
-            background: 'rgba(0,0,0,0.15)'
-          }} />
+          <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.15)' }} />
         )}
         {reward.image_url && (
-          <div style={{
-            position: 'absolute', inset: 0,
-            background: 'linear-gradient(to top, rgba(0,0,0,0.6), transparent)'
-          }} />
+          <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.6), transparent)' }} />
         )}
 
-        {/* Big emoji */}
-        <div style={{
-          fontSize: 52, position: 'relative', zIndex: 1,
-          filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))'
-        }}>
-          {reward.emoji || '🏆'}
+        <div style={{ fontSize: 52, position: 'relative', zIndex: 1, filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))' }}>
+          {reward.emoji || '✨'}
         </div>
 
-        {/* Points badge */}
-        <div style={{
-          position: 'relative', zIndex: 1, textAlign: 'center'
-        }}>
+        <div style={{ position: 'relative', zIndex: 1, textAlign: 'center' }}>
           <div style={{
             background: unlocked ? GOLD : 'rgba(255,255,255,0.15)',
-            borderRadius: 14, padding: '8px 14px',
-            backdropFilter: 'blur(4px)'
+            borderRadius: 14, padding: '8px 14px', backdropFilter: 'blur(4px)'
           }}>
-            <div style={{
-              fontSize: 24, fontWeight: 900,
-              color: unlocked ? NAVY : 'white', lineHeight: 1
-            }}>
+            <div style={{ fontSize: 24, fontWeight: 900, color: unlocked ? NAVY : 'white', lineHeight: 1 }}>
               {reward.points_required}
             </div>
-            <div style={{
-              fontSize: 10, fontWeight: 700,
-              color: unlocked ? NAVY : 'rgba(255,255,255,0.8)'
-            }}>נקודות</div>
+            <div style={{ fontSize: 10, fontWeight: 700, color: unlocked ? NAVY : 'rgba(255,255,255,0.8)' }}>
+              נק׳ לפתיחה
+            </div>
           </div>
           {unlocked && (
             <div style={{
               marginTop: 4, fontSize: 11, fontWeight: 700,
               color: GOLD, background: 'rgba(0,0,0,0.4)',
               borderRadius: 10, padding: '2px 8px'
-            }}>✓ זמין!</div>
+            }}>נפתח! ✨</div>
           )}
         </div>
       </div>
@@ -154,7 +136,6 @@ function RewardCard({ reward, index, currentPoints, isParent, onClaim, onEdit })
           </div>
         </div>
 
-        {/* Progress bar */}
         <div style={{ background: '#f0ebe0', borderRadius: 6, height: 7, marginBottom: 6 }}>
           <div style={{
             width: `${progress}%`, height: '100%',
@@ -165,7 +146,7 @@ function RewardCard({ reward, index, currentPoints, isParent, onClaim, onEdit })
 
         {!unlocked && (
           <div style={{ fontSize: 11, color: '#a09080', marginBottom: 8 }}>
-            עוד {remaining} נקודות · {progress}% מהדרך
+            עוד {remaining} נקודות לפתיחה · {progress}% מהדרך
           </div>
         )}
 
@@ -176,7 +157,7 @@ function RewardCard({ reward, index, currentPoints, isParent, onClaim, onEdit })
             border: 'none', borderRadius: 12, cursor: 'pointer',
             fontWeight: 700, fontSize: 14, marginTop: 4,
             fontFamily: 'var(--font-heebo), sans-serif'
-          }}>🏆 מממש את הפרס!</button>
+          }}>אני רוצה לפתוח את זה ✨</button>
         )}
 
         {unlocked && isParent && (
@@ -184,23 +165,23 @@ function RewardCard({ reward, index, currentPoints, isParent, onClaim, onEdit })
             textAlign: 'center', padding: '8px',
             background: '#edf7f1', borderRadius: 10,
             color: GREEN, fontWeight: 700, fontSize: 13, marginTop: 4
-          }}>✓ ניתן לממש</div>
+          }}>החוויה פתוחה ✓</div>
         )}
       </div>
     </div>
   )
 }
 
-function RewardFormModal({ reward, onClose, onSaved }) {
+function ExperienceFormModal({ reward, onClose, onSaved }) {
   const isNew = !reward?.id
   const [form, setForm] = useState({
-    title:           reward?.title       || '',
-    description:     reward?.description || '',
+    title:           reward?.title           || '',
+    description:     reward?.description     || '',
     points_required: reward?.points_required || 100,
-    type:            reward?.type        || 'experience',
-    emoji:           reward?.emoji       || '⭐',
-    image_url:       reward?.image_url   || '',
-    is_active:       reward?.is_active   ?? true,
+    type:            reward?.type            || 'experience',
+    emoji:           reward?.emoji           || '✨',
+    image_url:       reward?.image_url       || '',
+    is_active:       reward?.is_active       ?? true,
   })
   const [saving, setSaving] = useState(false)
 
@@ -242,28 +223,29 @@ function RewardFormModal({ reward, onClose, onSaved }) {
       }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
           <div style={{ fontSize: 18, fontWeight: 900, color: NAVY }}>
-            {isNew ? '+ פרס חדש' : '✏️ עריכת פרס'}
+            {isNew ? '+ חוויה חדשה' : '✏️ עריכת חוויה'}
           </div>
           <button onClick={onClose} style={{
-            background: 'none', border: 'none', fontSize: 20,
-            cursor: 'pointer', color: '#a09080'
+            background: 'none', border: 'none', fontSize: 20, cursor: 'pointer', color: '#a09080'
           }}>✕</button>
         </div>
 
-        <label style={labelStyle}>שם הפרס</label>
-        <input value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
-          placeholder="למשל: טיול לגלידה" style={inputStyle} />
+        <label style={labelStyle}>שם החוויה</label>
+        <input value={form.title}
+          onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
+          placeholder="למשל: גלידה משפחתית" style={inputStyle} />
 
-        <label style={labelStyle}>תיאור</label>
-        <input value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
-          placeholder="פרטים על הפרס..." style={inputStyle} />
+        <label style={labelStyle}>תיאור קצר</label>
+        <input value={form.description}
+          onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
+          placeholder="מה מקבלים כשפותחים את החוויה?" style={inputStyle} />
 
-        <label style={labelStyle}>מספר נקודות נדרש</label>
+        <label style={labelStyle}>כמה נקודות צריך כדי לפתוח?</label>
         <input type="number" value={form.points_required}
           onChange={e => setForm(f => ({ ...f, points_required: parseInt(e.target.value) || 0 }))}
           style={{ ...inputStyle, width: 120 }} />
 
-        <label style={labelStyle}>סוג</label>
+        <label style={labelStyle}>סוג החוויה</label>
         <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
           {Object.entries(TYPE_CONFIG).map(([key, val]) => (
             <button key={key} onClick={() => setForm(f => ({ ...f, type: key }))} style={{
@@ -276,37 +258,42 @@ function RewardFormModal({ reward, onClose, onSaved }) {
           ))}
         </div>
 
-        <label style={labelStyle}>אמוג׳י</label>
-        <input value={form.emoji} onChange={e => setForm(f => ({ ...f, emoji: e.target.value }))}
-          placeholder="🏆" style={{ ...inputStyle, width: 80, textAlign: 'center', fontSize: 24 }} />
+        <label style={labelStyle}>אייקון</label>
+        <input value={form.emoji}
+          onChange={e => setForm(f => ({ ...f, emoji: e.target.value }))}
+          placeholder="✨" style={{ ...inputStyle, width: 80, textAlign: 'center', fontSize: 24 }} />
 
         <label style={labelStyle}>קישור לתמונה (לא חובה)</label>
-        <input value={form.image_url} onChange={e => setForm(f => ({ ...f, image_url: e.target.value }))}
+        <input value={form.image_url}
+          onChange={e => setForm(f => ({ ...f, image_url: e.target.value }))}
           placeholder="https://..." style={inputStyle} />
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
           <input type="checkbox" checked={form.is_active}
             onChange={e => setForm(f => ({ ...f, is_active: e.target.checked }))}
             id="is_active" />
-          <label htmlFor="is_active" style={{ fontSize: 13, color: NAVY, fontWeight: 600 }}>פרס פעיל</label>
+          <label htmlFor="is_active" style={{ fontSize: 13, color: NAVY, fontWeight: 600 }}>
+            חוויה פעילה
+          </label>
         </div>
 
         <button onClick={handleSave} disabled={saving || !form.title.trim()} style={{
           width: '100%', padding: '14px',
           background: form.title.trim() ? GOLD : '#e0d8c8',
           color: form.title.trim() ? NAVY : '#a09080',
-          border: 'none', borderRadius: 14, cursor: form.title.trim() ? 'pointer' : 'default',
+          border: 'none', borderRadius: 14,
+          cursor: form.title.trim() ? 'pointer' : 'default',
           fontWeight: 700, fontSize: 16,
           fontFamily: 'var(--font-heebo), sans-serif'
         }}>
-          {saving ? 'שומר...' : isNew ? '+ הוסף פרס' : '💾 שמור שינויים'}
+          {saving ? 'שומר...' : isNew ? '+ הוסף חוויה' : 'שמור חוויה'}
         </button>
       </div>
     </div>
   )
 }
 
-function ClaimModal({ reward, profile, onClose, onClaimed }) {
+function UnlockModal({ reward, profile, onClose, onClaimed }) {
   const [claiming, setClaiming] = useState(false)
 
   const handleClaim = async () => {
@@ -330,34 +317,34 @@ function ClaimModal({ reward, profile, onClose, onClaimed }) {
         maxWidth: 340, width: '100%', textAlign: 'center',
         border: `1px solid ${GOLD}40`
       }}>
-        <div style={{ fontSize: 56, marginBottom: 12 }}>{reward.emoji || '🏆'}</div>
+        <div style={{ fontSize: 56, marginBottom: 12 }}>{reward.emoji || '✨'}</div>
         <div style={{ fontSize: 20, fontWeight: 900, color: 'white', marginBottom: 8 }}>{reward.title}</div>
         <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.55)', marginBottom: 6 }}>
-          {profile.name} רוצה לממש את הפרס הזה
+          {profile.name} רוצה לפתוח את החוויה הזאת
         </div>
         <div style={{
           background: 'rgba(201,168,76,0.15)', borderRadius: 12,
           padding: '10px 16px', marginBottom: 24,
           fontSize: 14, color: GOLD, fontWeight: 700
-        }}>עולה {reward.points_required} נקודות</div>
+        }}>נדרשות {reward.points_required} נקודות</div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           <button onClick={handleClaim} disabled={claiming} style={{
             padding: '13px', background: GOLD, border: 'none',
             borderRadius: 14, cursor: 'pointer', fontWeight: 700,
             fontSize: 15, color: NAVY, fontFamily: 'var(--font-heebo), sans-serif'
-          }}>{claiming ? 'שולח...' : '🙌 אני רוצה את הפרס!'}</button>
+          }}>{claiming ? 'שולח...' : 'כן, בא לי לפתוח ✨'}</button>
           <button onClick={onClose} style={{
             padding: '11px', background: 'transparent', border: 'none',
             cursor: 'pointer', fontSize: 13, color: 'rgba(255,255,255,0.4)',
             fontFamily: 'var(--font-heebo), sans-serif'
-          }}>ביטול</button>
+          }}>אולי אחר כך</button>
         </div>
       </div>
     </div>
   )
 }
 
-export default function RewardsPage() {
+export default function ExperiencesPage() {
   const [rewards, setRewards]               = useState([])
   const [profiles, setProfiles]             = useState([])
   const [currentProfile, setCurrentProfile] = useState(null)
@@ -401,7 +388,7 @@ export default function RewardsPage() {
   const handleClaimed = () => {
     setClaimTarget(null)
     setClaimed(true)
-    setTimeout(() => { setClaimed(false); loadData() }, 2000)
+    setTimeout(() => { setClaimed(false); loadData() }, 2500)
   }
 
   const handleSaved = () => {
@@ -423,8 +410,8 @@ export default function RewardsPage() {
       fontFamily: 'var(--font-heebo), sans-serif'
     }}>
       <div style={{ textAlign: 'center' }}>
-        <div style={{ fontSize: 32, marginBottom: 8 }}>🏆</div>
-        <div style={{ color: '#8a7a60', fontSize: 14 }}>טוענים פרסים...</div>
+        <div style={{ fontSize: 32, marginBottom: 8 }}>✨</div>
+        <div style={{ color: '#8a7a60', fontSize: 14 }}>טוענים חוויות...</div>
       </div>
     </div>
   )
@@ -439,7 +426,7 @@ export default function RewardsPage() {
     }}>
 
       {claimTarget && (
-        <ClaimModal
+        <UnlockModal
           reward={claimTarget} profile={selectedMember}
           onClose={() => setClaimTarget(null)}
           onClaimed={handleClaimed}
@@ -447,7 +434,7 @@ export default function RewardsPage() {
       )}
 
       {(editTarget || showNewForm) && (
-        <RewardFormModal
+        <ExperienceFormModal
           reward={editTarget || null}
           onClose={() => { setEditTarget(null); setShowNewForm(false) }}
           onSaved={handleSaved}
@@ -463,8 +450,8 @@ export default function RewardsPage() {
           fontFamily: 'var(--font-heebo), sans-serif', direction: 'rtl'
         }}>
           <div style={{ fontSize: 56 }}>🎉</div>
-          <div style={{ fontSize: 22, fontWeight: 900, color: 'white' }}>הבקשה נשלחה!</div>
-          <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.55)' }}>ההורים יאשרו בקרוב</div>
+          <div style={{ fontSize: 22, fontWeight: 900, color: 'white' }}>איזה כיף! הבקשה נשלחה</div>
+          <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.55)' }}>מחכים לאישור ההורים</div>
         </div>
       )}
 
@@ -475,9 +462,9 @@ export default function RewardsPage() {
       }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
           <div>
-            <div style={{ fontSize: 22, fontWeight: 900, color: 'white' }}>🏆 פרסים</div>
+            <div style={{ fontSize: 22, fontWeight: 900, color: 'white' }}>✨ נקודות וחוויות</div>
             <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginTop: 2 }}>
-              {isParent ? 'מעקב וניהול פרסים' : 'הפרסים שלי'}
+              {isParent ? 'ניהול חוויות ונקודות' : 'הנקודות והחוויות שלי'}
             </div>
           </div>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
@@ -487,7 +474,7 @@ export default function RewardsPage() {
                 borderRadius: 20, padding: '7px 14px',
                 fontWeight: 700, fontSize: 13, cursor: 'pointer',
                 fontFamily: 'var(--font-heebo), sans-serif'
-              }}>+ פרס</button>
+              }}>+ חוויה</button>
             )}
             <a href="/" style={{ color: 'rgba(255,255,255,0.45)', textDecoration: 'none', fontSize: 13 }}>← בית</a>
           </div>
@@ -523,20 +510,20 @@ export default function RewardsPage() {
               <Avatar profile={selectedMember} size={56} />
             </div>
             <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginBottom: 4 }}>
-              הנקודות של {selectedMember.name}
+              נקודות שצבר/ה {selectedMember.name}
             </div>
             <div style={{ fontSize: 48, fontWeight: 900, color: GOLD, lineHeight: 1, marginBottom: 4 }}>
               {currentPoints}
             </div>
             <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)' }}>
-              {unlockedCount} מתוך {rewards.length} פרסים זמינים
+              {unlockedCount} מתוך {rewards.length} חוויות פתוחות
             </div>
             {nextReward && (
               <div style={{ marginTop: 12 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-                  <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)' }}>הפרס הבא</span>
+                  <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)' }}>החוויה הבאה בדרך</span>
                   <span style={{ fontSize: 11, color: GOLD, fontWeight: 700 }}>
-                    עוד {nextReward.points_required - currentPoints} נק׳
+                    עוד {nextReward.points_required - currentPoints} נקודות לפתיחה
                   </span>
                 </div>
                 <div style={{ background: 'rgba(255,255,255,0.1)', borderRadius: 6, height: 7 }}>
@@ -548,17 +535,20 @@ export default function RewardsPage() {
                 <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginTop: 4 }}>
                   {nextReward.title}
                 </div>
+                <div style={{ fontSize: 11, color: GOLD, marginTop: 2 }}>
+                  כל נקודה מקרבת אותך לשם ✨
+                </div>
               </div>
             )}
           </div>
         )}
 
         <div style={{ fontSize: 12, color: '#8a7a60', fontWeight: 600, marginBottom: 12 }}>
-          {rewards.length} פרסים · {unlockedCount} זמינים
+          {rewards.length} חוויות · {unlockedCount} פתוחות עכשיו
         </div>
 
         {rewards.map((reward, i) => (
-          <RewardCard
+          <ExperienceCard
             key={reward.id}
             reward={reward}
             index={i}
@@ -571,39 +561,7 @@ export default function RewardsPage() {
 
       </div>
 
-      {/* Bottom nav */}
-      <div style={{
-        position: 'fixed', bottom: 0, left: 0, right: 0,
-        background: NAVY, borderTop: '1px solid rgba(255,255,255,0.08)',
-        display: 'flex', justifyContent: 'space-around',
-        padding: '10px 0 16px', zIndex: 100,
-        fontFamily: 'var(--font-heebo), sans-serif'
-      }}>
-        {[
-          { href: '/',           label: 'בית',    emoji: '🏠' },
-          { href: '/missions',   label: 'משימות', emoji: '🎯' },
-          { href: '/tazkir/new', label: 'תחקיר',  emoji: '📝', center: true },
-          { href: '/rewards',    label: 'פרסים',  emoji: '🏆', active: true },
-          { href: '/feed',       label: 'פיד',    emoji: '📖' },
-        ].map(item => (
-          <a key={item.href} href={item.href} style={{
-            display: 'flex', flexDirection: 'column', alignItems: 'center',
-            textDecoration: 'none', gap: 2,
-            color: item.active ? GOLD : 'rgba(255,255,255,0.45)',
-            fontSize: 10, fontFamily: 'var(--font-heebo), sans-serif'
-          }}>
-            <span style={{
-              ...(item.center ? {
-                background: GOLD, borderRadius: '50%',
-                width: 44, height: 44, fontSize: 20,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                marginTop: -18
-              } : { fontSize: 20 })
-            }}>{item.emoji}</span>
-            {item.label}
-          </a>
-        ))}
-      </div>
+      <BottomNav />
     </div>
   )
 }

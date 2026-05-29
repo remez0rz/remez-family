@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react'
 import { supabase, getCurrentProfile } from './lib/supabase'
 import { useRouter } from 'next/navigation'
+import BottomNav from './components/BottomNav'
 
 const NAVY = '#0a1628'
 const GOLD = '#c9a84c'
@@ -10,17 +11,16 @@ const GREEN = '#1a6b3c'
 const PURPLE = '#5c3d8f'
 
 const REACTIONS = [
-  { type: 'proud', emoji: '❤️', label: 'גאים בך' },
-  { type: 'fire', emoji: '🔥', label: 'אלוף' },
-  { type: 'clap', emoji: '👏', label: 'כל הכבוד' },
-  { type: 'star', emoji: '⭐', label: 'כוכב' },
-  { type: 'trophy', emoji: '🏆', label: 'ניצחון' },
-  { type: 'wow', emoji: '🤯', label: 'וואו' },
+  { type: 'proud',  emoji: '❤️' },
+  { type: 'fire',   emoji: '🔥' },
+  { type: 'clap',   emoji: '👏' },
+  { type: 'star',   emoji: '⭐' },
+  { type: 'trophy', emoji: '🏆' },
+  { type: 'wow',    emoji: '🤯' },
 ]
 
 function Avatar({ profile, size = 40 }) {
   const [imgError, setImgError] = useState(false)
-  const initials = profile?.name?.charAt(0) || '?'
   return (
     <div style={{
       width: size, height: size, borderRadius: '50%',
@@ -29,10 +29,10 @@ function Avatar({ profile, size = 40 }) {
       justifyContent: 'center', fontSize: size * 0.38, fontWeight: 700, color: NAVY
     }}>
       {profile?.avatar_url && !imgError
-        ? <img src={profile.avatar_url} alt={profile.name}
+        ? <img src={profile.avatar_url} alt={profile?.name}
             onError={() => setImgError(true)}
             style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-        : initials}
+        : profile?.name?.charAt(0)}
     </div>
   )
 }
@@ -68,12 +68,12 @@ function SectionHeader({ title, href, label = 'הכל' }) {
 
 export default function HomePage() {
   const [currentProfile, setCurrentProfile] = useState(null)
-  const [profiles, setProfiles] = useState([])
+  const [profiles, setProfiles]             = useState([])
   const [activeAssignments, setActiveAssignments] = useState([])
-  const [recentFeed, setRecentFeed] = useState([])
-  const [rewards, setRewards] = useState([])
-  const [reactions, setReactions] = useState({})
-  const [loading, setLoading] = useState(true)
+  const [recentFeed, setRecentFeed]         = useState([])
+  const [rewards, setRewards]               = useState([])
+  const [reactions, setReactions]           = useState({})
+  const [loading, setLoading]               = useState(true)
   const router = useRouter()
 
   useEffect(() => {
@@ -112,9 +112,7 @@ export default function HomePage() {
     if (feed?.length) {
       const postIds = feed.map(p => p.id)
       const { data: reactionData } = await supabase
-        .from('reactions')
-        .select('*')
-        .in('feed_post_id', postIds)
+        .from('reactions').select('*').in('feed_post_id', postIds)
       if (reactionData) {
         const grouped = {}
         reactionData.forEach(r => {
@@ -132,16 +130,11 @@ export default function HomePage() {
   const handleReaction = async (postId, type) => {
     if (!currentProfile) return
     await supabase.from('reactions').upsert({
-      feed_post_id: postId,
-      member_id: currentProfile.id,
-      type
+      feed_post_id: postId, member_id: currentProfile.id, type
     }, { onConflict: 'feed_post_id,member_id,type' })
     setReactions(prev => ({
       ...prev,
-      [postId]: {
-        ...prev[postId],
-        [type]: ((prev[postId]?.[type]) || 0) + 1
-      }
+      [postId]: { ...prev[postId], [type]: ((prev[postId]?.[type]) || 0) + 1 }
     }))
   }
 
@@ -178,8 +171,10 @@ export default function HomePage() {
 
   return (
     <div style={{
-      maxWidth: 480, margin: '0 auto', fontFamily: 'var(--font-heebo), sans-serif',
-      direction: 'rtl', background: CREAM, minHeight: '100vh', paddingBottom: '5.5rem'
+      maxWidth: 480, margin: '0 auto',
+      fontFamily: 'var(--font-heebo), sans-serif',
+      direction: 'rtl', background: CREAM,
+      minHeight: '100vh', paddingBottom: '5.5rem'
     }}>
 
       {/* Header */}
@@ -190,16 +185,16 @@ export default function HomePage() {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
           <div>
             <div style={{ fontSize: 22, fontWeight: 900, color: 'white', lineHeight: 1.1 }}>
-              משפחת רמז
+              משפחת רמז 🏡
             </div>
             <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.55)', marginTop: 2 }}>
               {isParent ? 'מה עושים היום?' : `שלום ${currentProfile?.name} 👋`}
             </div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-<a href="/profiles" style={{ textDecoration: 'none' }}>
-  <Avatar profile={currentProfile} size={42} />
-</a>
+            <a href="/profiles" style={{ textDecoration: 'none' }}>
+              <Avatar profile={currentProfile} size={42} />
+            </a>
             <button onClick={handleSignOut} style={{
               background: 'transparent', border: '1px solid rgba(255,255,255,0.2)',
               borderRadius: 20, color: 'rgba(255,255,255,0.6)', fontSize: 11,
@@ -208,7 +203,7 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* Current user points if child */}
+        {/* Child points widget */}
         {!isParent && currentProfile && (() => {
           const next = getNextReward(currentProfile.total_points)
           return (
@@ -219,7 +214,7 @@ export default function HomePage() {
               </div>
               <ProgressBar value={currentProfile.total_points} max={next?.points_required || currentProfile.total_points} color={GOLD} />
               {next && <div style={{ color: 'rgba(255,255,255,0.45)', fontSize: 11, marginTop: 5 }}>
-                עוד {next.points_required - currentProfile.total_points} נקודות עד {next.title}
+                עוד {next.points_required - currentProfile.total_points} נקודות ו{next.title} נפתח ✨
               </div>}
             </div>
           )
@@ -231,10 +226,15 @@ export default function HomePage() {
         {/* Action grid */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 14 }}>
           {[
-            { href: '/missions', bg: NAVY, icon: '🎯', title: 'בחר משימה', sub: 'בחר משהו כיפי' },
-{ href: '/missions?tab=active', bg: GOLD, icon: '✅', title: isParent ? 'משימות פעילות' : 'סיימתי משימה', sub: activeAssignments.length > 0 ? `${activeAssignments.length} ${isParent ? 'ממתינות' : 'פעילות'}` : 'אין עכשיו', dark: true },
+            { href: '/missions', bg: NAVY, icon: '⭐', title: 'צוברים נקודות', sub: 'בחר איך להרוויח' },
+            {
+              href: '/missions?tab=active', bg: GOLD, icon: '✅',
+              title: isParent ? 'בתהליך' : 'השלמתי!',
+              sub: myAssignments.length > 0 ? `${myAssignments.length} ${isParent ? 'ממתינות' : 'פעילות'}` : 'אין עכשיו',
+              dark: true
+            },
             { href: '/tazkir/new', bg: GREEN, icon: '📝', title: 'פותחים תחקיר', sub: 'מה עשינו היום?' },
-            { href: '/rewards', bg: PURPLE, icon: '🏆', title: 'הפרסים שלי', sub: 'נקודות ופרסים' },
+            { href: '/rewards', bg: PURPLE, icon: '✨', title: 'החוויות שלי', sub: 'נקודות וחוויות' },
           ].map(item => (
             <a key={item.href} href={item.href} style={{
               display: 'block', padding: '16px 14px 14px', background: item.bg,
@@ -247,7 +247,7 @@ export default function HomePage() {
           ))}
         </div>
 
-        {/* Parent: leaderboard. Child: their active missions */}
+        {/* Parent leaderboard / Child missions */}
         {isParent ? (
           <Card>
             <SectionHeader title="⭐ טבלת נקודות" href="/profiles" />
@@ -266,7 +266,7 @@ export default function HomePage() {
                       </div>
                       <ProgressBar value={child.total_points} max={next?.points_required || child.total_points} color={color} />
                       {next && <div style={{ color: '#a09080', fontSize: 11, marginTop: 3 }}>
-                        עוד {next.points_required - child.total_points} נקודות עד {next.title}
+                        עוד {next.points_required - child.total_points} נקודות ו{next.title} נפתח
                       </div>}
                     </div>
                   </div>
@@ -277,7 +277,7 @@ export default function HomePage() {
         ) : (
           myAssignments.length > 0 && (
             <Card>
-              <SectionHeader title="🎯 המשימות שלי" href="/missions/active" />
+              <SectionHeader title="⭐ צוברים עכשיו" href="/missions?tab=active" />
               {myAssignments.slice(0, 3).map((a, i) => (
                 <div key={a.id} style={{
                   display: 'flex', alignItems: 'center', gap: 10,
@@ -290,7 +290,7 @@ export default function HomePage() {
                     background: a.mission.type === 'learning' ? '#f0ebf8' : '#f7f4ee',
                     display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0
                   }}>
-                    {a.mission.type === 'learning' ? '📚' : a.mission.type === 'responsibility' ? '🤝' : '🎯'}
+                    {a.mission.type === 'learning' ? '📚' : a.mission.type === 'responsibility' ? '🤝' : '⭐'}
                   </div>
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: 14, fontWeight: 600, color: NAVY }}>{a.mission.title}</div>
@@ -308,65 +308,9 @@ export default function HomePage() {
           )
         )}
 
-        {/* Active missions — parent sees all, for approval */}
-        {isParent && activeAssignments.length > 0 && (
-          <Card>
-            <SectionHeader title="🎯 משימות פעילות" href="/missions/active" />
-            {activeAssignments.slice(0, 3).map((a, i) => (
-              <div key={a.id} style={{
-                display: 'flex', alignItems: 'center', gap: 10,
-                paddingBottom: i < 2 ? 10 : 0,
-                borderBottom: i < 2 ? '1px solid #f5f0e8' : 'none',
-                marginBottom: i < 2 ? 10 : 0
-              }}>
-                <Avatar profile={a.member} size={32} />
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: NAVY }}>{a.mission.title}</div>
-                  <div style={{ fontSize: 11, color: '#a09080' }}>{a.member.name}</div>
-                </div>
-                <div style={{
-                  fontWeight: 700, fontSize: 12,
-                  color: a.status === 'submitted' ? GREEN : '#a09080',
-                  background: a.status === 'submitted' ? '#edf7f1' : '#f5f5f5',
-                  padding: '3px 10px', borderRadius: 20
-                }}>
-                  {a.status === 'submitted' ? 'ממתין לאישור' : `+${a.mission.points}`}
-                </div>
-              </div>
-            ))}
-          </Card>
-        )}
-
-        {/* Recent feed */}
-{recentFeed.length > 0 && (
-  <Card>
-    <SectionHeader title="📖 זיכרונות אחרונים" href="/feed" />
-    {recentFeed.map((post, i) => {
-      const coverPhoto = post.media_urls?.[0]
-      const isVideo = url => /\.(mp4|mov|webm|avi)(\?|$)/i.test(url)
-      return (
-        <div key={post.id} style={{
-          paddingBottom: i < recentFeed.length - 1 ? 12 : 0,
-          borderBottom: i < recentFeed.length - 1 ? '1px solid #f5f0e8' : 'none',
-          marginBottom: i < recentFeed.length - 1 ? 12 : 0
-        }}>
-          {coverPhoto && !isVideo(coverPhoto) && (
-            <img src={coverPhoto} alt="cover" style={{
-              width: '100%', height: 140, objectFit: 'cover',
-              borderRadius: 12, marginBottom: 8, display: 'block'
-            }} />
-          )}
-          <div style={{ fontSize: 14, fontWeight: 700, color: NAVY }}>{post.title}</div>
-          {post.content && <div style={{ fontSize: 12, color: '#a09080', marginTop: 2 }}>{post.content}</div>}
-          <div style={{ fontSize: 11, color: '#b0a090', marginTop: 3 }}>{timeAgo(post.created_at)}</div>
-        </div>
-      )
-    })}
-  </Card>
-)}
-        {/* Parent only: quick approve section */}
+        {/* Parent pending approvals */}
         {isParent && activeAssignments.filter(a => a.status === 'submitted').length > 0 && (
-          <a href="/missions/active" style={{ textDecoration: 'none' }}>
+          <a href="/missions?tab=active" style={{ textDecoration: 'none' }}>
             <div style={{
               background: NAVY, borderRadius: 18, padding: '14px 16px',
               display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10
@@ -374,7 +318,7 @@ export default function HomePage() {
               <div style={{ fontSize: 28 }}>⏳</div>
               <div style={{ flex: 1 }}>
                 <div style={{ fontWeight: 700, fontSize: 14, color: 'white' }}>
-                  {activeAssignments.filter(a => a.status === 'submitted').length} משימות ממתינות לאישורך
+                  {activeAssignments.filter(a => a.status === 'submitted').length} פעילויות ממתינות לאישורך
                 </div>
                 <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', marginTop: 2 }}>
                   לחץ לאישור מהיר
@@ -385,42 +329,54 @@ export default function HomePage() {
           </a>
         )}
 
+        {/* Recent feed */}
+        {recentFeed.length > 0 && (
+          <Card>
+            <SectionHeader title="📖 זיכרונות אחרונים" href="/feed" />
+            {recentFeed.map((post, i) => {
+              const coverPhoto = post.media_urls?.[0]
+              const isVideo = url => /\.(mp4|mov|webm|avi)(\?|$)/i.test(url)
+              const postReactions = reactions[post.id] || {}
+              return (
+                <div key={post.id} style={{
+                  paddingBottom: i < recentFeed.length - 1 ? 14 : 0,
+                  borderBottom: i < recentFeed.length - 1 ? '1px solid #f5f0e8' : 'none',
+                  marginBottom: i < recentFeed.length - 1 ? 14 : 0
+                }}>
+                  {coverPhoto && !isVideo(coverPhoto) && (
+                    <img src={coverPhoto} alt="cover" style={{
+                      width: '100%', height: 140, objectFit: 'cover',
+                      borderRadius: 12, marginBottom: 8, display: 'block'
+                    }} />
+                  )}
+                  <div style={{ fontSize: 14, fontWeight: 700, color: NAVY }}>{post.title}</div>
+                  {post.content && <div style={{ fontSize: 12, color: '#a09080', marginTop: 2 }}>{post.content}</div>}
+                  <div style={{ fontSize: 11, color: '#b0a090', marginTop: 3 }}>{timeAgo(post.created_at)}</div>
+                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 8 }}>
+                    {REACTIONS.map(r => (
+                      <button key={r.type} onClick={() => handleReaction(post.id, r.type)} style={{
+                        background: postReactions[r.type] ? '#faf6ec' : '#f7f4ee',
+                        border: `1px solid ${postReactions[r.type] ? GOLD : '#e8e0d0'}`,
+                        borderRadius: 20, padding: '4px 10px', cursor: 'pointer',
+                        display: 'flex', alignItems: 'center', gap: 4,
+                        fontFamily: 'var(--font-heebo), sans-serif'
+                      }}>
+                        <span style={{ fontSize: 14 }}>{r.emoji}</span>
+                        {postReactions[r.type] > 0 && (
+                          <span style={{ fontSize: 11, fontWeight: 700, color: NAVY }}>{postReactions[r.type]}</span>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )
+            })}
+          </Card>
+        )}
+
       </div>
 
-      {/* Bottom nav */}
-      <div style={{
-        position: 'fixed', bottom: 0, left: 0, right: 0,
-        background: NAVY, borderTop: `1px solid rgba(255,255,255,0.08)`,
-        display: 'flex', justifyContent: 'space-around',
-        padding: '10px 0 16px', zIndex: 100,
-        fontFamily: 'var(--font-heebo), sans-serif'
-      }}>
-        {[
-          { href: '/', label: 'בית', emoji: '🏠' },
-          { href: '/missions', label: 'משימות', emoji: '🎯' },
-          { href: '/tazkir/new', label: 'תחקיר', emoji: '📝', center: true },
-          { href: '/rewards', label: 'פרסים', emoji: '🏆' },
-          { href: '/feed', label: 'פיד', emoji: '📖' },
-        ].map(item => (
-          <a key={item.href} href={item.href} style={{
-            display: 'flex', flexDirection: 'column', alignItems: 'center',
-            textDecoration: 'none', gap: 2,
-            color: item.center ? GOLD : 'rgba(255,255,255,0.45)',
-            fontSize: 10, fontFamily: 'var(--font-heebo), sans-serif'
-          }}>
-            <span style={{
-              fontSize: item.center ? 26 : 20,
-              ...(item.center ? {
-                background: GOLD, borderRadius: '50%', width: 44, height: 44,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                marginTop: -18, fontSize: 20
-              } : {})
-            }}>{item.emoji}</span>
-            {item.label}
-          </a>
-        ))}
-      </div>
-
+      <BottomNav />
     </div>
   )
 }

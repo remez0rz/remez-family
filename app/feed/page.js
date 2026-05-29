@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react'
 import { supabase, getCurrentProfile } from '../lib/supabase'
 import { useRouter } from 'next/navigation'
+import BottomNav from '../components/BottomNav'
 
 const NAVY = '#0a1628'
 const GOLD = '#c9a84c'
@@ -456,39 +457,7 @@ export default function FeedPage() {
         )}
       </div>
 
-      {/* Bottom nav */}
-      <div style={{
-        position: 'fixed', bottom: 0, left: 0, right: 0,
-        background: NAVY, borderTop: '1px solid rgba(255,255,255,0.08)',
-        display: 'flex', justifyContent: 'space-around',
-        padding: '10px 0 16px', zIndex: 100,
-        fontFamily: 'var(--font-heebo), sans-serif'
-      }}>
-        {[
-          { href: '/',           label: 'בית',    emoji: '🏠' },
-          { href: '/missions',   label: 'משימות', emoji: '🎯' },
-          { href: '/tazkir/new', label: 'תחקיר',  emoji: '📝', center: true },
-          { href: '/rewards',    label: 'פרסים',  emoji: '🏆' },
-          { href: '/feed',       label: 'פיד',    emoji: '📖', active: true },
-        ].map(item => (
-          <a key={item.href} href={item.href} style={{
-            display: 'flex', flexDirection: 'column', alignItems: 'center',
-            textDecoration: 'none', gap: 2,
-            color: item.active ? GOLD : 'rgba(255,255,255,0.45)',
-            fontSize: 10, fontFamily: 'var(--font-heebo), sans-serif'
-          }}>
-            <span style={{
-              ...(item.center ? {
-                background: GOLD, borderRadius: '50%',
-                width: 44, height: 44, fontSize: 20,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                marginTop: -18
-              } : { fontSize: 20 })
-            }}>{item.emoji}</span>
-            {item.label}
-          </a>
-        ))}
-      </div>
+       <BottomNav />
     </div>
   )
 }
