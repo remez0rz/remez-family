@@ -197,7 +197,9 @@ export default function HomePage() {
             </div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <Avatar profile={currentProfile} size={42} />
+<a href="/profiles" style={{ textDecoration: 'none' }}>
+  <Avatar profile={currentProfile} size={42} />
+</a>
             <button onClick={handleSignOut} style={{
               background: 'transparent', border: '1px solid rgba(255,255,255,0.2)',
               borderRadius: 20, color: 'rgba(255,255,255,0.6)', fontSize: 11,
