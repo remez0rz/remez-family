@@ -10,12 +10,12 @@ const GREEN = '#1a6b3c'
 const PURPLE = '#5c3d8f'
 
 const MODES = [
-  { id: 'all',    label: 'הכל',     emoji: '✨', categories: null },
-  { id: 'fun',    label: 'כיף',     emoji: '🎉', categories: ['Funny', 'Creative', 'Weekend'] },
-  { id: 'learn',  label: 'ללמוד',   emoji: '📚', categories: ['Learning', 'Reading', 'English', 'Hebrew'] },
-  { id: 'help',   label: 'לעזור',   emoji: '🤝', categories: ['Helping', 'Kindness', 'House'] },
-  { id: 'move',   label: 'לזוז',    emoji: '🏃', categories: ['Outdoor', 'Health'] },
-  { id: 'family', label: 'משפחה',   emoji: '👨‍👩‍👧', categories: ['Family', 'Memory'] },
+  { id: 'all',    label: 'הכל',   emoji: '✨', categories: null },
+  { id: 'fun',    label: 'כיף',   emoji: '🎉', categories: ['Funny', 'Creative', 'Weekend'] },
+  { id: 'learn',  label: 'ללמוד', emoji: '📚', categories: ['Learning', 'Reading', 'English', 'Hebrew'] },
+  { id: 'help',   label: 'לעזור', emoji: '🤝', categories: ['Helping', 'Kindness', 'House'] },
+  { id: 'move',   label: 'לזוז',  emoji: '🏃', categories: ['Outdoor', 'Health'] },
+  { id: 'family', label: 'משפחה', emoji: '👨‍👩‍👧', categories: ['Family', 'Memory'] },
 ]
 
 const CATEGORY_VISUAL = {
@@ -64,11 +64,9 @@ function Avatar({ profile, size = 44, selected = false, onClick }) {
       {selected && (
         <div style={{
           position: 'absolute', bottom: -1, right: -1,
-          background: GOLD, borderRadius: '50%',
-          width: 16, height: 16,
+          background: GOLD, borderRadius: '50%', width: 16, height: 16,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: 9, color: NAVY, fontWeight: 900,
-          border: '1.5px solid white'
+          fontSize: 9, color: NAVY, fontWeight: 900, border: '1.5px solid white'
         }}>✓</div>
       )}
     </div>
@@ -124,8 +122,6 @@ function MissionCard({ mission, isParent, currentProfile, assignableProfiles }) 
       border: `1px solid ${visual.accent}30`,
       marginBottom: 12, overflow: 'hidden'
     }}>
-
-      {/* Visual header */}
       <div style={{
         background: visual.bg, padding: '12px 14px',
         display: 'flex', alignItems: 'center', gap: 12,
@@ -147,14 +143,11 @@ function MissionCard({ mission, isParent, currentProfile, assignableProfiles }) 
           </div>
         </div>
         <div style={{ textAlign: 'center', flexShrink: 0 }}>
-          <div style={{ fontSize: 30, fontWeight: 900, color: ptColor, lineHeight: 1 }}>
-            {mission.points}
-          </div>
+          <div style={{ fontSize: 30, fontWeight: 900, color: ptColor, lineHeight: 1 }}>{mission.points}</div>
           <div style={{ fontSize: 10, fontWeight: 700, color: ptColor, opacity: 0.7 }}>נקודות</div>
         </div>
       </div>
 
-      {/* Body */}
       <div style={{ padding: '12px 14px' }}>
         <div style={{ fontSize: 15, fontWeight: 800, color: NAVY, marginBottom: 4, lineHeight: 1.3 }}>
           {mission.title}
@@ -173,7 +166,6 @@ function MissionCard({ mission, isParent, currentProfile, assignableProfiles }) 
           }}>🎉 המשימה נשלחה!</div>
         ) : (
           <>
-            {/* Avatar row */}
             <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', marginBottom: isParent ? 10 : 0 }}>
               {assignableProfiles.map(p => (
                 <div key={p.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
@@ -189,7 +181,6 @@ function MissionCard({ mission, isParent, currentProfile, assignableProfiles }) 
               ))}
             </div>
 
-            {/* Parent: due date + confirm */}
             {isParent && (
               <>
                 <div style={{ marginBottom: 10 }}>
@@ -217,7 +208,7 @@ function MissionCard({ mission, isParent, currentProfile, assignableProfiles }) 
                     fontFamily: 'var(--font-heebo), sans-serif',
                     boxSizing: 'border-box'
                   }}>
-                  {assigning ? 'שולח...' : assignedTo.length ? `📤 שלח משימה` : 'בחר מישהו'}
+                  {assigning ? 'שולח...' : assignedTo.length ? '📤 שלח משימה' : 'בחר מישהו'}
                 </button>
               </>
             )}
@@ -228,12 +219,131 @@ function MissionCard({ mission, isParent, currentProfile, assignableProfiles }) 
   )
 }
 
+function ActiveMissionsTab({ profiles, currentProfile, isParent }) {
+  const [assignments, setAssignments] = useState([])
+  const [loading, setLoading]         = useState(true)
+  const router = useRouter()
+
+  useEffect(() => { loadAssignments() }, [])
+
+  const loadAssignments = async () => {
+    let query = supabase
+      .from('assignments')
+      .select('*, mission:missions(*), member:profiles!assignments_assigned_to_fkey(*)')
+      .in('status', ['active', 'submitted'])
+      .order('created_at', { ascending: false })
+
+    if (!isParent) query = query.eq('assigned_to', currentProfile.id)
+
+    const { data } = await query
+    if (data) setAssignments(data)
+    setLoading(false)
+  }
+
+  if (loading) return (
+    <div style={{ textAlign: 'center', padding: 40, color: '#8a7a60', fontSize: 14 }}>טוען...</div>
+  )
+
+  if (assignments.length === 0) return (
+    <div style={{ textAlign: 'center', padding: '48px 20px' }}>
+      <div style={{ fontSize: 40, marginBottom: 12 }}>🎯</div>
+      <div style={{ fontSize: 15, fontWeight: 700, color: NAVY, marginBottom: 8 }}>אין משימות פעילות</div>
+      <div style={{ fontSize: 13, color: '#8a7a60' }}>שלחו משימה מהספרייה</div>
+    </div>
+  )
+
+  return (
+    <div>
+      {assignments.map(a => {
+        const isLearning = ['Learning','Reading','English','Hebrew'].includes(a.mission?.category)
+        const ptColor    = isLearning ? PURPLE : GREEN
+        const isSubmitted = a.status === 'submitted'
+
+        return (
+          <div key={a.id} style={{
+            background: 'white', borderRadius: 16, marginBottom: 12,
+            border: `1px solid ${isSubmitted ? GOLD + '60' : '#e8e0d0'}`,
+            overflow: 'hidden'
+          }}>
+            <div style={{
+              background: isSubmitted ? '#fff8e8' : '#f7f4ee',
+              padding: '8px 14px',
+              borderBottom: `1px solid ${isSubmitted ? GOLD + '30' : '#f0ebe0'}`,
+              display: 'flex', justifyContent: 'space-between', alignItems: 'center'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                {(() => {
+                  const memberProfile = profiles.find(p => p.id === a.assigned_to)
+                  return memberProfile ? (
+                    <div style={{
+                      width: 28, height: 28, borderRadius: '50%',
+                      border: `2px solid ${GOLD}`, overflow: 'hidden',
+                      background: '#e8d5a3', display: 'flex', alignItems: 'center',
+                      justifyContent: 'center', fontSize: 11, fontWeight: 700, color: NAVY, flexShrink: 0
+                    }}>
+                      {memberProfile.avatar_url
+                        ? <img src={memberProfile.avatar_url} alt={memberProfile.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        : memberProfile.name?.charAt(0)}
+                    </div>
+                  ) : null
+                })()}
+                <span style={{ fontSize: 13, fontWeight: 700, color: NAVY }}>{a.member?.name}</span>
+              </div>
+              <span style={{
+                fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 20,
+                background: isSubmitted ? GOLD : '#e8e0d0',
+                color: isSubmitted ? NAVY : '#8a7a60'
+              }}>
+                {isSubmitted ? 'ממתין לאישור' : 'פעיל'}
+              </span>
+            </div>
+
+            <div style={{ padding: '12px 14px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
+                <div style={{ flex: 1, paddingLeft: 10 }}>
+                  <div style={{ fontSize: 15, fontWeight: 800, color: NAVY, lineHeight: 1.3 }}>
+                    {a.mission?.title}
+                  </div>
+                  {a.due_date && (
+                    <div style={{ fontSize: 11, color: '#c45000', marginTop: 3, fontWeight: 600 }}>
+                      ⏰ עד {new Date(a.due_date).toLocaleDateString('he-IL')}
+                    </div>
+                  )}
+                </div>
+                <div style={{ textAlign: 'center', flexShrink: 0 }}>
+                  <div style={{ fontSize: 26, fontWeight: 900, color: ptColor, lineHeight: 1 }}>{a.mission?.points}</div>
+                  <div style={{ fontSize: 10, color: ptColor, opacity: 0.7, fontWeight: 700 }}>נקודות</div>
+                </div>
+              </div>
+
+              <button
+                onClick={() => router.push(`/missions/active`)}
+                style={{
+                  width: '100%', padding: '11px',
+                  background: isSubmitted ? GOLD : NAVY,
+                  color: isSubmitted ? NAVY : 'white',
+                  border: 'none', borderRadius: 12, cursor: 'pointer',
+                  fontWeight: 700, fontSize: 14,
+                  fontFamily: 'var(--font-heebo), sans-serif'
+                }}>
+                {isSubmitted ? '👑 אשר ותן נקודות' : 'סיום וסיכום משימה →'}
+              </button>
+            </div>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
 export default function MissionsPage() {
-  const [missions, setMissions]           = useState([])
-  const [profiles, setProfiles]           = useState([])
+  const [missions, setMissions]             = useState([])
+  const [profiles, setProfiles]             = useState([])
   const [currentProfile, setCurrentProfile] = useState(null)
-  const [loading, setLoading]             = useState(true)
-  const [activeMode, setActiveMode]       = useState('all')
+  const [loading, setLoading]               = useState(true)
+  const [activeMode, setActiveMode]         = useState('all')
+  const [activeTab, setActiveTab]           = useState('library')
+  const [activeCount, setActiveCount]       = useState(0)
   const router = useRouter()
 
   useEffect(() => {
@@ -243,18 +353,26 @@ export default function MissionsPage() {
     })
   }, [])
 
-  const loadData = async () => {
-    const profile = await getCurrentProfile()
-    if (!profile) { router.push('/login'); return }
-    setCurrentProfile(profile)
-    const [{ data: missionData }, { data: profileData }] = await Promise.all([
-      supabase.from('missions').select('*').eq('is_active', true).order('points', { ascending: false }),
-      supabase.from('profiles').select('*').eq('active', true)
-    ])
-    if (missionData) setMissions(missionData)
-    if (profileData) setProfiles(profileData)
-    setLoading(false)
-  }
+ const loadData = async () => {
+  const profile = await getCurrentProfile()
+  if (!profile) { router.push('/login'); return }
+  setCurrentProfile(profile)
+
+  const [{ data: missionData }, { data: profileData }, { data: activeData }] = await Promise.all([
+    supabase.from('missions').select('*').eq('is_active', true).order('points', { ascending: false }),
+    supabase.from('profiles').select('*').eq('active', true),
+    supabase.from('assignments').select('id').in('status', ['active', 'submitted'])
+  ])
+
+  if (missionData) setMissions(missionData)
+  if (profileData) setProfiles(profileData)
+  if (activeData) setActiveCount(activeData.length)
+
+  const params = new URLSearchParams(window.location.search)
+  if (params.get('tab') === 'active') setActiveTab('active')
+
+  setLoading(false)
+}
 
   const isParent = currentProfile?.role === 'parent'
   const currentMode = MODES.find(m => m.id === activeMode)
@@ -288,12 +406,9 @@ export default function MissionsPage() {
       boxSizing: 'border-box', overflowX: 'hidden'
     }}>
 
-      {/* Header */}
       <div style={{
-        background: NAVY,
-        padding: '20px 16px 0',
-        borderRadius: '0 0 24px 24px',
-        marginBottom: 16
+        background: NAVY, padding: '20px 16px 0',
+        borderRadius: '0 0 24px 24px', marginBottom: 16
       }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
           <div>
@@ -305,48 +420,76 @@ export default function MissionsPage() {
           <a href="/" style={{ color: 'rgba(255,255,255,0.45)', textDecoration: 'none', fontSize: 13 }}>← בית</a>
         </div>
 
-        {/* Mode pills */}
-        <div style={{
-          display: 'flex', gap: 8, overflowX: 'auto',
-          paddingBottom: 16, paddingRight: 2,
-          scrollbarWidth: 'none'
-        }}>
-          {MODES.map(mode => (
-            <button key={mode.id} onClick={() => setActiveMode(mode.id)} style={{
-              display: 'flex', alignItems: 'center', gap: 5,
-              padding: '8px 14px', borderRadius: 20, border: 'none',
-              cursor: 'pointer', flexShrink: 0,
-              background: activeMode === mode.id ? GOLD : 'rgba(255,255,255,0.1)',
-              color: activeMode === mode.id ? NAVY : 'rgba(255,255,255,0.8)',
-              fontWeight: activeMode === mode.id ? 700 : 500,
-              fontSize: 14, fontFamily: 'var(--font-heebo), sans-serif',
+        {/* Main tabs */}
+        <div style={{ display: 'flex', gap: 0, marginBottom: 0 }}>
+          {[
+            { id: 'library', label: '📋 ספריית משימות' },
+            { id: 'active',  label: `✅ פעילות${activeCount > 0 ? ` (${activeCount})` : ''}` },
+          ].map(tab => (
+            <button key={tab.id} onClick={() => setActiveTab(tab.id)} style={{
+              flex: 1, padding: '10px 8px', border: 'none', cursor: 'pointer',
+              background: activeTab === tab.id ? CREAM : 'transparent',
+              color: activeTab === tab.id ? NAVY : 'rgba(255,255,255,0.6)',
+              fontWeight: activeTab === tab.id ? 700 : 500,
+              fontSize: 13, borderRadius: activeTab === tab.id ? '12px 12px 0 0' : 0,
+              fontFamily: 'var(--font-heebo), sans-serif',
+              transition: 'all 0.15s'
             }}>
-              {mode.emoji} {mode.label}
+              {tab.label}
             </button>
           ))}
         </div>
       </div>
 
-      {/* List */}
       <div style={{ padding: '0 12px', boxSizing: 'border-box' }}>
-        <div style={{ fontSize: 12, color: '#8a7a60', fontWeight: 600, marginBottom: 10 }}>
-          {filtered.length} משימות{currentMode?.id !== 'all' ? ` · ${currentMode.label}` : ''}
-        </div>
 
-        {filtered.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '40px 0', color: '#a09080' }}>
-            <div style={{ fontSize: 40, marginBottom: 8 }}>🤔</div>
-            <div style={{ fontSize: 14 }}>אין משימות בקטגוריה הזו</div>
-          </div>
-        ) : filtered.map(mission => (
-          <MissionCard
-            key={mission.id}
-            mission={mission}
-            isParent={isParent}
+        {activeTab === 'library' && (
+          <>
+            {/* Mode pills */}
+            <div style={{
+              display: 'flex', gap: 8, overflowX: 'auto',
+              paddingBottom: 12, scrollbarWidth: 'none', marginBottom: 4
+            }}>
+              {MODES.map(mode => (
+                <button key={mode.id} onClick={() => setActiveMode(mode.id)} style={{
+                  display: 'flex', alignItems: 'center', gap: 5,
+                  padding: '7px 14px', borderRadius: 20, border: 'none',
+                  cursor: 'pointer', flexShrink: 0,
+                  background: activeMode === mode.id ? NAVY : 'white',
+                  color: activeMode === mode.id ? 'white' : '#6b5e4e',
+                  fontWeight: activeMode === mode.id ? 700 : 500,
+                  fontSize: 13, fontFamily: 'var(--font-heebo), sans-serif',
+                  border: `1px solid ${activeMode === mode.id ? NAVY : '#e8e0d0'}`
+                }}>
+                  {mode.emoji} {mode.label}
+                </button>
+              ))}
+            </div>
+
+            <div style={{ fontSize: 12, color: '#8a7a60', fontWeight: 600, marginBottom: 10 }}>
+              {filtered.length} משימות{currentMode?.id !== 'all' ? ` · ${currentMode.label}` : ''}
+            </div>
+
+            {filtered.map(mission => (
+              <MissionCard
+                key={mission.id}
+                mission={mission}
+                isParent={isParent}
+                currentProfile={currentProfile}
+                assignableProfiles={assignableProfiles}
+              />
+            ))}
+          </>
+        )}
+
+        {activeTab === 'active' && (
+          <ActiveMissionsTab
+            profiles={profiles}
             currentProfile={currentProfile}
-            assignableProfiles={assignableProfiles}
+            isParent={isParent}
           />
-        ))}
+        )}
+
       </div>
 
       {/* Bottom nav */}
@@ -358,11 +501,11 @@ export default function MissionsPage() {
         fontFamily: 'var(--font-heebo), sans-serif'
       }}>
         {[
-          { href: '/',           label: 'בית',     emoji: '🏠' },
-          { href: '/missions',   label: 'משימות',  emoji: '🎯', active: true },
-          { href: '/tazkir/new', label: 'תחקיר',   emoji: '📝', center: true },
-          { href: '/rewards',    label: 'פרסים',   emoji: '🏆' },
-          { href: '/feed',       label: 'פיד',     emoji: '📖' },
+          { href: '/',           label: 'בית',    emoji: '🏠' },
+          { href: '/missions',   label: 'משימות', emoji: '🎯', active: true },
+          { href: '/tazkir/new', label: 'תחקיר',  emoji: '📝', center: true },
+          { href: '/rewards',    label: 'פרסים',  emoji: '🏆' },
+          { href: '/feed',       label: 'פיד',    emoji: '📖' },
         ].map(item => (
           <a key={item.href} href={item.href} style={{
             display: 'flex', flexDirection: 'column', alignItems: 'center',

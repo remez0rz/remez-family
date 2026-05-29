@@ -32,10 +32,7 @@ function ProgressBar({ value, max, color = GOLD }) {
   const pct = max > 0 ? Math.min(Math.round((value / max) * 100), 100) : 100
   return (
     <div style={{ background: 'rgba(255,255,255,0.2)', borderRadius: 6, height: 8 }}>
-      <div style={{
-        width: `${pct}%`, height: '100%', background: color,
-        borderRadius: 6, transition: 'width 0.6s ease'
-      }} />
+      <div style={{ width: `${pct}%`, height: '100%', background: color, borderRadius: 6, transition: 'width 0.6s ease' }} />
     </div>
   )
 }
@@ -49,20 +46,14 @@ function Confetti() {
     size: Math.random() * 8 + 6,
     duration: `${Math.random() * 1.5 + 1.5}s`
   }))
-
   return (
     <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '100%', overflow: 'hidden', pointerEvents: 'none' }}>
-      <style>{`
-        @keyframes fall {
-          0% { transform: translateY(-20px) rotate(0deg); opacity: 1; }
-          100% { transform: translateY(300px) rotate(360deg); opacity: 0; }
-        }
-      `}</style>
+      <style>{`@keyframes fall { 0% { transform: translateY(-20px) rotate(0deg); opacity: 1; } 100% { transform: translateY(300px) rotate(360deg); opacity: 0; } }`}</style>
       {pieces.map(p => (
         <div key={p.id} style={{
           position: 'absolute', top: 0, left: p.left,
-          width: p.size, height: p.size,
-          background: p.color, borderRadius: Math.random() > 0.5 ? '50%' : 2,
+          width: p.size, height: p.size, background: p.color,
+          borderRadius: Math.random() > 0.5 ? '50%' : 2,
           animation: `fall ${p.duration} ${p.delay} ease-in forwards`
         }} />
       ))}
@@ -70,120 +61,210 @@ function Confetti() {
   )
 }
 
-function CelebrationScreen({ assignment, newTotal, nextReward, onClose, onTazkir }) {
-  const router = useRouter()
-  const [show, setShow] = useState(false)
-  const points = assignment.mission.points
-  const isLearning = ['Learning', 'Reading', 'English', 'Hebrew'].includes(assignment.mission?.category)
+function StarRating({ value, onChange }) {
+  return (
+    <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
+      {[1,2,3,4,5].map(star => (
+        <div key={star} onClick={() => onChange(star)} style={{
+          fontSize: 28, cursor: 'pointer',
+          opacity: star <= value ? 1 : 0.25, transition: 'opacity 0.15s'
+        }}>⭐</div>
+      ))}
+    </div>
+  )
+}
 
-  useEffect(() => {
-    setTimeout(() => setShow(true), 50)
-  }, [])
+function CelebrationScreen({ assignment, newTotal, nextReward, feedPostId, onClose, onTazkir }) {
+  const router = useRouter()
+  const [show, setShow]           = useState(false)
+  const [step, setStep]           = useState('celebrate') // celebrate | summary
+  const [saving, setSaving]       = useState(false)
+  const [summarySaved, setSummarySaved] = useState(false)
+  const [summary, setSummary]     = useState({
+    best_moment: '', funny_moment: '', quote: '', rating: 0
+  })
+
+  const points = assignment.mission.points
+  const isLearning = ['Learning','Reading','English','Hebrew'].includes(assignment.mission?.category)
+
+  useEffect(() => { setTimeout(() => setShow(true), 50) }, [])
+
+  const inputStyle = {
+    width: '100%', padding: '10px 12px',
+    border: '1px solid rgba(255,255,255,0.15)', borderRadius: 10,
+    fontSize: 14, color: 'white', background: 'rgba(255,255,255,0.08)',
+    fontFamily: 'var(--font-heebo), sans-serif',
+    boxSizing: 'border-box', outline: 'none',
+    marginBottom: 10
+  }
+
+  const handleSaveSummary = async () => {
+    if (!feedPostId) { setSummarySaved(true); return }
+    setSaving(true)
+    await supabase.from('feed_posts').update({
+      best_moment:  summary.best_moment  || null,
+      funny_moment: summary.funny_moment || null,
+      quote:        summary.quote        || null,
+      rating:       summary.rating       || null,
+    }).eq('id', feedPostId)
+    setSaving(false)
+    setSummarySaved(true)
+  }
 
   return (
     <div style={{
       position: 'fixed', inset: 0, zIndex: 1000,
       display: 'flex', alignItems: 'center', justifyContent: 'center',
-      background: 'rgba(10,22,40,0.92)',
+      background: 'rgba(10,22,40,0.95)',
       opacity: show ? 1 : 0, transition: 'opacity 0.3s ease',
-      fontFamily: 'var(--font-heebo), sans-serif', direction: 'rtl'
+      fontFamily: 'var(--font-heebo), sans-serif', direction: 'rtl',
+      overflowY: 'auto', padding: '20px 16px'
     }}>
       <Confetti />
 
       <div style={{
-        background: NAVY, borderRadius: 28, padding: '32px 24px',
-        maxWidth: 360, width: '90%', textAlign: 'center',
+        background: NAVY, borderRadius: 28, padding: '28px 22px',
+        maxWidth: 360, width: '100%', textAlign: 'center',
         border: `1px solid ${GOLD}40`, position: 'relative', zIndex: 1,
         transform: show ? 'scale(1)' : 'scale(0.85)',
         transition: 'transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
       }}>
 
-        {/* Avatar */}
-        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }}>
-          <div style={{ position: 'relative' }}>
-            <Avatar profile={assignment.member} size={72} />
-            <div style={{
-              position: 'absolute', bottom: -4, right: -4,
-              background: GOLD, borderRadius: '50%', width: 26, height: 26,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 14, border: '2px solid ' + NAVY
-            }}>🏆</div>
-          </div>
-        </div>
-
-        {/* Title */}
-        <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginBottom: 4, fontWeight: 600 }}>
-          כל הכבוד
-        </div>
-        <div style={{ fontSize: 24, fontWeight: 900, color: 'white', marginBottom: 6, lineHeight: 1.2 }}>
-          {assignment.member.name}! 🎉
-        </div>
-        <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.65)', marginBottom: 24, lineHeight: 1.5 }}>
-          {assignment.mission.title}
-        </div>
-
-        {/* Points earned */}
-        <div style={{
-          background: isLearning ? PURPLE : GREEN,
-          borderRadius: 20, padding: '16px 24px', marginBottom: 20
-        }}>
-          <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.7)', fontWeight: 700, marginBottom: 4 }}>
-            הרוויחת
-          </div>
-          <div style={{ fontSize: 52, fontWeight: 900, color: 'white', lineHeight: 1 }}>
-            +{points}
-          </div>
-          <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', marginTop: 2 }}>
-            נקודות
-          </div>
-        </div>
-
-        {/* Progress to next reward */}
-        {nextReward && (
-          <div style={{ marginBottom: 24 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-              <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>
-                סה״כ: {newTotal} נק׳
-              </span>
-              <span style={{ fontSize: 12, color: GOLD, fontWeight: 700 }}>
-                עוד {nextReward.points_required - newTotal} עד {nextReward.title}
-              </span>
+        {step === 'celebrate' && (
+          <>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }}>
+              <div style={{ position: 'relative' }}>
+                <Avatar profile={assignment.member} size={72} />
+                <div style={{
+                  position: 'absolute', bottom: -4, right: -4,
+                  background: GOLD, borderRadius: '50%', width: 26, height: 26,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: 14, border: '2px solid ' + NAVY
+                }}>🏆</div>
+              </div>
             </div>
-            <ProgressBar
-              value={newTotal}
-              max={nextReward.points_required}
-              color={GOLD}
-            />
-          </div>
+
+            <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginBottom: 4, fontWeight: 600 }}>כל הכבוד</div>
+            <div style={{ fontSize: 24, fontWeight: 900, color: 'white', marginBottom: 6, lineHeight: 1.2 }}>
+              {assignment.member.name}! 🎉
+            </div>
+            <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.65)', marginBottom: 24, lineHeight: 1.5 }}>
+              {assignment.mission.title}
+            </div>
+
+            <div style={{
+              background: isLearning ? PURPLE : GREEN,
+              borderRadius: 20, padding: '16px 24px', marginBottom: 20
+            }}>
+              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.7)', fontWeight: 700, marginBottom: 4 }}>הרוויחת</div>
+              <div style={{ fontSize: 52, fontWeight: 900, color: 'white', lineHeight: 1 }}>+{points}</div>
+              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', marginTop: 2 }}>נקודות</div>
+            </div>
+
+            {nextReward && (
+              <div style={{ marginBottom: 24 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+                  <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>סה״כ: {newTotal} נק׳</span>
+                  <span style={{ fontSize: 12, color: GOLD, fontWeight: 700 }}>
+                    עוד {nextReward.points_required - newTotal} עד {nextReward.title}
+                  </span>
+                </div>
+                <ProgressBar value={newTotal} max={nextReward.points_required} color={GOLD} />
+              </div>
+            )}
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <button onClick={() => setStep('summary')} style={{
+                padding: '13px', background: GOLD, border: 'none',
+                borderRadius: 14, cursor: 'pointer', fontWeight: 700, fontSize: 15, color: NAVY,
+                fontFamily: 'var(--font-heebo), sans-serif'
+              }}>📋 הוסף סיכום משימה</button>
+              <button onClick={onTazkir} style={{
+                padding: '13px', background: 'rgba(255,255,255,0.08)', border: 'none',
+                borderRadius: 14, cursor: 'pointer', fontWeight: 600, fontSize: 14,
+                color: 'rgba(255,255,255,0.8)', fontFamily: 'var(--font-heebo), sans-serif'
+              }}>📝 פתח תחקיר מבצע</button>
+              <button onClick={onClose} style={{
+                padding: '11px', background: 'transparent', border: 'none',
+                cursor: 'pointer', fontWeight: 500, fontSize: 13,
+                color: 'rgba(255,255,255,0.4)', fontFamily: 'var(--font-heebo), sans-serif'
+              }}>חזרה לבית</button>
+            </div>
+          </>
         )}
 
-        {/* Actions */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          <button onClick={onTazkir} style={{
-            padding: '13px', background: GOLD, border: 'none',
-            borderRadius: 14, cursor: 'pointer',
-            fontWeight: 700, fontSize: 15, color: NAVY,
-            fontFamily: 'var(--font-heebo), sans-serif'
-          }}>
-            📝 פותחים תחקיר על זה
-          </button>
-          <button onClick={() => router.push('/missions')} style={{
-            padding: '13px', background: 'rgba(255,255,255,0.08)', border: 'none',
-            borderRadius: 14, cursor: 'pointer',
-            fontWeight: 600, fontSize: 14, color: 'rgba(255,255,255,0.8)',
-            fontFamily: 'var(--font-heebo), sans-serif'
-          }}>
-            🎯 בחר משימה נוספת
-          </button>
-          <button onClick={onClose} style={{
-            padding: '11px', background: 'transparent', border: 'none',
-            cursor: 'pointer', fontWeight: 500, fontSize: 13,
-            color: 'rgba(255,255,255,0.4)',
-            fontFamily: 'var(--font-heebo), sans-serif'
-          }}>
-            חזרה לבית
-          </button>
-        </div>
+        {step === 'summary' && !summarySaved && (
+          <>
+            <div style={{ fontSize: 18, fontWeight: 900, color: 'white', marginBottom: 6 }}>
+              📋 סיכום משימה
+            </div>
+            <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginBottom: 20 }}>
+              {assignment.mission.title}
+            </div>
+
+            <div style={{ textAlign: 'right' }}>
+              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', marginBottom: 6, fontWeight: 600 }}>
+                🌟 הרגע הכי טוב
+              </div>
+              <input
+                placeholder="מה היה השיא?"
+                value={summary.best_moment}
+                onChange={e => setSummary(s => ({ ...s, best_moment: e.target.value }))}
+                style={inputStyle}
+              />
+              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', marginBottom: 6, fontWeight: 600 }}>
+                😂 הרגע המצחיק
+              </div>
+              <input
+                placeholder="מה גרם לכולם לצחוק?"
+                value={summary.funny_moment}
+                onChange={e => setSummary(s => ({ ...s, funny_moment: e.target.value }))}
+                style={inputStyle}
+              />
+              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', marginBottom: 6, fontWeight: 600 }}>
+                💬 ציטוט לזכור
+              </div>
+              <input
+                placeholder="משהו שנאמר..."
+                value={summary.quote}
+                onChange={e => setSummary(s => ({ ...s, quote: e.target.value }))}
+                style={inputStyle}
+              />
+              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', marginBottom: 10, fontWeight: 600 }}>
+                ⭐ דירוג המשימה
+              </div>
+              <StarRating value={summary.rating} onChange={v => setSummary(s => ({ ...s, rating: v }))} />
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 20 }}>
+              <button onClick={handleSaveSummary} disabled={saving} style={{
+                padding: '13px', background: GOLD, border: 'none',
+                borderRadius: 14, cursor: 'pointer', fontWeight: 700, fontSize: 15, color: NAVY,
+                fontFamily: 'var(--font-heebo), sans-serif'
+              }}>{saving ? 'שומר...' : '💾 שמור סיכום'}</button>
+              <button onClick={() => setStep('celebrate')} style={{
+                padding: '11px', background: 'transparent', border: 'none',
+                cursor: 'pointer', fontSize: 13, color: 'rgba(255,255,255,0.4)',
+                fontFamily: 'var(--font-heebo), sans-serif'
+              }}>← חזרה</button>
+            </div>
+          </>
+        )}
+
+        {summarySaved && (
+          <>
+            <div style={{ fontSize: 48, marginBottom: 12 }}>✅</div>
+            <div style={{ fontSize: 20, fontWeight: 900, color: 'white', marginBottom: 8 }}>הסיכום נשמר!</div>
+            <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginBottom: 24 }}>
+              הפיד המשפחתי עודכן
+            </div>
+            <button onClick={onClose} style={{
+              width: '100%', padding: '13px', background: GOLD, border: 'none',
+              borderRadius: 14, cursor: 'pointer', fontWeight: 700, fontSize: 15, color: NAVY,
+              fontFamily: 'var(--font-heebo), sans-serif'
+            }}>חזרה לבית 🏠</button>
+          </>
+        )}
       </div>
     </div>
   )
@@ -192,6 +273,7 @@ function CelebrationScreen({ assignment, newTotal, nextReward, onClose, onTazkir
 export default function ActiveMissionsPage() {
   const [assignments, setAssignments]       = useState([])
   const [currentProfile, setCurrentProfile] = useState(null)
+  const [profiles, setProfiles]             = useState([])
   const [rewards, setRewards]               = useState([])
   const [loading, setLoading]               = useState(true)
   const [celebration, setCelebration]       = useState(null)
@@ -209,61 +291,57 @@ export default function ActiveMissionsPage() {
     if (!profile) { router.push('/login'); return }
     setCurrentProfile(profile)
 
-    const [{ data: assignmentData }, { data: rewardData }] = await Promise.all([
-      supabase.from('assignments').select(`
-        *, mission:missions(*), member:profiles!assignments_assigned_to_fkey(*)
-      `).in('status', ['active', 'submitted']).order('created_at', { ascending: false }),
-      supabase.from('rewards').select('*').eq('is_active', true).order('points_required')
+    const [{ data: assignmentData }, { data: rewardData }, { data: profileData }] = await Promise.all([
+      supabase.from('assignments').select(`*, mission:missions(*), member:profiles!assignments_assigned_to_fkey(*)`).in('status', ['active', 'submitted']).order('created_at', { ascending: false }),
+      supabase.from('rewards').select('*').eq('is_active', true).order('points_required'),
+      supabase.from('profiles').select('*').eq('active', true)
     ])
 
     if (assignmentData) setAssignments(assignmentData)
     if (rewardData) setRewards(rewardData)
+    if (profileData) setProfiles(profileData)
     setLoading(false)
   }
 
   const getNextReward = (points) => rewards.find(r => r.points_required > points)
 
   const awardPoints = async (assignment) => {
-    const points = assignment.mission.points
+    const points   = assignment.mission.points
     const memberId = assignment.assigned_to
 
     await supabase.from('assignments').update({
-      status: 'completed',
-      completed_at: new Date().toISOString()
+      status: 'completed', completed_at: new Date().toISOString()
     }).eq('id', assignment.id)
 
     await supabase.from('point_events').insert({
-      member_id: memberId,
-      points,
+      member_id: memberId, points,
       reason: `השלים: ${assignment.mission.title}`,
       assignment_id: assignment.id
     })
 
     const { data: profile } = await supabase
       .from('profiles').select('total_points').eq('id', memberId).single()
-
     const newTotal = (profile?.total_points || 0) + points
-
     await supabase.from('profiles').update({ total_points: newTotal }).eq('id', memberId)
 
-    await supabase.from('feed_posts').insert({
+    const { data: feedPost } = await supabase.from('feed_posts').insert({
       type: 'mission_completed',
       title: `${assignment.member.name} השלים/ה: ${assignment.mission.title}`,
       content: `+${points} נקודות`,
       participants: [assignment.member.name],
       linked_type: 'assignment',
-      linked_id: assignment.id
-    })
+      linked_id: assignment.id,
+      created_by: memberId
+    }).select().single()
 
     const nextReward = getNextReward(newTotal)
-    setCelebration({ assignment, newTotal, nextReward })
+    setCelebration({ assignment, newTotal, nextReward, feedPostId: feedPost?.id })
     loadData()
   }
 
   const handleComplete = async (assignment) => {
     const isResponsibility = assignment.mission.type === 'responsibility'
     const isParent = currentProfile?.role === 'parent'
-
     if (isResponsibility && !isParent) {
       await supabase.from('assignments').update({ status: 'submitted' }).eq('id', assignment.id)
       loadData()
@@ -272,14 +350,7 @@ export default function ActiveMissionsPage() {
     }
   }
 
-  const handleApprove = async (assignment) => {
-    await awardPoints(assignment)
-  }
-
-  const closeCelebration = () => {
-    setCelebration(null)
-    router.push('/')
-  }
+  const closeCelebration = () => { setCelebration(null); router.push('/') }
 
   const openTazkir = () => {
     if (celebration) {
@@ -288,7 +359,6 @@ export default function ActiveMissionsPage() {
   }
 
   const isParent = currentProfile?.role === 'parent'
-
   const visibleAssignments = isParent
     ? assignments
     : assignments.filter(a => a.member?.id === currentProfile?.id)
@@ -320,12 +390,12 @@ export default function ActiveMissionsPage() {
           assignment={celebration.assignment}
           newTotal={celebration.newTotal}
           nextReward={celebration.nextReward}
+          feedPostId={celebration.feedPostId}
           onClose={closeCelebration}
           onTazkir={openTazkir}
         />
       )}
 
-      {/* Header */}
       <div style={{
         background: NAVY, padding: '20px 16px 24px',
         borderRadius: '0 0 24px 24px', marginBottom: 16
@@ -344,16 +414,11 @@ export default function ActiveMissionsPage() {
       </div>
 
       <div style={{ padding: '0 12px', boxSizing: 'border-box' }}>
-
         {visibleAssignments.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '48px 20px' }}>
             <div style={{ fontSize: 48, marginBottom: 12 }}>🎯</div>
-            <div style={{ fontSize: 16, fontWeight: 700, color: NAVY, marginBottom: 8 }}>
-              אין משימות פעילות
-            </div>
-            <div style={{ fontSize: 13, color: '#8a7a60', marginBottom: 20 }}>
-              בחר משימה ותתחיל לצבור נקודות
-            </div>
+            <div style={{ fontSize: 16, fontWeight: 700, color: NAVY, marginBottom: 8 }}>אין משימות פעילות</div>
+            <div style={{ fontSize: 13, color: '#8a7a60', marginBottom: 20 }}>בחר משימה ותתחיל לצבור נקודות</div>
             <a href="/missions" style={{
               display: 'inline-block', padding: '12px 24px',
               background: NAVY, color: 'white', borderRadius: 14,
@@ -362,9 +427,10 @@ export default function ActiveMissionsPage() {
           </div>
         ) : (
           visibleAssignments.map(a => {
-            const isLearning = ['Learning','Reading','English','Hebrew'].includes(a.mission?.category)
-            const ptColor = isLearning ? PURPLE : GREEN
+            const isLearning  = ['Learning','Reading','English','Hebrew'].includes(a.mission?.category)
+            const ptColor     = isLearning ? PURPLE : GREEN
             const isSubmitted = a.status === 'submitted'
+            const memberProfile = profiles.find(p => p.id === a.assigned_to)
 
             return (
               <div key={a.id} style={{
@@ -372,7 +438,6 @@ export default function ActiveMissionsPage() {
                 border: `1px solid ${isSubmitted ? GOLD + '60' : '#e8e0d0'}`,
                 overflow: 'hidden'
               }}>
-                {/* Status bar */}
                 <div style={{
                   background: isSubmitted ? '#fff8e8' : '#f7f4ee',
                   padding: '8px 14px',
@@ -380,8 +445,19 @@ export default function ActiveMissionsPage() {
                   display: 'flex', justifyContent: 'space-between', alignItems: 'center'
                 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <Avatar profile={a.member} size={28} />
-                    <span style={{ fontSize: 13, fontWeight: 700, color: NAVY }}>{a.member.name}</span>
+                    {memberProfile && (
+                      <div style={{
+                        width: 28, height: 28, borderRadius: '50%',
+                        border: `2px solid ${GOLD}`, overflow: 'hidden',
+                        background: '#e8d5a3', display: 'flex', alignItems: 'center',
+                        justifyContent: 'center', fontSize: 11, fontWeight: 700, color: NAVY, flexShrink: 0
+                      }}>
+                        {memberProfile.avatar_url
+                          ? <img src={memberProfile.avatar_url} alt={memberProfile.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                          : memberProfile.name?.charAt(0)}
+                      </div>
+                    )}
+                    <span style={{ fontSize: 13, fontWeight: 700, color: NAVY }}>{a.member?.name}</span>
                   </div>
                   <span style={{
                     fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 20,
@@ -396,32 +472,27 @@ export default function ActiveMissionsPage() {
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
                     <div style={{ flex: 1, paddingLeft: 10 }}>
                       <div style={{ fontSize: 15, fontWeight: 800, color: NAVY, lineHeight: 1.3 }}>
-                        {a.mission.title}
+                        {a.mission?.title}
                       </div>
-                      {a.mission.estimated_minutes && (
-                        <div style={{ fontSize: 12, color: '#a09080', marginTop: 3 }}>
-                          ⏱ {a.mission.estimated_minutes} דקות
+                      {a.due_date && (
+                        <div style={{ fontSize: 11, color: '#c45000', marginTop: 3, fontWeight: 600 }}>
+                          ⏰ עד {new Date(a.due_date).toLocaleDateString('he-IL')}
                         </div>
                       )}
                     </div>
                     <div style={{ textAlign: 'center', flexShrink: 0 }}>
-                      <div style={{ fontSize: 26, fontWeight: 900, color: ptColor, lineHeight: 1 }}>
-                        {a.mission.points}
-                      </div>
+                      <div style={{ fontSize: 26, fontWeight: 900, color: ptColor, lineHeight: 1 }}>{a.mission?.points}</div>
                       <div style={{ fontSize: 10, color: ptColor, opacity: 0.7, fontWeight: 700 }}>נקודות</div>
                     </div>
                   </div>
 
-                  {/* Action button */}
                   {a.status === 'active' && !isParent && (
                     <button onClick={() => handleComplete(a)} style={{
                       width: '100%', padding: '12px', background: NAVY,
                       color: 'white', border: 'none', borderRadius: 12,
                       cursor: 'pointer', fontWeight: 700, fontSize: 15,
                       fontFamily: 'var(--font-heebo), sans-serif'
-                    }}>
-                      סיימתי! 🙌
-                    </button>
+                    }}>סיימתי! 🙌</button>
                   )}
 
                   {a.status === 'active' && isParent && (
@@ -430,20 +501,16 @@ export default function ActiveMissionsPage() {
                       color: 'white', border: 'none', borderRadius: 12,
                       cursor: 'pointer', fontWeight: 700, fontSize: 15,
                       fontFamily: 'var(--font-heebo), sans-serif'
-                    }}>
-                      ✅ אשר והענק נקודות
-                    </button>
+                    }}>✅ אשר והענק נקודות</button>
                   )}
 
                   {a.status === 'submitted' && isParent && (
-                    <button onClick={() => handleApprove(a)} style={{
+                    <button onClick={() => handleComplete(a)} style={{
                       width: '100%', padding: '12px', background: GOLD,
                       color: NAVY, border: 'none', borderRadius: 12,
                       cursor: 'pointer', fontWeight: 700, fontSize: 15,
                       fontFamily: 'var(--font-heebo), sans-serif'
-                    }}>
-                      👑 אשר ותן {a.mission.points} נקודות
-                    </button>
+                    }}>👑 אשר ותן {a.mission?.points} נקודות</button>
                   )}
 
                   {a.status === 'submitted' && !isParent && (
@@ -451,9 +518,7 @@ export default function ActiveMissionsPage() {
                       textAlign: 'center', padding: '10px',
                       background: '#fff8e8', borderRadius: 12,
                       color: '#9a6500', fontWeight: 600, fontSize: 13
-                    }}>
-                      ממתין לאישור הורה ⏳
-                    </div>
+                    }}>ממתין לאישור הורה ⏳</div>
                   )}
                 </div>
               </div>
@@ -462,7 +527,6 @@ export default function ActiveMissionsPage() {
         )}
       </div>
 
-      {/* Bottom nav */}
       <div style={{
         position: 'fixed', bottom: 0, left: 0, right: 0,
         background: NAVY, borderTop: '1px solid rgba(255,255,255,0.08)',

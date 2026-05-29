@@ -232,7 +232,7 @@ export default function HomePage() {
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 14 }}>
           {[
             { href: '/missions', bg: NAVY, icon: '🎯', title: 'בחר משימה', sub: 'בחר משהו כיפי' },
-            { href: '/missions/active', bg: GOLD, icon: '✅', title: 'סיימתי משימה', sub: myAssignments.length > 0 ? `${myAssignments.length} פעילות` : 'אין עכשיו', dark: true },
+{ href: '/missions?tab=active', bg: GOLD, icon: '✅', title: isParent ? 'משימות פעילות' : 'סיימתי משימה', sub: activeAssignments.length > 0 ? `${activeAssignments.length} ${isParent ? 'ממתינות' : 'פעילות'}` : 'אין עכשיו', dark: true },
             { href: '/tazkir/new', bg: GREEN, icon: '📝', title: 'פותחים תחקיר', sub: 'מה עשינו היום?' },
             { href: '/rewards', bg: PURPLE, icon: '🏆', title: 'הפרסים שלי', sub: 'נקודות ופרסים' },
           ].map(item => (
