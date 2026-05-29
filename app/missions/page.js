@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react'
 import { supabase, getCurrentProfile } from '../lib/supabase'
 import { useRouter } from 'next/navigation'
-import BottomNav from '..components/BottomNav'
+import BottomNav from '../components/BottomNav'
 
 const NAVY = '#0a1628'
 const GOLD = '#c9a84c'
