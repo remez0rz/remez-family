@@ -123,7 +123,7 @@ export default function HomePage() {
         setReactions(grouped)
       }
     }
-/ Weekly bonus check for children
+// Weekly bonus check for children
 if (profile.role === 'child') {
   const { checkAndAwardWeeklyBonus } = await import('./lib/weeklyBonus')
   const awarded = await checkAndAwardWeeklyBonus(profile.id)
