@@ -215,7 +215,6 @@ export default function ProfilesPage() {
               {profiles.length} בני משפחה
             </div>
           </div>
-          <a href="/" style={{ color: 'rgba(255,255,255,0.45)', textDecoration: 'none', fontSize: 13 }}>← בית</a>
         </div>
       </div>
 

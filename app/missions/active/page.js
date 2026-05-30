@@ -10,6 +10,39 @@ const CREAM = '#f7f4ee'
 const GREEN = '#1a6b3c'
 const PURPLE = '#5c3d8f'
 
+const CATEGORY_VISUAL = {
+  Funny:    { emoji: '😂', bg: '#fff3e0', accent: '#e07000' },
+  Creative: { emoji: '🎨', bg: '#fce4ec', accent: '#c2185b' },
+  Weekend:  { emoji: '🌅', bg: '#e8f5e9', accent: '#2e7d32' },
+  Learning: { emoji: '🧠', bg: '#ede7f6', accent: PURPLE },
+  Reading:  { emoji: '📖', bg: '#e8eaf6', accent: '#303f9f' },
+  English:  { emoji: '🌍', bg: '#e3f2fd', accent: '#1565c0' },
+  Hebrew:   { emoji: '✡️', bg: '#e8eaf6', accent: '#283593' },
+  Helping:  { emoji: '🤝', bg: '#e8f5e9', accent: GREEN },
+  Kindness: { emoji: '❤️', bg: '#fce4ec', accent: '#ad1457' },
+  House:    { emoji: '🏠', bg: '#efebe9', accent: '#4e342e' },
+  Outdoor:  { emoji: '🌿', bg: '#e0f2f1', accent: '#00695c' },
+  Health:   { emoji: '💪', bg: '#e0f7fa', accent: '#00838f' },
+  Family:   { emoji: '👨‍👩‍👧', bg: '#fff8e1', accent: '#f57f17' },
+  Memory:   { emoji: '📸', bg: '#f3e5f5', accent: '#6a1b9a' },
+}
+
+const MISSION_GRADIENTS = [
+  ['#1a6b3c', '#2d9e5f'], ['#0a1628', '#1e3a5f'],
+  ['#7b2d8b', '#a855c8'], ['#c45000', '#e07030'],
+  ['#1a6b8a', '#2892b8'], ['#9a6500', '#c9a84c'],
+  ['#ad1457', '#d81b60'], ['#0a1628', '#2d4a9e'],
+  ['#1a6b3c', '#43a870'], ['#5c3d8f', '#8b5cf6'],
+]
+
+const CATEGORY_LABELS = {
+  Family: 'משפחה', Learning: 'לומדים בכיף', Helping: 'עוזרים בבית',
+  Creative: 'יצירה', Funny: 'מצחיקים', Outdoor: 'בחוץ',
+  Reading: 'קריאה', English: 'אנגלית', Hebrew: 'עברית',
+  Kindness: 'מעשים טובים', House: 'הבית שלנו', Memory: 'זיכרונות',
+  Health: 'בריאות', Weekend: 'סופ״ש',
+}
+
 function Avatar({ profile, size = 40 }) {
   const [imgError, setImgError] = useState(false)
   if (!profile) return null
@@ -60,32 +93,40 @@ function Confetti() {
   )
 }
 
-function StarRating({ value, onChange }) {
-  return (
-    <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
-      {[1,2,3,4,5].map(star => (
-        <div key={star} onClick={() => onChange(star)} style={{
-          fontSize: 28, cursor: 'pointer',
-          opacity: star <= value ? 1 : 0.25, transition: 'opacity 0.15s'
-        }}>⭐</div>
-      ))}
-    </div>
-  )
-}
-
-// Summary form shown BEFORE celebration
-function SummaryForm({ assignment, onSubmit, onSkip }) {
-  const [show, setShow] = useState(false)
-  const [summary, setSummary] = useState({ best_moment: '', funny_moment: '', quote: '', rating: 0 })
+// Simple documentation form — photo + text only
+function DocumentationForm({ assignment, onSubmit, onSkip }) {
+  const [show, setShow]           = useState(false)
+  const [text, setText]           = useState('')
+  const [photo, setPhoto]         = useState(null)
+  const [preview, setPreview]     = useState(null)
+  const [uploading, setUploading] = useState(false)
 
   useEffect(() => { setTimeout(() => setShow(true), 50) }, [])
 
-  const inputStyle = {
-    width: '100%', padding: '10px 12px',
-    border: '1px solid rgba(255,255,255,0.15)', borderRadius: 10,
-    fontSize: 14, color: 'white', background: 'rgba(255,255,255,0.08)',
-    fontFamily: 'var(--font-heebo), sans-serif',
-    boxSizing: 'border-box', outline: 'none', marginBottom: 10
+  const handlePhotoSelect = (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+    setPhoto(file)
+    setPreview(URL.createObjectURL(file))
+    e.target.value = ''
+  }
+
+  const handleSubmit = async () => {
+    let photoUrl = null
+    if (photo) {
+      setUploading(true)
+      const ext = photo.name.split('.').pop()
+      const filename = `missions/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
+      const { error } = await supabase.storage
+        .from('family-media')
+        .upload(filename, photo, { contentType: photo.type })
+      if (!error) {
+        const { data } = supabase.storage.from('family-media').getPublicUrl(filename)
+        photoUrl = data.publicUrl
+      }
+      setUploading(false)
+    }
+    onSubmit({ text, photoUrl })
   }
 
   return (
@@ -99,44 +140,86 @@ function SummaryForm({ assignment, onSubmit, onSkip }) {
     }}>
       <div style={{
         background: NAVY, borderRadius: 28, padding: '28px 22px',
-        maxWidth: 360, width: '100%', textAlign: 'center',
+        maxWidth: 360, width: '100%',
         border: `1px solid ${GOLD}40`, position: 'relative', zIndex: 1,
         transform: show ? 'scale(1)' : 'scale(0.85)',
         transition: 'transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
       }}>
-        <div style={{ fontSize: 36, marginBottom: 8 }}>📋</div>
-        <div style={{ fontSize: 18, fontWeight: 900, color: 'white', marginBottom: 4 }}>
-          סיכום האתגר
-        </div>
-        <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginBottom: 20 }}>
-          {assignment.mission.title}
-        </div>
-
-        <div style={{ textAlign: 'right' }}>
-          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', marginBottom: 6, fontWeight: 600 }}>🌟 הרגע הכי טוב</div>
-          <input placeholder="מה היה השיא?" value={summary.best_moment}
-            onChange={e => setSummary(s => ({ ...s, best_moment: e.target.value }))} style={inputStyle} />
-          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', marginBottom: 6, fontWeight: 600 }}>😂 הרגע המצחיק</div>
-          <input placeholder="מה גרם לכולם לצחוק?" value={summary.funny_moment}
-            onChange={e => setSummary(s => ({ ...s, funny_moment: e.target.value }))} style={inputStyle} />
-          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', marginBottom: 6, fontWeight: 600 }}>💬 ציטוט לזכור</div>
-          <input placeholder="משהו שנאמר..." value={summary.quote}
-            onChange={e => setSummary(s => ({ ...s, quote: e.target.value }))} style={inputStyle} />
-          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', marginBottom: 10, fontWeight: 600 }}>⭐ דירוג</div>
-          <StarRating value={summary.rating} onChange={v => setSummary(s => ({ ...s, rating: v }))} />
+        <div style={{ textAlign: 'center', marginBottom: 20 }}>
+          <div style={{ fontSize: 32, marginBottom: 8 }}>📸</div>
+          <div style={{ fontSize: 18, fontWeight: 900, color: 'white', marginBottom: 4 }}>
+            תעדו את הרגע
+          </div>
+          <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)' }}>
+            {assignment.mission.title}
+          </div>
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 20 }}>
-          <button onClick={() => onSubmit(summary)} style={{
+        {/* Photo */}
+        <input type="file" accept="image/*" capture="environment"
+          onChange={handlePhotoSelect} style={{ display: 'none' }} id="doc-camera" />
+        <input type="file" accept="image/*"
+          onChange={handlePhotoSelect} style={{ display: 'none' }} id="doc-gallery" />
+
+        {preview ? (
+          <div style={{ position: 'relative', marginBottom: 12 }}>
+            <img src={preview} alt="preview" style={{
+              width: '100%', borderRadius: 12, maxHeight: 200, objectFit: 'cover', display: 'block'
+            }} />
+            <button onClick={() => { setPhoto(null); setPreview(null) }} style={{
+              position: 'absolute', top: 8, left: 8,
+              background: 'rgba(10,22,40,0.7)', border: 'none',
+              borderRadius: '50%', width: 28, height: 28,
+              color: 'white', cursor: 'pointer', fontSize: 14,
+              display: 'flex', alignItems: 'center', justifyContent: 'center'
+            }}>✕</button>
+          </div>
+        ) : (
+          <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+            <label htmlFor="doc-camera" style={{
+              flex: 1, padding: '10px', background: 'rgba(255,255,255,0.08)',
+              borderRadius: 12, border: '1.5px dashed rgba(255,255,255,0.2)',
+              textAlign: 'center', cursor: 'pointer',
+              fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.7)'
+            }}>📷 מצלמה</label>
+            <label htmlFor="doc-gallery" style={{
+              flex: 1, padding: '10px', background: 'rgba(255,255,255,0.08)',
+              borderRadius: 12, border: '1.5px dashed rgba(255,255,255,0.2)',
+              textAlign: 'center', cursor: 'pointer',
+              fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.7)'
+            }}>🖼️ גלריה</label>
+          </div>
+        )}
+
+        {/* Text */}
+        <textarea
+          value={text}
+          onChange={e => setText(e.target.value)}
+          placeholder="ספר מה עשית... (לא חובה)"
+          style={{
+            width: '100%', padding: '10px 12px',
+            border: '1px solid rgba(255,255,255,0.15)', borderRadius: 10,
+            fontSize: 14, color: 'white', background: 'rgba(255,255,255,0.08)',
+            fontFamily: 'var(--font-heebo), sans-serif',
+            boxSizing: 'border-box', outline: 'none',
+            resize: 'none', minHeight: 80, lineHeight: 1.6,
+            marginBottom: 16
+          }}
+        />
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <button onClick={handleSubmit} disabled={uploading} style={{
             padding: '13px', background: GOLD, border: 'none',
             borderRadius: 14, cursor: 'pointer', fontWeight: 700, fontSize: 15, color: NAVY,
             fontFamily: 'var(--font-heebo), sans-serif'
-          }}>סיימתי! תן לי נקודות ⭐</button>
-          <button onClick={() => onSkip()} style={{
+          }}>
+            {uploading ? 'מעלה תמונה...' : 'סיימתי! תן לי נקודות ⭐'}
+          </button>
+          <button onClick={onSkip} style={{
             padding: '11px', background: 'transparent', border: 'none',
             cursor: 'pointer', fontSize: 13, color: 'rgba(255,255,255,0.4)',
             fontFamily: 'var(--font-heebo), sans-serif'
-          }}>דלג על הסיכום</button>
+          }}>דלג</button>
         </div>
       </div>
     </div>
@@ -146,7 +229,7 @@ function SummaryForm({ assignment, onSubmit, onSkip }) {
 function CelebrationScreen({ assignment, newTotal, nextReward, leveledUp, newLevel, newBadges, onClose, onTazkir }) {
   const router = useRouter()
   const [show, setShow] = useState(false)
-  const points    = assignment.mission.points
+  const points     = assignment.mission.points
   const isLearning = ['Learning','Reading','English','Hebrew'].includes(assignment.mission?.category)
 
   useEffect(() => { setTimeout(() => setShow(true), 50) }, [])
@@ -264,7 +347,7 @@ export default function ActiveEarningPage() {
   const [profiles, setProfiles]             = useState([])
   const [rewards, setRewards]               = useState([])
   const [loading, setLoading]               = useState(true)
-  const [summaryTarget, setSummaryTarget]   = useState(null)
+  const [docTarget, setDocTarget]           = useState(null)
   const [celebration, setCelebration]       = useState(null)
   const router = useRouter()
 
@@ -282,7 +365,7 @@ export default function ActiveEarningPage() {
 
     const [{ data: assignmentData }, { data: rewardData }, { data: profileData }] = await Promise.all([
       supabase.from('assignments').select(`*, mission:missions(*), member:profiles!assignments_assigned_to_fkey(*)`)
-        .in('status', ['active', 'submitted']).order('created_at', { ascending: false }),
+        .eq('status', 'active').order('created_at', { ascending: false }),
       supabase.from('rewards').select('*').eq('is_active', true).order('points_required'),
       supabase.from('profiles').select('*').eq('active', true)
     ])
@@ -295,7 +378,7 @@ export default function ActiveEarningPage() {
 
   const getNextReward = (points) => rewards.find(r => r.points_required > points)
 
-  const awardPoints = async (assignment, summary = null) => {
+  const awardPoints = async (assignment, doc = null) => {
     const points   = assignment.mission.points
     const memberId = assignment.assigned_to
 
@@ -322,43 +405,30 @@ export default function ActiveEarningPage() {
     const { checkAndAwardBadges } = await import('../../lib/badges')
     const newBadges = await checkAndAwardBadges(memberId)
 
-    const { data: feedPost } = await supabase.from('feed_posts').insert({
+    await supabase.from('feed_posts').insert({
       type: 'mission_completed',
       title: `${assignment.member.name} צבר/ה נקודות! ${assignment.mission.title}`,
-      content: summary?.best_moment || summary?.funny_moment || `+${points} נקודות 🎉`,
-      best_moment:  summary?.best_moment  || null,
-      funny_moment: summary?.funny_moment || null,
-      quote:        summary?.quote        || null,
-      rating:       summary?.rating       || null,
+      content: doc?.text || `+${points} נקודות 🎉`,
+      media_urls: doc?.photoUrl ? [doc.photoUrl] : [],
       participants: [assignment.member.name],
       linked_type: 'assignment',
       linked_id: assignment.id,
       created_by: memberId
-    }).select().single()
+    })
 
     const nextReward = getNextReward(newTotal)
-    setSummaryTarget(null)
+    setDocTarget(null)
     setCelebration({ assignment, newTotal, nextReward, leveledUp, newLevel, newBadges })
     loadData()
   }
 
-  const handleComplete = async (assignment) => {
+  const handleComplete = (assignment) => {
     const isParent = currentProfile?.role === 'parent'
     if (isParent) {
-      // Parents approve instantly — no summary form
-      await awardPoints(assignment)
+      awardPoints(assignment)
     } else {
-      // Kids see summary form first
-      setSummaryTarget(assignment)
+      setDocTarget(assignment)
     }
-  }
-
-  const handleSummarySubmit = async (summary) => {
-    await awardPoints(summaryTarget, summary)
-  }
-
-  const handleSummarySkip = async () => {
-    await awardPoints(summaryTarget)
   }
 
   const closeCelebration = () => { setCelebration(null); router.push('/') }
@@ -395,11 +465,11 @@ export default function ActiveEarningPage() {
       boxSizing: 'border-box', overflowX: 'hidden'
     }}>
 
-      {summaryTarget && (
-        <SummaryForm
-          assignment={summaryTarget}
-          onSubmit={handleSummarySubmit}
-          onSkip={handleSummarySkip}
+      {docTarget && (
+        <DocumentationForm
+          assignment={docTarget}
+          onSubmit={(doc) => awardPoints(docTarget, doc)}
+          onSkip={() => awardPoints(docTarget)}
         />
       )}
 
@@ -420,16 +490,9 @@ export default function ActiveEarningPage() {
         background: NAVY, padding: '20px 16px 24px',
         borderRadius: '0 0 24px 24px', marginBottom: 16
       }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div>
-            <div style={{ fontSize: 22, fontWeight: 900, color: 'white' }}>⭐ בתהליך</div>
-            <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginTop: 2 }}>
-              {isParent ? 'אשר השלמות ותן נקודות' : 'סיימת? קבל את הנקודות שלך'}
-            </div>
-          </div>
-          <a href="/missions" style={{ color: 'rgba(255,255,255,0.45)', textDecoration: 'none', fontSize: 13 }}>
-            ← אתגרים
-          </a>
+        <div style={{ fontSize: 22, fontWeight: 900, color: 'white' }}>⭐ בתהליך</div>
+        <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginTop: 2 }}>
+          {isParent ? 'אשר השלמות ותן נקודות' : 'סיימת? קבל את הנקודות שלך'}
         </div>
       </div>
 
@@ -446,58 +509,59 @@ export default function ActiveEarningPage() {
             }}>צוברים נקודות →</a>
           </div>
         ) : (
-          visibleAssignments.map(a => {
-            const isLearning  = ['Learning','Reading','English','Hebrew'].includes(a.mission?.category)
-            const ptColor     = isLearning ? PURPLE : GREEN
-            const isSubmitted = a.status === 'submitted'
+          visibleAssignments.map((a, index) => {
+            const isLearning    = ['Learning','Reading','English','Hebrew'].includes(a.mission?.category)
+            const ptColor       = isLearning ? PURPLE : GREEN
+            const visual        = CATEGORY_VISUAL[a.mission?.category] || { emoji: '⭐', bg: '#f7f4ee', accent: GOLD }
+            const gradient      = MISSION_GRADIENTS[index % MISSION_GRADIENTS.length]
             const memberProfile = profiles.find(p => p.id === a.assigned_to)
 
             return (
               <div key={a.id} style={{
-                background: 'white', borderRadius: 16, marginBottom: 12,
-                border: `1px solid ${isSubmitted ? GOLD + '60' : '#e8e0d0'}`,
-                overflow: 'hidden'
+                borderRadius: 20, marginBottom: 14, overflow: 'hidden',
+                border: `1px solid ${visual.accent}30`
               }}>
+                {/* Gradient header — same as mission cards */}
                 <div style={{
-                  background: isSubmitted ? '#fff8e8' : '#f7f4ee', padding: '8px 14px',
-                  borderBottom: `1px solid ${isSubmitted ? GOLD + '30' : '#f0ebe0'}`,
-                  display: 'flex', justifyContent: 'space-between', alignItems: 'center'
+                  background: `linear-gradient(135deg, ${gradient[0]}, ${gradient[1]})`,
+                  padding: '20px 18px 18px',
+                  display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between',
+                  minHeight: 100, position: 'relative'
                 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    {memberProfile && (
-                      <div style={{
-                        width: 28, height: 28, borderRadius: '50%',
-                        border: `2px solid ${GOLD}`, overflow: 'hidden',
-                        background: '#e8d5a3', display: 'flex', alignItems: 'center',
-                        justifyContent: 'center', fontSize: 11, fontWeight: 700, color: NAVY, flexShrink: 0
-                      }}>
-                        {memberProfile.avatar_url
-                          ? <img src={memberProfile.avatar_url} alt={memberProfile.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                          : memberProfile.name?.charAt(0)}
+                  <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.2)' }} />
+                  <div style={{ position: 'relative', zIndex: 1 }}>
+                    <div style={{ fontSize: 32, marginBottom: 4, filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))' }}>
+                      {visual.emoji}
+                    </div>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.7)', letterSpacing: '0.06em' }}>
+                      {CATEGORY_LABELS[a.mission?.category] || a.mission?.category}
+                    </div>
+                    {a.due_date && (
+                      <div style={{ fontSize: 11, color: '#f0a080', marginTop: 3, fontWeight: 600 }}>
+                        ⏰ עד {new Date(a.due_date).toLocaleDateString('he-IL')}
                       </div>
                     )}
-                    <span style={{ fontSize: 13, fontWeight: 700, color: NAVY }}>{a.member?.name}</span>
                   </div>
-                  <span style={{
-                    fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 20,
-                    background: isSubmitted ? GOLD : '#e8e0d0',
-                    color: isSubmitted ? NAVY : '#8a7a60'
-                  }}>{isSubmitted ? 'ממתין לאישור' : 'בתהליך'}</span>
+                  <div style={{ position: 'relative', zIndex: 1, textAlign: 'center' }}>
+                    <div style={{
+                      background: 'rgba(255,255,255,0.15)', borderRadius: 14,
+                      padding: '8px 14px', backdropFilter: 'blur(4px)'
+                    }}>
+                      <div style={{ fontSize: 28, fontWeight: 900, color: 'white', lineHeight: 1 }}>{a.mission?.points}</div>
+                      <div style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.8)' }}>נק׳</div>
+                    </div>
+                  </div>
                 </div>
 
-                <div style={{ padding: '12px 14px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
-                    <div style={{ flex: 1, paddingLeft: 10 }}>
-                      <div style={{ fontSize: 15, fontWeight: 800, color: NAVY, lineHeight: 1.3 }}>{a.mission?.title}</div>
-                      {a.due_date && (
-                        <div style={{ fontSize: 11, color: '#c45000', marginTop: 3, fontWeight: 600 }}>
-                          ⏰ עד {new Date(a.due_date).toLocaleDateString('he-IL')}
-                        </div>
-                      )}
-                    </div>
-                    <div style={{ textAlign: 'center', flexShrink: 0 }}>
-                      <div style={{ fontSize: 26, fontWeight: 900, color: ptColor, lineHeight: 1 }}>{a.mission?.points}</div>
-                      <div style={{ fontSize: 10, color: ptColor, opacity: 0.7, fontWeight: 700 }}>נק׳</div>
+                {/* Card body */}
+                <div style={{ background: 'white', padding: '14px 16px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+                    {memberProfile && <Avatar profile={memberProfile} size={32} />}
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 15, fontWeight: 800, color: NAVY, lineHeight: 1.3 }}>
+                        {a.mission?.title}
+                      </div>
+                      <div style={{ fontSize: 12, color: '#a09080', marginTop: 2 }}>{memberProfile?.name}</div>
                     </div>
                   </div>
 
