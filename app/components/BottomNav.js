@@ -5,11 +5,11 @@ const NAVY = '#0a1628'
 const GOLD = '#c9a84c'
 
 const NAV_ITEMS = [
-  { href: '/',           label: 'בית',     emoji: '🏠' },
-  { href: '/missions',   label: 'צוברים',  emoji: '⭐' },
-  { href: '/tazkir/new', label: 'תחקיר',   emoji: '📝', center: true },
-  { href: '/rewards',    label: 'חוויות',  emoji: '✨' },
-  { href: '/feed',       label: 'פיד',     emoji: '📖' },
+  { href: '/',           label: 'בית',        emoji: '🏠' },
+  { href: '/missions',   label: 'צוברים',     emoji: '⭐' },
+  { href: '/tazkir/new', label: 'תחקיר',      emoji: '📝', center: true },
+  { href: '/rewards',    label: 'חוויות',     emoji: '✨' },
+  { href: '/feed',       label: 'זיכרונות',   emoji: '📖' },
 ]
 
 export default function BottomNav() {

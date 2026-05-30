@@ -23,7 +23,7 @@ const REACTIONS = [
 const TYPE_FILTERS = [
   { id: 'all',     label: 'הכל',      emoji: '✨' },
   { id: 'tahkir',  label: 'תחקירים',  emoji: '📝' },
-  { id: 'mission', label: 'משימות',   emoji: '✅' },
+  { id: 'mission', label: 'אתגרים',   emoji: '⭐' },
 ]
 
 function Avatar({ profile, size = 36 }) {
@@ -77,7 +77,7 @@ function ReactionBar({ postId, currentProfileId, initialReactions }) {
   return (
     <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', paddingTop: 10 }}>
       {REACTIONS.map(r => {
-        const count = counts[r.type] || 0
+        const count  = counts[r.type] || 0
         const active = mine.includes(r.type)
         return (
           <button key={r.type} onClick={() => handle(r.type)} style={{
@@ -157,7 +157,6 @@ function FeedCard({ post, profiles, currentProfile, reactionData }) {
       background: 'white', borderRadius: 20,
       border: '1px solid #e8e0d0', marginBottom: 14, overflow: 'hidden'
     }}>
-      {/* Header */}
       <div style={{ padding: '14px 16px 10px', display: 'flex', alignItems: 'center', gap: 10 }}>
         <div style={{ display: 'flex' }}>
           {participantProfiles.length > 0
@@ -171,7 +170,7 @@ function FeedCard({ post, profiles, currentProfile, reactionData }) {
                 width: 38, height: 38, borderRadius: '50%',
                 background: '#f0ebe0', border: `2px solid ${GOLD}`,
                 display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18
-              }}>{isTazkir ? '📝' : '🎯'}</div>
+              }}>{isTazkir ? '📝' : '⭐'}</div>
             )
           }
         </div>
@@ -185,7 +184,7 @@ function FeedCard({ post, profiles, currentProfile, reactionData }) {
               background: isTazkir ? '#ede7f6' : '#edf7f1',
               color: isTazkir ? PURPLE : GREEN
             }}>
-              {isTazkir ? '📝 תחקיר' : '✅ משימה'}
+              {isTazkir ? '📝 תחקיר' : '⭐ אתגר'}
             </span>
             <TimeAgo dateStr={post.created_at} />
           </div>
@@ -200,6 +199,32 @@ function FeedCard({ post, profiles, currentProfile, reactionData }) {
             fontSize: 13, color: '#5a4a3a', lineHeight: 1.6,
             background: '#faf8f4', borderRadius: 10, padding: '10px 12px'
           }}>{post.content}</div>
+        </div>
+      )}
+
+      {post.best_moment && (
+        <div style={{ padding: '8px 16px 0' }}>
+          <span style={{ fontSize: 11, color: '#8a7a60', fontWeight: 600 }}>🌟 </span>
+          <span style={{ fontSize: 13, color: '#5a4a3a' }}>{post.best_moment}</span>
+        </div>
+      )}
+
+      {post.funny_moment && (
+        <div style={{ padding: '4px 16px 0' }}>
+          <span style={{ fontSize: 11, color: '#8a7a60', fontWeight: 600 }}>😂 </span>
+          <span style={{ fontSize: 13, color: '#5a4a3a' }}>{post.funny_moment}</span>
+        </div>
+      )}
+
+      {post.quote && (
+        <div style={{ padding: '4px 16px 0' }}>
+          <span style={{ fontSize: 13, color: '#5a4a3a', fontStyle: 'italic' }}>״{post.quote}״</span>
+        </div>
+      )}
+
+      {post.rating && (
+        <div style={{ padding: '4px 16px 0' }}>
+          {'⭐'.repeat(post.rating)}
         </div>
       )}
 
@@ -243,7 +268,6 @@ export default function FeedPage() {
     })
   }, [])
 
-  // Reload when filters change
   useEffect(() => {
     if (currentProfile) {
       setPosts([])
@@ -279,13 +303,11 @@ export default function FeedPage() {
     if (typeFilter !== 'all') {
       query = query.eq('type', typeFilter === 'mission' ? 'mission_completed' : 'tahkir')
     }
-
     if (memberFilter !== 'all') {
       query = query.contains('participants', [memberFilter])
     }
 
     const { data: postData } = await query
-
     if (!postData || postData.length < PAGE_SIZE) setHasMore(false)
 
     if (postData?.length) {
@@ -313,8 +335,6 @@ export default function FeedPage() {
     setLoadingMore(false)
   }
 
-  const children = profiles.filter(p => p.role === 'child')
-
   if (loading) return (
     <div style={{
       minHeight: '100vh', display: 'flex', alignItems: 'center',
@@ -337,7 +357,6 @@ export default function FeedPage() {
       boxSizing: 'border-box', overflowX: 'hidden'
     }}>
 
-      {/* Header */}
       <div style={{
         background: NAVY, padding: '20px 16px 0',
         borderRadius: '0 0 24px 24px', marginBottom: 16
@@ -349,11 +368,6 @@ export default function FeedPage() {
               הסיפור של משפחת רמז
             </div>
           </div>
-          <a href="/tazkir/new" style={{
-            background: GOLD, color: NAVY, borderRadius: 20,
-            padding: '8px 16px', textDecoration: 'none',
-            fontWeight: 700, fontSize: 13
-          }}>+ תחקיר</a>
         </div>
 
         {/* Type filter */}
@@ -372,7 +386,7 @@ export default function FeedPage() {
           ))}
         </div>
 
-        {/* Member filter — avatar chips */}
+        {/* Member filter with real avatars */}
         <div style={{ display: 'flex', gap: 10, paddingBottom: 16, overflowX: 'auto', scrollbarWidth: 'none' }}>
           <div onClick={() => setMemberFilter('all')} style={{
             display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, cursor: 'pointer', flexShrink: 0
@@ -395,7 +409,9 @@ export default function FeedPage() {
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 fontSize: 15, fontWeight: 700, color: NAVY
               }}>
-                {p.name?.charAt(0)}
+                {p.avatar_url
+                  ? <img src={p.avatar_url} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={e => e.target.style.display = 'none'} />
+                  : p.name?.charAt(0)}
               </div>
               <span style={{ fontSize: 10, color: memberFilter === p.name ? GOLD : 'rgba(255,255,255,0.5)', fontWeight: 600 }}>
                 {p.name}
@@ -413,7 +429,7 @@ export default function FeedPage() {
               {typeFilter !== 'all' || memberFilter !== 'all' ? 'אין תוצאות לפילטר הזה' : 'עדיין אין זיכרונות'}
             </div>
             <div style={{ fontSize: 13, color: '#8a7a60', marginBottom: 20 }}>
-              {typeFilter !== 'all' || memberFilter !== 'all' ? 'נסו פילטר אחר' : 'סיימו משימה או פתחו תחקיר ראשון'}
+              {typeFilter !== 'all' || memberFilter !== 'all' ? 'נסו פילטר אחר' : 'השלימו אתגר או פתחו תחקיר ראשון'}
             </div>
             {typeFilter === 'all' && memberFilter === 'all' && (
               <a href="/tazkir/new" style={{
@@ -457,7 +473,7 @@ export default function FeedPage() {
         )}
       </div>
 
-       <BottomNav />
+      <BottomNav />
     </div>
   )
 }
