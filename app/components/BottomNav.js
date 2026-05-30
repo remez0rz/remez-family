@@ -9,7 +9,7 @@ const NAV_ITEMS = [
   { href: '/missions',   label: 'צוברים',     emoji: '⭐' },
   { href: '/tazkir/new', label: 'תחקיר',      emoji: '📝', center: true },
   { href: '/rewards',    label: 'חוויות',     emoji: '✨' },
-  { href: '/feed',       label: 'זיכרונות',   emoji: '📖' },
+  { href: '/feed',       label: 'רגעים',      emoji: '📖' },
 ]
 
 export default function BottomNav() {
