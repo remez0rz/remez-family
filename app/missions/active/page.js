@@ -10,23 +10,6 @@ const CREAM = '#f7f4ee'
 const GREEN = '#1a6b3c'
 const PURPLE = '#5c3d8f'
 
-const CATEGORY_VISUAL = {
-  Funny:    { emoji: '😂', bg: '#fff3e0', accent: '#e07000' },
-  Creative: { emoji: '🎨', bg: '#fce4ec', accent: '#c2185b' },
-  Weekend:  { emoji: '🌅', bg: '#e8f5e9', accent: '#2e7d32' },
-  Learning: { emoji: '🧠', bg: '#ede7f6', accent: PURPLE },
-  Reading:  { emoji: '📖', bg: '#e8eaf6', accent: '#303f9f' },
-  English:  { emoji: '🌍', bg: '#e3f2fd', accent: '#1565c0' },
-  Hebrew:   { emoji: '✡️', bg: '#e8eaf6', accent: '#283593' },
-  Helping:  { emoji: '🤝', bg: '#e8f5e9', accent: GREEN },
-  Kindness: { emoji: '❤️', bg: '#fce4ec', accent: '#ad1457' },
-  House:    { emoji: '🏠', bg: '#efebe9', accent: '#4e342e' },
-  Outdoor:  { emoji: '🌿', bg: '#e0f2f1', accent: '#00695c' },
-  Health:   { emoji: '💪', bg: '#e0f7fa', accent: '#00838f' },
-  Family:   { emoji: '👨‍👩‍👧', bg: '#fff8e1', accent: '#f57f17' },
-  Memory:   { emoji: '📸', bg: '#f3e5f5', accent: '#6a1b9a' },
-}
-
 const MISSION_GRADIENTS = [
   ['#1a6b3c', '#2d9e5f'], ['#0a1628', '#1e3a5f'],
   ['#7b2d8b', '#a855c8'], ['#c45000', '#e07030'],
@@ -34,6 +17,16 @@ const MISSION_GRADIENTS = [
   ['#ad1457', '#d81b60'], ['#0a1628', '#2d4a9e'],
   ['#1a6b3c', '#43a870'], ['#5c3d8f', '#8b5cf6'],
 ]
+
+const CATEGORY_VISUAL = {
+  Funny:    { emoji: '😂' }, Creative: { emoji: '🎨' },
+  Weekend:  { emoji: '🌅' }, Learning: { emoji: '🧠' },
+  Reading:  { emoji: '📖' }, English:  { emoji: '🌍' },
+  Hebrew:   { emoji: '✡️' }, Helping:  { emoji: '🤝' },
+  Kindness: { emoji: '❤️' }, House:    { emoji: '🏠' },
+  Outdoor:  { emoji: '🌿' }, Health:   { emoji: '💪' },
+  Family:   { emoji: '👨‍👩‍👧' }, Memory:  { emoji: '📸' },
+}
 
 const CATEGORY_LABELS = {
   Family: 'משפחה', Learning: 'לומדים בכיף', Helping: 'עוזרים בבית',
@@ -43,7 +36,7 @@ const CATEGORY_LABELS = {
   Health: 'בריאות', Weekend: 'סופ״ש',
 }
 
-function Avatar({ profile, size = 40 }) {
+function Avatar({ profile, size = 36 }) {
   const [imgError, setImgError] = useState(false)
   if (!profile) return null
   return (
@@ -93,7 +86,6 @@ function Confetti() {
   )
 }
 
-// Simple documentation form — photo + text only
 function DocumentationForm({ assignment, onSubmit, onSkip }) {
   const [show, setShow]           = useState(false)
   const [text, setText]           = useState('')
@@ -117,9 +109,7 @@ function DocumentationForm({ assignment, onSubmit, onSkip }) {
       setUploading(true)
       const ext = photo.name.split('.').pop()
       const filename = `missions/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
-      const { error } = await supabase.storage
-        .from('family-media')
-        .upload(filename, photo, { contentType: photo.type })
+      const { error } = await supabase.storage.from('family-media').upload(filename, photo, { contentType: photo.type })
       if (!error) {
         const { data } = supabase.storage.from('family-media').getPublicUrl(filename)
         photoUrl = data.publicUrl
@@ -147,15 +137,10 @@ function DocumentationForm({ assignment, onSubmit, onSkip }) {
       }}>
         <div style={{ textAlign: 'center', marginBottom: 20 }}>
           <div style={{ fontSize: 32, marginBottom: 8 }}>📸</div>
-          <div style={{ fontSize: 18, fontWeight: 900, color: 'white', marginBottom: 4 }}>
-            תעדו את הרגע
-          </div>
-          <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)' }}>
-            {assignment.mission.title}
-          </div>
+          <div style={{ fontSize: 18, fontWeight: 900, color: 'white', marginBottom: 4 }}>תעדו את הרגע</div>
+          <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)' }}>{assignment.mission.title}</div>
         </div>
 
-        {/* Photo */}
         <input type="file" accept="image/*" capture="environment"
           onChange={handlePhotoSelect} style={{ display: 'none' }} id="doc-camera" />
         <input type="file" accept="image/*"
@@ -168,9 +153,8 @@ function DocumentationForm({ assignment, onSubmit, onSkip }) {
             }} />
             <button onClick={() => { setPhoto(null); setPreview(null) }} style={{
               position: 'absolute', top: 8, left: 8,
-              background: 'rgba(10,22,40,0.7)', border: 'none',
-              borderRadius: '50%', width: 28, height: 28,
-              color: 'white', cursor: 'pointer', fontSize: 14,
+              background: 'rgba(10,22,40,0.7)', border: 'none', borderRadius: '50%',
+              width: 28, height: 28, color: 'white', cursor: 'pointer', fontSize: 14,
               display: 'flex', alignItems: 'center', justifyContent: 'center'
             }}>✕</button>
           </div>
@@ -191,10 +175,7 @@ function DocumentationForm({ assignment, onSubmit, onSkip }) {
           </div>
         )}
 
-        {/* Text */}
-        <textarea
-          value={text}
-          onChange={e => setText(e.target.value)}
+        <textarea value={text} onChange={e => setText(e.target.value)}
           placeholder="ספר מה עשית... (לא חובה)"
           style={{
             width: '100%', padding: '10px 12px',
@@ -202,15 +183,14 @@ function DocumentationForm({ assignment, onSubmit, onSkip }) {
             fontSize: 14, color: 'white', background: 'rgba(255,255,255,0.08)',
             fontFamily: 'var(--font-heebo), sans-serif',
             boxSizing: 'border-box', outline: 'none',
-            resize: 'none', minHeight: 80, lineHeight: 1.6,
-            marginBottom: 16
+            resize: 'none', minHeight: 80, lineHeight: 1.6, marginBottom: 16
           }}
         />
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           <button onClick={handleSubmit} disabled={uploading} style={{
-            padding: '13px', background: GOLD, border: 'none',
-            borderRadius: 14, cursor: 'pointer', fontWeight: 700, fontSize: 15, color: NAVY,
+            padding: '13px', background: GOLD, border: 'none', borderRadius: 14,
+            cursor: 'pointer', fontWeight: 700, fontSize: 15, color: NAVY,
             fontFamily: 'var(--font-heebo), sans-serif'
           }}>
             {uploading ? 'מעלה תמונה...' : 'סיימתי! תן לי נקודות ⭐'}
@@ -227,7 +207,6 @@ function DocumentationForm({ assignment, onSubmit, onSkip }) {
 }
 
 function CelebrationScreen({ assignment, newTotal, nextReward, leveledUp, newLevel, newBadges, onClose, onTazkir }) {
-  const router = useRouter()
   const [show, setShow] = useState(false)
   const points     = assignment.mission.points
   const isLearning = ['Learning','Reading','English','Hebrew'].includes(assignment.mission?.category)
@@ -364,8 +343,10 @@ export default function ActiveEarningPage() {
     setCurrentProfile(profile)
 
     const [{ data: assignmentData }, { data: rewardData }, { data: profileData }] = await Promise.all([
-      supabase.from('assignments').select(`*, mission:missions(*), member:profiles!assignments_assigned_to_fkey(*)`)
-        .eq('status', 'active').order('created_at', { ascending: false }),
+      supabase.from('assignments')
+        .select(`*, mission:missions(*), member:profiles!assignments_assigned_to_fkey(*)`)
+        .eq('status', 'active')
+        .order('created_at', { ascending: false }),
       supabase.from('rewards').select('*').eq('is_active', true).order('points_required'),
       supabase.from('profiles').select('*').eq('active', true)
     ])
@@ -490,7 +471,7 @@ export default function ActiveEarningPage() {
         background: NAVY, padding: '20px 16px 24px',
         borderRadius: '0 0 24px 24px', marginBottom: 16
       }}>
-        <div style={{ fontSize: 22, fontWeight: 900, color: 'white' }}>⭐ בתהליך</div>
+        <div style={{ fontSize: 22, fontWeight: 900, color: 'white' }}>🏃 בתהליך</div>
         <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginTop: 2 }}>
           {isParent ? 'אשר השלמות ותן נקודות' : 'סיימת? קבל את הנקודות שלך'}
         </div>
@@ -510,45 +491,41 @@ export default function ActiveEarningPage() {
           </div>
         ) : (
           visibleAssignments.map((a, index) => {
-            const isLearning    = ['Learning','Reading','English','Hebrew'].includes(a.mission?.category)
-            const ptColor       = isLearning ? PURPLE : GREEN
-            const visual        = CATEGORY_VISUAL[a.mission?.category] || { emoji: '⭐', bg: '#f7f4ee', accent: GOLD }
-            const gradient      = MISSION_GRADIENTS[index % MISSION_GRADIENTS.length]
+            const visual    = CATEGORY_VISUAL[a.mission?.category] || { emoji: '⭐' }
+            const gradient  = MISSION_GRADIENTS[index % MISSION_GRADIENTS.length]
             const memberProfile = profiles.find(p => p.id === a.assigned_to)
 
             return (
               <div key={a.id} style={{
                 borderRadius: 20, marginBottom: 14, overflow: 'hidden',
-                border: `1px solid ${visual.accent}30`
+                border: '1px solid #e8e0d0'
               }}>
-                {/* Gradient header — same as mission cards */}
+                {/* Same gradient header as mission cards */}
                 <div style={{
                   background: `linear-gradient(135deg, ${gradient[0]}, ${gradient[1]})`,
-                  padding: '20px 18px 18px',
+                  padding: '18px 18px 16px',
                   display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between',
-                  minHeight: 100, position: 'relative'
+                  minHeight: 90, position: 'relative'
                 }}>
                   <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.2)' }} />
                   <div style={{ position: 'relative', zIndex: 1 }}>
-                    <div style={{ fontSize: 32, marginBottom: 4, filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))' }}>
-                      {visual.emoji}
-                    </div>
-                    <div style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.7)', letterSpacing: '0.06em' }}>
+                    <div style={{ fontSize: 30, marginBottom: 4 }}>{visual.emoji}</div>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.7)', letterSpacing: '0.05em' }}>
                       {CATEGORY_LABELS[a.mission?.category] || a.mission?.category}
                     </div>
                     {a.due_date && (
-                      <div style={{ fontSize: 11, color: '#f0a080', marginTop: 3, fontWeight: 600 }}>
+                      <div style={{ fontSize: 11, color: '#f0c080', marginTop: 3, fontWeight: 600 }}>
                         ⏰ עד {new Date(a.due_date).toLocaleDateString('he-IL')}
                       </div>
                     )}
                   </div>
-                  <div style={{ position: 'relative', zIndex: 1, textAlign: 'center' }}>
+                  <div style={{ position: 'relative', zIndex: 1 }}>
                     <div style={{
                       background: 'rgba(255,255,255,0.15)', borderRadius: 14,
-                      padding: '8px 14px', backdropFilter: 'blur(4px)'
+                      padding: '8px 14px', backdropFilter: 'blur(4px)', textAlign: 'center'
                     }}>
-                      <div style={{ fontSize: 28, fontWeight: 900, color: 'white', lineHeight: 1 }}>{a.mission?.points}</div>
-                      <div style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.8)' }}>נק׳</div>
+                      <div style={{ fontSize: 26, fontWeight: 900, color: 'white', lineHeight: 1 }}>{a.mission?.points}</div>
+                      <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.8)', fontWeight: 700 }}>נק׳</div>
                     </div>
                   </div>
                 </div>
@@ -558,10 +535,8 @@ export default function ActiveEarningPage() {
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
                     {memberProfile && <Avatar profile={memberProfile} size={32} />}
                     <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: 15, fontWeight: 800, color: NAVY, lineHeight: 1.3 }}>
-                        {a.mission?.title}
-                      </div>
-                      <div style={{ fontSize: 12, color: '#a09080', marginTop: 2 }}>{memberProfile?.name}</div>
+                      <div style={{ fontSize: 15, fontWeight: 800, color: NAVY }}>{a.mission?.title}</div>
+                      {isParent && <div style={{ fontSize: 12, color: '#a09080', marginTop: 2 }}>{memberProfile?.name}</div>}
                     </div>
                   </div>
 
