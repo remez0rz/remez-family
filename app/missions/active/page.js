@@ -406,16 +406,18 @@ export default function ActiveEarningPage() {
     const { checkAndAwardBadges } = await import('../../lib/badges')
     const newBadges = await checkAndAwardBadges(memberId)
 
-    await supabase.from('feed_posts').insert({
-      type: 'mission_completed',
-      title: `${assignment.member.name} צבר/ה נקודות! ${assignment.mission.title}`,
-      content: doc?.text || `+${points} נקודות 🎉`,
-      media_urls: doc?.photoUrl ? [doc.photoUrl] : [],
-      participants: [assignment.member.name],
-      linked_type: 'assignment',
-      linked_id: assignment.id,
-      created_by: memberId
-    })
+    if (assignment.mission.category !== 'Daily') {
+      await supabase.from('feed_posts').insert({
+        type: 'mission_completed',
+        title: `${assignment.member.name} צבר/ה נקודות! ${assignment.mission.title}`,
+        content: doc?.text || `+${points} נקודות 🎉`,
+        media_urls: doc?.photoUrl ? [doc.photoUrl] : [],
+        participants: [assignment.member.name],
+        linked_type: 'assignment',
+        linked_id: assignment.id,
+        created_by: memberId
+      })
+    }
 
     const nextReward = getNextReward(newTotal)
     setAwarding(prev => { const s = new Set(prev); s.delete(assignment.id); return s })
@@ -425,11 +427,10 @@ export default function ActiveEarningPage() {
   }
 
   const handleComplete = (assignment) => {
-    const isParent = currentProfile?.role === 'parent'
-    if (isParent) {
-      awardPoints(assignment)
-    } else {
+    if (!isParent || isViewingAsKid) {
       setDocTarget(assignment)
+    } else {
+      awardPoints(assignment)
     }
   }
 

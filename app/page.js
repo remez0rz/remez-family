@@ -170,56 +170,6 @@ function KidHome({ currentProfile, missions, dailyMissions, completedDailyIds, r
 
       <div style={{ padding: '0 14px' }}>
 
-        {/* Daily missions */}
-        {dailyMissions.length > 0 && (
-          <div style={{ marginBottom: 14 }}>
-            <SectionTitle title="🌅 משימות יומיות" href="/missions?filter=daily" />
-            <div style={{ background: 'white', borderRadius: 20, overflow: 'hidden', boxShadow: '0 4px 16px rgba(0,0,0,0.07)' }}>
-              {dailyMissions.map((mission, i) => {
-                const done    = completedDailyIds.has(mission.id)
-                const starting = startingMission === mission.id
-                return (
-                  <div key={mission.id} style={{
-                    display: 'flex', alignItems: 'center', gap: 12,
-                    padding: '14px 16px',
-                    borderBottom: i < dailyMissions.length - 1 ? '1px solid #f5f0e8' : 'none',
-                    background: done ? '#f0faf8' : 'white',
-                    opacity: done ? 0.85 : 1
-                  }}>
-                    <div style={{
-                      width: 40, height: 40, borderRadius: 12, flexShrink: 0,
-                      background: done ? '#4ECDC4' : 'linear-gradient(135deg, #FFB830, #FFD166)',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20
-                    }}>
-                      {done ? '✓' : '🏠'}
-                    </div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 14, fontWeight: 800, color: NAVY, lineHeight: 1.3 }}>{mission.title}</div>
-                      <div style={{ fontSize: 11, color: '#8a7a60', marginTop: 2 }}>+{mission.points} נקודות</div>
-                    </div>
-                    {done ? (
-                      <div style={{
-                        background: '#4ECDC4', color: 'white',
-                        fontSize: 11, fontWeight: 700, padding: '5px 10px', borderRadius: 20, flexShrink: 0
-                      }}>✓ היום</div>
-                    ) : (
-                      <button onClick={() => handleStartMission(mission)} disabled={starting} style={{
-                        background: starting ? '#e8e0d0' : CORAL, color: starting ? '#a09080' : 'white',
-                        border: 'none', borderRadius: 20, padding: '7px 14px',
-                        fontWeight: 700, fontSize: 12, cursor: starting ? 'default' : 'pointer',
-                        fontFamily: 'var(--font-heebo), sans-serif', flexShrink: 0,
-                        boxShadow: starting ? 'none' : '0 3px 8px rgba(255,107,107,0.35)'
-                      }}>
-                        {starting ? '...' : 'עשיתי ⭐'}
-                      </button>
-                    )}
-                  </div>
-                )
-              })}
-            </div>
-          </div>
-        )}
-
         {/* Today's challenges */}
         {todayMissions.length > 0 && (
           <div style={{ marginBottom: 12 }}>
@@ -301,7 +251,7 @@ function KidHome({ currentProfile, missions, dailyMissions, completedDailyIds, r
         {/* Active missions */}
         {activeAssignments.length > 0 && (
           <Card style={{ marginBottom: 12 }}>
-            <SectionTitle title="🏃 בתהליך" href="/missions?tab=active" />
+            <SectionTitle title="🏃 בתהליך" href="/missions/active" />
             {activeAssignments.slice(0, 3).map((a, i) => (
               <div key={a.id} style={{
                 display: 'flex', justifyContent: 'space-between', alignItems: 'center',
@@ -316,6 +266,55 @@ function KidHome({ currentProfile, missions, dailyMissions, completedDailyIds, r
               </div>
             ))}
           </Card>
+        )}
+
+        {/* Daily missions */}
+        {dailyMissions.length > 0 && (
+          <div style={{ marginBottom: 14 }}>
+            <SectionTitle title="🌅 משימות יומיות" href="/missions" />
+            <div style={{ background: 'white', borderRadius: 20, overflow: 'hidden', boxShadow: '0 4px 16px rgba(0,0,0,0.07)' }}>
+              {dailyMissions.map((mission, i) => {
+                const done = completedDailyIds.has(mission.id)
+                const starting = startingMission === mission.id
+                return (
+                  <div key={mission.id} style={{
+                    display: 'flex', alignItems: 'center', gap: 12,
+                    padding: '14px 16px',
+                    borderBottom: i < dailyMissions.length - 1 ? '1px solid #f5f0e8' : 'none',
+                    background: done ? '#f0faf8' : 'white',
+                  }}>
+                    <div style={{
+                      width: 40, height: 40, borderRadius: 12, flexShrink: 0,
+                      background: done ? '#4ECDC4' : 'linear-gradient(135deg, #FFB830, #FFD166)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20
+                    }}>
+                      {done ? '✓' : '🏠'}
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 14, fontWeight: 800, color: NAVY, lineHeight: 1.3 }}>{mission.title}</div>
+                      <div style={{ fontSize: 11, color: '#8a7a60', marginTop: 2 }}>+{mission.points} נקודות</div>
+                    </div>
+                    {done ? (
+                      <div style={{
+                        background: '#4ECDC4', color: 'white',
+                        fontSize: 11, fontWeight: 700, padding: '5px 10px', borderRadius: 20, flexShrink: 0
+                      }}>✓ היום</div>
+                    ) : (
+                      <button onClick={() => handleStartMission(mission)} disabled={starting} style={{
+                        background: starting ? '#e8e0d0' : CORAL, color: starting ? '#a09080' : 'white',
+                        border: 'none', borderRadius: 20, padding: '7px 14px',
+                        fontWeight: 700, fontSize: 12, cursor: starting ? 'default' : 'pointer',
+                        fontFamily: 'var(--font-heebo), sans-serif', flexShrink: 0,
+                        boxShadow: starting ? 'none' : '0 3px 8px rgba(255,107,107,0.35)'
+                      }}>
+                        {starting ? '...' : 'עשיתי ⭐'}
+                      </button>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          </div>
         )}
 
         {/* Recent feed */}
@@ -679,11 +678,12 @@ export default function HomePage() {
   const handleStartMission = async (mission) => {
     if (!currentProfile || startingMission) return
     setStartingMission(mission.id)
+    const targetId = viewAsId || currentProfile.id
     await supabase.from('assignments').insert([{
-      mission_id: mission.id, assigned_to: currentProfile.id, status: 'active'
+      mission_id: mission.id, assigned_to: targetId, status: 'active'
     }])
     setStartingMission(null)
-    router.push('/missions?tab=active')
+    router.push('/missions/active')
   }
 
   const handleSignOut = async () => {

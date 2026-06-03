@@ -430,8 +430,9 @@ export default function MissionsPage() {
   const handleStart = async (mission) => {
     if (!currentProfile || starting) return
     setStarting(mission.id)
+    const targetId = viewAsId || currentProfile.id
     await supabase.from('assignments').insert([{
-      mission_id: mission.id, assigned_to: currentProfile.id, status: 'active'
+      mission_id: mission.id, assigned_to: targetId, status: 'active'
     }])
     setStarting(null)
     router.push('/missions/active')
@@ -581,13 +582,14 @@ export default function MissionsPage() {
         {activeCount > 0 && (
           <a href="/missions/active" style={{
             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            background: 'rgba(255,107,107,0.1)', borderRadius: 12,
-            padding: '10px 14px', marginBottom: 12, textDecoration: 'none'
+            background: 'rgba(255,255,255,0.2)', borderRadius: 12,
+            padding: '10px 14px', marginBottom: 12, textDecoration: 'none',
+            border: '1.5px solid rgba(255,255,255,0.4)'
           }}>
-            <span style={{ fontSize: 13, color: CORAL, fontWeight: 600 }}>
+            <span style={{ fontSize: 13, color: 'white', fontWeight: 700 }}>
               🏃 {activeCount} אתגרים בתהליך
             </span>
-            <span style={{ color: CORAL, fontSize: 13, fontWeight: 700 }}>סיים ←</span>
+            <span style={{ color: 'white', fontSize: 13, fontWeight: 700 }}>סיים ←</span>
           </a>
         )}
 
