@@ -392,14 +392,15 @@ export default function ActiveEarningPage() {
     })
 
     const { data: profile } = await supabase
-      .from('profiles').select('total_points, level').eq('id', memberId).single()
+      .from('profiles').select('total_points, total_experience, level').eq('id', memberId).single()
 
     const oldLevel  = profile?.level || 1
     const newTotal  = (profile?.total_points || 0) + points
-    const newLevel  = Math.floor(newTotal / 500) + 1
+    const newXP     = (profile?.total_experience || 0) + points
+    const newLevel  = Math.floor(newXP / 500) + 1
     const leveledUp = newLevel > oldLevel
 
-    await supabase.from('profiles').update({ total_points: newTotal, level: newLevel }).eq('id', memberId)
+    await supabase.from('profiles').update({ total_points: newTotal, total_experience: newXP, level: newLevel }).eq('id', memberId)
 
     const { checkAndAwardBadges } = await import('../../lib/badges')
     const newBadges = await checkAndAwardBadges(memberId)
@@ -417,7 +418,7 @@ export default function ActiveEarningPage() {
       })
     }
 
-    const nextReward = getNextReward(newTotal)
+    const nextReward = getNextReward(newTotal)  // next reward by balance
     setAwarding(prev => { const s = new Set(prev); s.delete(assignment.id); return s })
     setDocTarget(null)
     setCelebration({ assignment, newTotal, nextReward, leveledUp, newLevel, newBadges })

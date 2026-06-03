@@ -51,12 +51,14 @@ export async function checkAndAwardBirthdayBonus(member) {
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('total_points')
+    .select('total_points, total_experience, level')
     .eq('id', member.id)
     .single()
 
   const newTotal = (profile?.total_points || 0) + BIRTHDAY_POINTS
-  await supabase.from('profiles').update({ total_points: newTotal }).eq('id', member.id)
+  const newXP    = (profile?.total_experience || 0) + BIRTHDAY_POINTS
+  const newLevel = Math.floor(newXP / 500) + 1
+  await supabase.from('profiles').update({ total_points: newTotal, total_experience: newXP, level: newLevel }).eq('id', member.id)
 
   // This one DOES go to feed — birthday is worth celebrating
   await supabase.from('feed_posts').insert({

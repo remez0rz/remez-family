@@ -65,20 +65,21 @@ function Avatar({ profile, size = 44, selected = false, onClick }) {
   )
 }
 
-function ExperienceCard({ reward, index, currentPoints, isParent, onClaim, onEdit }) {
-  const unlocked  = currentPoints >= reward.points_required
-  const progress  = Math.min(Math.round((currentPoints / reward.points_required) * 100), 100)
-  const remaining = reward.points_required - currentPoints
+function ExperienceCard({ reward, index, currentPoints, currentLevel, isParent, onClaim, onEdit }) {
+  const levelOk   = currentLevel >= (reward.level_required || 1)
+  const canAfford = currentPoints >= reward.points_required
+  const unlocked  = levelOk && canAfford
+  const progress  = levelOk
+    ? Math.min(Math.round((currentPoints / reward.points_required) * 100), 100)
+    : 0
   const config    = TYPE_CONFIG[reward.type] || TYPE_CONFIG.experience
   const gradient  = REWARD_GRADIENTS[index % REWARD_GRADIENTS.length]
 
   return (
     <div style={{
       borderRadius: 24, marginBottom: 14, overflow: 'hidden',
-      boxShadow: unlocked
-        ? '0 6px 24px rgba(255,107,107,0.2)'
-        : '0 4px 20px rgba(0,0,0,0.07)',
-      opacity: unlocked ? 1 : 0.9
+      boxShadow: unlocked ? '0 6px 24px rgba(255,107,107,0.2)' : '0 4px 20px rgba(0,0,0,0.07)',
+      opacity: levelOk ? 1 : 0.65
     }}>
       <div style={{
         background: reward.image_url
@@ -89,6 +90,13 @@ function ExperienceCard({ reward, index, currentPoints, isParent, onClaim, onEdi
         minHeight: 110, position: 'relative'
       }}>
         {reward.image_url && <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.5), transparent)' }} />}
+        {!levelOk && (
+          <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2 }}>
+            <div style={{ background: 'rgba(0,0,0,0.6)', borderRadius: 20, padding: '8px 16px', color: 'white', fontSize: 13, fontWeight: 800 }}>
+              🔒 פתוח ברמה {reward.level_required}
+            </div>
+          </div>
+        )}
         <div style={{ fontSize: 52, position: 'relative', zIndex: 1, filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.2))' }}>
           {reward.emoji || '✨'}
         </div>
@@ -100,13 +108,11 @@ function ExperienceCard({ reward, index, currentPoints, isParent, onClaim, onEdi
             <div style={{ fontSize: 24, fontWeight: 900, color: unlocked ? gradient[0] : 'white', lineHeight: 1 }}>
               {reward.points_required}
             </div>
-            <div style={{ fontSize: 10, fontWeight: 700, color: unlocked ? gradient[0] : 'rgba(255,255,255,0.9)' }}>
-              נק׳
-            </div>
+            <div style={{ fontSize: 10, fontWeight: 700, color: unlocked ? gradient[0] : 'rgba(255,255,255,0.9)' }}>נק׳</div>
           </div>
           {unlocked && (
             <div style={{ marginTop: 6, fontSize: 11, fontWeight: 800, color: 'white', background: 'rgba(0,0,0,0.25)', borderRadius: 20, padding: '3px 10px' }}>
-              נפתח! ✨
+              זמין! ✨
             </div>
           )}
         </div>
@@ -134,18 +140,20 @@ function ExperienceCard({ reward, index, currentPoints, isParent, onClaim, onEdi
           </div>
         </div>
 
-        <div style={{ background: '#F0EBE0', borderRadius: 8, height: 8, marginBottom: 8 }}>
-          <div style={{
-            width: `${progress}%`, height: '100%',
-            background: unlocked ? GOLD : '#C8BFB0',
-            borderRadius: 8, transition: 'width 0.4s ease',
-            boxShadow: unlocked ? `0 2px 6px ${GOLD}66` : 'none'
-          }} />
-        </div>
+        {levelOk && (
+          <div style={{ background: '#F0EBE0', borderRadius: 8, height: 8, marginBottom: 8 }}>
+            <div style={{
+              width: `${progress}%`, height: '100%',
+              background: unlocked ? GOLD : '#C8BFB0',
+              borderRadius: 8, transition: 'width 0.4s ease',
+              boxShadow: unlocked ? `0 2px 6px ${GOLD}66` : 'none'
+            }} />
+          </div>
+        )}
 
-        {!unlocked && (
+        {levelOk && !canAfford && (
           <div style={{ fontSize: 11, color: '#AAAAAA', marginBottom: 8 }}>
-            עוד {remaining} נקודות לפתיחה · {progress}% מהדרך
+            עוד {reward.points_required - currentPoints} נקודות · {progress}% מהדרך
           </div>
         )}
 
@@ -156,7 +164,7 @@ function ExperienceCard({ reward, index, currentPoints, isParent, onClaim, onEdi
             fontWeight: 800, fontSize: 14, marginTop: 4,
             fontFamily: 'var(--font-heebo), sans-serif',
             boxShadow: '0 4px 12px rgba(255,107,107,0.35)'
-          }}>אני רוצה לפתוח את זה ✨</button>
+          }}>אני רוצה את זה! ✨</button>
         )}
 
         {unlocked && isParent && (
@@ -467,8 +475,10 @@ export default function ExperiencesPage() {
   // When viewing as a kid, show that kid's data
   const effectiveMember = isViewingAsKid ? viewAsProfile : selectedMember
   const currentPoints = effectiveMember?.total_points || 0
-  const nextReward    = rewards.find(r => r.points_required > currentPoints)
-  const unlockedCount = rewards.filter(r => currentPoints >= r.points_required).length
+  const currentLevel  = effectiveMember?.level || 1
+  const currentXP     = effectiveMember?.total_experience || currentPoints
+  const nextReward    = rewards.find(r => r.points_required > currentPoints && currentLevel >= (r.level_required || 1))
+  const unlockedCount = rewards.filter(r => currentPoints >= r.points_required && currentLevel >= (r.level_required || 1)).length
 
   if (loading) return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: PAGE_BG, fontFamily: 'var(--font-heebo), sans-serif' }}>
@@ -612,13 +622,21 @@ export default function ExperiencesPage() {
               </div>
             </div>
             <div style={{ fontSize: 13, color: '#AAAAAA', marginBottom: 4, fontWeight: 600 }}>
-              נקודות שצבר/ה {effectiveMember.name}
+              יתרה — {effectiveMember.name}
             </div>
             <div style={{ fontSize: 52, fontWeight: 900, color: CORAL, lineHeight: 1, marginBottom: 4 }}>
               {currentPoints}
             </div>
+            <div style={{ display: 'flex', justifyContent: 'center', gap: 12, marginBottom: 4 }}>
+              <div style={{ background: '#FFF0D5', borderRadius: 20, padding: '4px 12px', fontSize: 12, color: '#CC8800', fontWeight: 700 }}>
+                🏅 רמה {currentLevel}
+              </div>
+              <div style={{ background: '#EDE7F6', borderRadius: 20, padding: '4px 12px', fontSize: 12, color: '#9B7FD4', fontWeight: 700 }}>
+                ⭐ {currentXP} XP כולל
+              </div>
+            </div>
             <div style={{ fontSize: 12, color: '#AAAAAA' }}>
-              {unlockedCount} מתוך {rewards.length} חוויות פתוחות
+              {unlockedCount} מתוך {rewards.length} פרסים זמינים
             </div>
             {nextReward && (
               <div style={{ marginTop: 14 }}>
@@ -673,7 +691,7 @@ export default function ExperiencesPage() {
                 {tierRewards.map((reward, i) => (
                   <ExperienceCard
                     key={reward.id} reward={reward} index={i}
-                    currentPoints={currentPoints} isParent={isParent && !isViewingAsKid}
+                    currentPoints={currentPoints} currentLevel={currentLevel} isParent={isParent && !isViewingAsKid}
                     onClaim={r => setClaimTarget(r)}
                     onEdit={r => setEditTarget(r)}
                   />
@@ -694,7 +712,7 @@ export default function ExperiencesPage() {
                 {filtered.map((reward, i) => (
                   <ExperienceCard
                     key={reward.id} reward={reward} index={i}
-                    currentPoints={currentPoints} isParent={isParent && !isViewingAsKid}
+                    currentPoints={currentPoints} currentLevel={currentLevel} isParent={isParent && !isViewingAsKid}
                     onClaim={r => setClaimTarget(r)}
                     onEdit={r => setEditTarget(r)}
                   />

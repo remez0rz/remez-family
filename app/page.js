@@ -12,6 +12,66 @@ const PURPLE = '#9B7FD4'
 const CORAL = '#FF6B6B'
 const HEADER_BG = 'linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%)'
 
+function QuickDailyDoc({ mission, uploading, onSubmit, onSkip, onClose }) {
+  const [text, setText]   = useState('')
+  const [file, setFile]   = useState(null)
+  const [preview, setPreview] = useState(null)
+  const [isVideo, setIsVideo] = useState(false)
+
+  const handleSelect = (e) => {
+    const f = e.target.files[0]
+    if (!f) return
+    setFile(f); setIsVideo(f.type.startsWith('video/')); setPreview(URL.createObjectURL(f))
+    e.target.value = ''
+  }
+
+  return (
+    <div style={{
+      position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(10,22,40,0.96)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      fontFamily: 'var(--font-heebo), sans-serif', direction: 'rtl', padding: 16
+    }}>
+      <div style={{ background: '#2D2D2D', borderRadius: 28, padding: '24px 20px', maxWidth: 360, width: '100%', position: 'relative' }}>
+        <button onClick={onClose} style={{ position: 'absolute', top: 14, left: 14, background: 'rgba(255,255,255,0.1)', border: 'none', borderRadius: '50%', width: 28, height: 28, color: 'white', cursor: 'pointer', fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
+        <div style={{ textAlign: 'center', marginBottom: 16 }}>
+          <div style={{ fontSize: 28, marginBottom: 6 }}>🌅</div>
+          <div style={{ fontSize: 17, fontWeight: 900, color: 'white', marginBottom: 4 }}>איך הלך?</div>
+          <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', fontWeight: 600 }}>{mission.title}</div>
+          <div style={{ display: 'inline-block', marginTop: 6, background: `linear-gradient(135deg, #FFB830, #FFD166)`, borderRadius: 20, padding: '4px 12px', fontSize: 13, fontWeight: 800, color: '#2D2D2D' }}>+{mission.points} נקודות</div>
+        </div>
+
+        <input type="file" accept="image/*,video/*" capture="environment" onChange={handleSelect} style={{ display: 'none' }} id="qd-cam" />
+        <input type="file" accept="image/*,video/*" onChange={handleSelect} style={{ display: 'none' }} id="qd-gal" />
+
+        {preview ? (
+          <div style={{ position: 'relative', marginBottom: 10 }}>
+            {isVideo
+              ? <video src={preview} controls style={{ width: '100%', borderRadius: 12, maxHeight: 160, display: 'block' }} />
+              : <img src={preview} alt="p" style={{ width: '100%', borderRadius: 12, maxHeight: 160, objectFit: 'cover', display: 'block' }} />
+            }
+            <button onClick={() => { setFile(null); setPreview(null) }} style={{ position: 'absolute', top: 8, left: 8, background: 'rgba(0,0,0,0.6)', border: 'none', borderRadius: '50%', width: 26, height: 26, color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12 }}>✕</button>
+          </div>
+        ) : (
+          <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
+            <label htmlFor="qd-cam" style={{ flex: 1, padding: '10px 6px', background: 'rgba(255,255,255,0.08)', borderRadius: 12, border: '1.5px dashed rgba(255,255,255,0.2)', textAlign: 'center', cursor: 'pointer', fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.8)' }}>📷<br/>מצלמה</label>
+            <label htmlFor="qd-gal" style={{ flex: 1, padding: '10px 6px', background: 'rgba(255,255,255,0.08)', borderRadius: 12, border: '1.5px dashed rgba(255,255,255,0.2)', textAlign: 'center', cursor: 'pointer', fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.8)' }}>🎬<br/>גלריה</label>
+          </div>
+        )}
+
+        <textarea value={text} onChange={e => setText(e.target.value)}
+          placeholder="משהו קצר על מה שעשית... (לא חובה)"
+          style={{ width: '100%', padding: '10px 12px', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 10, fontSize: 13, color: 'white', background: 'rgba(255,255,255,0.08)', fontFamily: 'var(--font-heebo), sans-serif', boxSizing: 'border-box', resize: 'none', minHeight: 56, lineHeight: 1.5, marginBottom: 12, outline: 'none' }}
+        />
+
+        <button onClick={() => onSubmit({ text, file })} disabled={uploading} style={{ width: '100%', padding: '13px', background: '#FF6B6B', border: 'none', borderRadius: 50, cursor: 'pointer', fontWeight: 800, fontSize: 15, color: 'white', fontFamily: 'var(--font-heebo), sans-serif', marginBottom: 8 }}>
+          {uploading ? 'שולח...' : 'סיימתי! 🎉'}
+        </button>
+        <button onClick={onSkip} style={{ width: '100%', padding: '9px', background: 'transparent', border: 'none', cursor: 'pointer', fontSize: 12, color: 'rgba(255,255,255,0.4)', fontFamily: 'var(--font-heebo), sans-serif' }}>דלג (בלי תמונה)</button>
+      </div>
+    </div>
+  )
+}
+
 const REACTIONS = [
   { type: 'proud',  emoji: '❤️' },
   { type: 'fire',   emoji: '🔥' },
@@ -95,8 +155,9 @@ function SectionTitle({ title, href }) {
 }
 
 // Kid homepage
-function KidHome({ currentProfile, missions, dailyMissions, completedDailyIds, rewards, activeAssignments, recentFeed, reactionData, handleReaction, handleStartMission, startingMission }) {
-  const getNextReward = (points) => rewards.find(r => r.points_required > points)
+function KidHome({ currentProfile, missions, dailyMissions, completedDailyIds, rewards, activeAssignments, recentFeed, reactionData, handleReaction, handleStartMission, startingMission, onQuickDaily }) {
+  const level = currentProfile.level || 1
+  const getNextReward = (pts) => rewards.find(r => r.points_required > pts && (r.level_required || 1) <= level)
   const next = getNextReward(currentProfile.total_points)
   const todayMissions = missions.slice(0, 3)
 
@@ -136,11 +197,27 @@ function KidHome({ currentProfile, missions, dailyMissions, completedDailyIds, r
 
         {/* Points hero */}
         <div style={{ background: 'rgba(255,255,255,0.18)', borderRadius: 24, padding: '20px 18px', backdropFilter: 'blur(4px)', position: 'relative', zIndex: 1 }}>
-          <div style={{ textAlign: 'center', marginBottom: 14 }}>
-            <div style={{ fontSize: 56, fontWeight: 900, color: 'white', lineHeight: 1, textShadow: '0 2px 8px rgba(0,0,0,0.15)' }}>
-              {currentProfile.total_points}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+            <div style={{ textAlign: 'center', flex: 1 }}>
+              <div style={{ fontSize: 48, fontWeight: 900, color: 'white', lineHeight: 1, textShadow: '0 2px 8px rgba(0,0,0,0.15)' }}>
+                {currentProfile.total_points}
+              </div>
+              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.85)', marginTop: 2, fontWeight: 600 }}>יתרה 💰</div>
             </div>
-            <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.95)', marginTop: 4, fontWeight: 700 }}>נקודות 🌟</div>
+            <div style={{ width: 1, height: 40, background: 'rgba(255,255,255,0.3)', margin: '0 8px' }} />
+            <div style={{ textAlign: 'center', flex: 1 }}>
+              <div style={{ fontSize: 26, fontWeight: 900, color: 'white', lineHeight: 1 }}>
+                {currentProfile.level || 1}
+              </div>
+              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.85)', marginTop: 2, fontWeight: 600 }}>רמה 🏅</div>
+            </div>
+            <div style={{ width: 1, height: 40, background: 'rgba(255,255,255,0.3)', margin: '0 8px' }} />
+            <div style={{ textAlign: 'center', flex: 1 }}>
+              <div style={{ fontSize: 22, fontWeight: 900, color: 'white', lineHeight: 1 }}>
+                {currentProfile.total_experience || currentProfile.total_points}
+              </div>
+              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.85)', marginTop: 2, fontWeight: 600 }}>XP כולל ⭐</div>
+            </div>
           </div>
 
           {next ? (
@@ -150,21 +227,22 @@ function KidHome({ currentProfile, missions, dailyMissions, completedDailyIds, r
                 עוד {next.points_required - currentProfile.total_points} נקודות ו{next.title} נפתח ✨
               </div>
             </>
-          ) : (
-            <div style={{ fontSize: 13, color: 'white', textAlign: 'center', fontWeight: 800 }}>
-              השגת את כל החוויות! 🏆
-            </div>
-          )}
+          ) : null}
 
-          <a href="/missions" style={{
-            display: 'block', marginTop: 16,
-            background: 'white', color: CORAL, borderRadius: 50,
-            padding: '13px', textAlign: 'center',
-            textDecoration: 'none', fontWeight: 900, fontSize: 15,
-            boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
-          }}>
-            ✨ צוברים נקודות עכשיו
-          </a>
+          <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
+            <a href="/missions" style={{
+              flex: 1, background: 'white', color: CORAL, borderRadius: 50,
+              padding: '12px', textAlign: 'center',
+              textDecoration: 'none', fontWeight: 900, fontSize: 14,
+              boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
+            }}>⭐ צוברים</a>
+            <a href="/rewards" style={{
+              flex: 1, background: 'rgba(255,255,255,0.2)', color: 'white', borderRadius: 50,
+              padding: '12px', textAlign: 'center',
+              textDecoration: 'none', fontWeight: 700, fontSize: 14,
+              border: '1.5px solid rgba(255,255,255,0.4)'
+            }}>✨ פרסים</a>
+          </div>
         </div>
       </div>
 
@@ -308,14 +386,14 @@ function KidHome({ currentProfile, missions, dailyMissions, completedDailyIds, r
                         fontSize: 11, fontWeight: 700, padding: '5px 10px', borderRadius: 20, flexShrink: 0
                       }}>✓ היום</div>
                     ) : (
-                      <button onClick={() => handleStartMission(mission)} disabled={starting} style={{
-                        background: starting ? '#e8e0d0' : CORAL, color: starting ? '#a09080' : 'white',
+                      <button onClick={() => onQuickDaily(mission)} style={{
+                        background: CORAL, color: 'white',
                         border: 'none', borderRadius: 20, padding: '7px 14px',
-                        fontWeight: 700, fontSize: 12, cursor: starting ? 'default' : 'pointer',
+                        fontWeight: 700, fontSize: 12, cursor: 'pointer',
                         fontFamily: 'var(--font-heebo), sans-serif', flexShrink: 0,
-                        boxShadow: starting ? 'none' : '0 3px 8px rgba(255,107,107,0.35)'
+                        boxShadow: '0 3px 8px rgba(255,107,107,0.35)'
                       }}>
-                        {starting ? '...' : 'עשיתי ⭐'}
+                        עשיתי ⭐
                       </button>
                     )}
                   </div>
@@ -660,6 +738,9 @@ export default function HomePage() {
   const [reactions, setReactions]           = useState({})
   const [loading, setLoading]               = useState(true)
   const [startingMission, setStartingMission] = useState(null)
+  const [quickDocMission, setQuickDocMission] = useState(null)
+  const [quickDocUploading, setQuickDocUploading] = useState(false)
+  const [quickSuccess, setQuickSuccess]       = useState(null)
   const [myReactions, setMyReactions]       = useState(new Set())
   const [viewAsId, setViewAsId]             = useState(null)
   const router = useRouter()
@@ -787,6 +868,53 @@ export default function HomePage() {
     router.push('/missions/active')
   }
 
+  const handleQuickDailySubmit = async (doc) => {
+    if (!quickDocMission || !currentProfile) return
+    setQuickDocUploading(true)
+    const mission  = quickDocMission
+    const memberId = viewAsId || currentProfile.id
+
+    let photoUrl = null
+    if (doc?.file) {
+      const ext = doc.file.name.split('.').pop()
+      const filename = `missions/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
+      const { error } = await supabase.storage.from('family-media').upload(filename, doc.file, { contentType: doc.file.type })
+      if (!error) {
+        const { data } = supabase.storage.from('family-media').getPublicUrl(filename)
+        photoUrl = data.publicUrl
+      }
+    }
+
+    const { data: assignment } = await supabase.from('assignments').insert({
+      mission_id: mission.id, assigned_to: memberId,
+      status: 'completed', completed_at: new Date().toISOString(),
+      proof_text: doc?.text || null,
+      proof_image_url: photoUrl
+    }).select().single()
+
+    if (assignment) {
+      await supabase.from('point_events').insert({
+        member_id: memberId, points: mission.points,
+        reason: `צבר: ${mission.title}`, assignment_id: assignment.id
+      })
+
+      const { data: profile } = await supabase.from('profiles')
+        .select('total_points, total_experience, level').eq('id', memberId).single()
+
+      const newTotal = (profile?.total_points || 0) + mission.points
+      const newXP    = (profile?.total_experience || 0) + mission.points
+      const newLevel = Math.floor(newXP / 500) + 1
+
+      await supabase.from('profiles').update({ total_points: newTotal, total_experience: newXP, level: newLevel }).eq('id', memberId)
+    }
+
+    setCompletedDailyIds(prev => new Set([...prev, mission.id]))
+    setQuickDocMission(null)
+    setQuickDocUploading(false)
+    setQuickSuccess(`+${mission.points} נקודות! 🎉`)
+    setTimeout(() => { setQuickSuccess(null); loadData() }, 2200)
+  }
+
   const handleSignOut = async () => {
     await supabase.auth.signOut()
     router.push('/login')
@@ -803,7 +931,7 @@ export default function HomePage() {
 
   // Filter today's missions — exclude already active ones
   const activeMissionIds = new Set(myAssignments.map(a => a.mission_id))
-  const todayMissions = missions.filter(m => !activeMissionIds.has(m.id)).slice(0, 3)
+  const todayMissions = missions.filter(m => !activeMissionIds.has(m.id) && !completedDailyIds.has(m.id)).slice(0, 3)
   // For daily missions, also exclude ones currently active
   const visibleDailyMissions = dailyMissions.filter(m => !activeMissionIds.has(m.id) && !completedDailyIds.has(m.id))
 
@@ -865,6 +993,29 @@ export default function HomePage() {
           handleViewAs={handleViewAs}
         />
       ) : (
+        <>
+        {/* Quick daily doc overlay */}
+        {quickDocMission && (
+          <QuickDailyDoc
+            mission={quickDocMission}
+            uploading={quickDocUploading}
+            onSubmit={handleQuickDailySubmit}
+            onSkip={() => handleQuickDailySubmit({})}
+            onClose={() => setQuickDocMission(null)}
+          />
+        )}
+
+        {/* Quick success flash */}
+        {quickSuccess && (
+          <div style={{
+            position: 'fixed', bottom: 90, left: '50%', transform: 'translateX(-50%)',
+            background: '#2D2D2D', color: 'white', borderRadius: 24,
+            padding: '12px 24px', fontSize: 16, fontWeight: 800, zIndex: 500,
+            boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
+            fontFamily: 'var(--font-heebo), sans-serif', direction: 'rtl'
+          }}>{quickSuccess}</div>
+        )}
+
         <KidHome
           currentProfile={effectiveProfile}
           missions={todayMissions}
@@ -877,7 +1028,9 @@ export default function HomePage() {
           handleReaction={handleReaction}
           handleStartMission={handleStartMission}
           startingMission={startingMission}
+          onQuickDaily={setQuickDocMission}
         />
+        </>
       )}
       <BottomNav />
     </div>
