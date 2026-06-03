@@ -72,12 +72,7 @@ export async function checkAndAwardBadges(memberId) {
     } else if (badge.condition_type === 'tahkirim') {
       earned = totalTahkirim >= badge.condition_value
     } else if (badge.condition_type === 'category_missions') {
-      const groupCount = Object.values(categoryCounts).reduce((sum, count) => {
-        // Check if this badge's category matches
-        return sum
-      }, 0)
-      // Match badge category to group
-      const count = categoryCounts[badge.category] || 0
+      const count = categoryCounts[badge.category?.toLowerCase()] || 0
       earned = count >= badge.condition_value
     }
 

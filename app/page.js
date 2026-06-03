@@ -571,6 +571,7 @@ export default function HomePage() {
   const [reactions, setReactions]           = useState({})
   const [loading, setLoading]               = useState(true)
   const [startingMission, setStartingMission] = useState(null)
+  const [myReactions, setMyReactions]       = useState(new Set())
   const [viewAsId, setViewAsId]             = useState(null)
   const router = useRouter()
 
@@ -663,6 +664,9 @@ export default function HomePage() {
 
   const handleReaction = async (postId, type) => {
     if (!currentProfile) return
+    const key = `${postId}:${type}`
+    if (myReactions.has(key)) return
+    setMyReactions(prev => new Set([...prev, key]))
     await supabase.from('reactions').upsert({
       feed_post_id: postId, member_id: currentProfile.id, type
     }, { onConflict: 'feed_post_id,member_id,type' })

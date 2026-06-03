@@ -251,12 +251,12 @@ function UnlockModal({ reward, profile, onClose, onClaimed }) {
 
   const handleClaim = async () => {
     setClaiming(true)
-    await supabase.from('reward_claims').insert({
+    const { error } = await supabase.from('reward_claims').insert({
       reward_id: reward.id, member_id: profile.id,
       status: 'claimed', claimed_at: new Date().toISOString()
     })
     setClaiming(false)
-    onClaimed()
+    if (!error) onClaimed()
   }
 
   return (

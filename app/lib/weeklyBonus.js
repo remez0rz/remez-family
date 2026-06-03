@@ -4,10 +4,8 @@ const WEEKLY_BONUS_MISSION_ID = 'c4005842-b744-41e4-a460-552257bbcb07'
 const WEEKLY_BONUS_POINTS = 50
 
 function getLastSunday() {
-  const now = new Date()
-  const day = now.getDay()
-  const diff = now.getDate() - day
-  const sunday = new Date(now.setDate(diff))
+  const sunday = new Date()
+  sunday.setDate(sunday.getDate() - sunday.getDay())
   sunday.setHours(0, 0, 0, 0)
   return sunday
 }

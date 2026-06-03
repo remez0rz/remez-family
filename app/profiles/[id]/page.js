@@ -123,23 +123,22 @@ export default function ProfilePage({ params }) {
 
     const profileId = params.id
 
+    const { data: profileData } = await supabase.from('profiles').select('*').eq('id', profileId).single()
+    if (!profileData) { router.push('/profiles'); return }
+
     const [
-      { data: profileData },
       { data: rewardData },
       { data: badgeData },
       { data: activityData },
       { data: missionCount },
       { data: tahkirData }
     ] = await Promise.all([
-      supabase.from('profiles').select('*').eq('id', profileId).single(),
       supabase.from('rewards').select('*').eq('is_active', true).order('points_required'),
       supabase.from('member_badges').select('*, badge:badges(*)').eq('member_id', profileId).order('awarded_at', { ascending: false }),
-      supabase.from('feed_posts').select('*').contains('participants', []).order('created_at', { ascending: false }).limit(5),
+      supabase.from('feed_posts').select('*').contains('participants', [profileData.name]).order('created_at', { ascending: false }).limit(5),
       supabase.from('assignments').select('id').eq('assigned_to', profileId).eq('status', 'completed'),
       supabase.from('tahkirim').select('id').eq('created_by', profileId)
     ])
-
-    if (!profileData) { router.push('/profiles'); return }
 
     setProfile(profileData)
     if (rewardData) setRewards(rewardData)
@@ -256,7 +255,7 @@ export default function ProfilePage({ params }) {
                 <div style={{ background: 'rgba(255,255,255,0.1)', borderRadius: 6, height: 7, marginBottom: 6 }}>
                   <div style={{ width: `${progressPct}%`, height: '100%', background: GOLD, borderRadius: 6 }} />
                 </div>
-                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)' }}>
+                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.8)', fontWeight: 600 }}>
                   עוד {next.points_required - profile.total_points} נקודות ו{next.title} נפתח ✨
                 </div>
               </>
@@ -399,12 +398,7 @@ export default function ProfilePage({ params }) {
               }}>
                 <div style={{ fontSize: 13, fontWeight: 600, color: NAVY }}>{post.title}</div>
                 <div style={{ fontSize: 11, color: '#a09080', marginTop: 2 }}>
-                  {Math.floor((Date.now() - new Date(post.created_at)) / 86400000) === 0
-                    ? 'היום'
-                    : Math.floor((Date.now() - new Date(post.created_at)) / 86400000) === 1
-                    ? 'אתמול'
-                    : `לפני ${Math.floor((Date.now() - new Date(post.created_at)) / 86400000)} ימים`
-                  }
+                  {(() => { const d = Math.floor((Date.now() - new Date(post.created_at)) / 86400000); return d === 0 ? 'היום' : d === 1 ? 'אתמול' : `לפני ${d} ימים` })()}
                 </div>
               </div>
             ))}

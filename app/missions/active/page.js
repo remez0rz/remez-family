@@ -339,6 +339,7 @@ export default function ActiveEarningPage() {
   const [loading, setLoading]               = useState(true)
   const [docTarget, setDocTarget]           = useState(null)
   const [celebration, setCelebration]       = useState(null)
+  const [awarding, setAwarding]             = useState(new Set())
   const [viewAsId, setViewAsId]             = useState(null)
   const router = useRouter()
 
@@ -377,6 +378,8 @@ export default function ActiveEarningPage() {
   const getNextReward = (points) => rewards.find(r => r.points_required > points)
 
   const awardPoints = async (assignment, doc = null) => {
+    if (awarding.has(assignment.id)) return
+    setAwarding(prev => new Set([...prev, assignment.id]))
     const points   = assignment.mission.points
     const memberId = assignment.assigned_to
 
@@ -398,7 +401,7 @@ export default function ActiveEarningPage() {
     const newLevel  = Math.floor(newTotal / 500) + 1
     const leveledUp = newLevel > oldLevel
 
-    await supabase.from('profiles').update({ total_points: newTotal }).eq('id', memberId)
+    await supabase.from('profiles').update({ total_points: newTotal, level: newLevel }).eq('id', memberId)
 
     const { checkAndAwardBadges } = await import('../../lib/badges')
     const newBadges = await checkAndAwardBadges(memberId)
@@ -415,6 +418,7 @@ export default function ActiveEarningPage() {
     })
 
     const nextReward = getNextReward(newTotal)
+    setAwarding(prev => { const s = new Set(prev); s.delete(assignment.id); return s })
     setDocTarget(null)
     setCelebration({ assignment, newTotal, nextReward, leveledUp, newLevel, newBadges })
     loadData()
@@ -572,12 +576,15 @@ export default function ActiveEarningPage() {
                   )}
 
                   {isParent && !isViewingAsKid && (
-                    <button onClick={() => handleComplete(a)} style={{
-                      width: '100%', padding: '12px', background: GOLD,
-                      color: NAVY, border: 'none', borderRadius: 50,
-                      cursor: 'pointer', fontWeight: 700, fontSize: 15,
+                    <button onClick={() => handleComplete(a)} disabled={awarding.has(a.id)} style={{
+                      width: '100%', padding: '12px',
+                      background: awarding.has(a.id) ? '#e8e0d0' : GOLD,
+                      color: awarding.has(a.id) ? '#a09080' : NAVY,
+                      border: 'none', borderRadius: 50,
+                      cursor: awarding.has(a.id) ? 'default' : 'pointer',
+                      fontWeight: 700, fontSize: 15,
                       fontFamily: 'var(--font-heebo), sans-serif'
-                    }}>⭐ אשר ותן {a.mission?.points} נקודות</button>
+                    }}>{awarding.has(a.id) ? 'מעבד...' : `⭐ אשר ותן ${a.mission?.points} נקודות`}</button>
                   )}
                 </div>
               </div>

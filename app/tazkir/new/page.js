@@ -336,7 +336,7 @@ function TazkirForm() {
           <div style={{ fontSize: 22, fontWeight: 900, color: 'white' }}>📝 תחקיר מבצע</div>
           <a href="/" style={{ color: 'rgba(255,255,255,0.45)', textDecoration: 'none', fontSize: 13 }}>← בית</a>
         </div>
-        <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)' }}>
+        <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.85)', fontWeight: 600 }}>
           תעדו את מה שקרה — לפני שישכחו
         </div>
       </div>
