@@ -31,6 +31,7 @@ const CATEGORY_VISUAL = {
   Kindness: { emoji: '❤️' }, House:    { emoji: '🏠' },
   Outdoor:  { emoji: '🌿' }, Health:   { emoji: '💪' },
   Family:   { emoji: '👨‍👩‍👧' }, Memory:  { emoji: '📸' },
+  Daily:    { emoji: '🌅' },
 }
 
 const CATEGORY_LABELS = {
@@ -38,17 +39,18 @@ const CATEGORY_LABELS = {
   Creative: 'יצירה', Funny: 'מצחיקים', Outdoor: 'בחוץ',
   Reading: 'קריאה', English: 'אנגלית', Hebrew: 'עברית',
   Kindness: 'מעשים טובים', House: 'הבית שלנו', Memory: 'זיכרונות',
-  Health: 'בריאות', Weekend: 'סופ״ש',
+  Health: 'בריאות', Weekend: 'סופ״ש', Daily: 'משימות יומיות',
 }
 
 const FILTERS = [
-  { id: 'all',      label: 'הכל',        categories: null },
-  { id: 'easy',     label: 'קל ומהיר',   maxPoints: 30 },
-  { id: 'family',   label: 'משפחה',      categories: ['Family', 'Memory', 'Weekend'] },
-  { id: 'learning', label: 'לומדים',     categories: ['Learning', 'Reading', 'English', 'Hebrew'] },
-  { id: 'helping',  label: 'עוזרים',     categories: ['Helping', 'Kindness', 'House'] },
-  { id: 'creative', label: 'יצירה',      categories: ['Creative', 'Funny'] },
-  { id: 'outdoor',  label: 'בחוץ',       categories: ['Outdoor', 'Health'] },
+  { id: 'all',      label: 'הכל',           categories: null },
+  { id: 'daily',    label: '🌅 יומי',        categories: ['Daily'] },
+  { id: 'easy',     label: 'קל ומהיר',      maxPoints: 30 },
+  { id: 'family',   label: 'משפחה',         categories: ['Family', 'Memory', 'Weekend'] },
+  { id: 'learning', label: 'לומדים',        categories: ['Learning', 'Reading', 'English', 'Hebrew'] },
+  { id: 'helping',  label: 'עוזרים',        categories: ['Helping', 'Kindness', 'House'] },
+  { id: 'creative', label: 'יצירה',         categories: ['Creative', 'Funny'] },
+  { id: 'outdoor',  label: 'בחוץ',          categories: ['Outdoor', 'Health'] },
 ]
 
 const DIFFICULTY = {
@@ -464,10 +466,11 @@ export default function MissionsPage() {
   })
 
   // Section grouping for kid view
-  const familyMissions   = filtered.filter(m => ['Family','Memory','Weekend'].includes(m.category))
-  const learningMissions = filtered.filter(m => ['Learning','Reading','English','Hebrew'].includes(m.category))
-  const otherMissions    = filtered.filter(m => !['Family','Memory','Weekend','Learning','Reading','English','Hebrew'].includes(m.category))
-  const dailyMissions    = filtered.slice(0, 5)
+  const dailyCategoryMissions = filtered.filter(m => m.category === 'Daily')
+  const familyMissions        = filtered.filter(m => ['Family','Memory','Weekend'].includes(m.category))
+  const learningMissions      = filtered.filter(m => ['Learning','Reading','English','Hebrew'].includes(m.category))
+  const otherMissions         = filtered.filter(m => !['Daily','Family','Memory','Weekend','Learning','Reading','English','Hebrew'].includes(m.category))
+  const topMissions           = filtered.filter(m => m.category !== 'Daily').slice(0, 5)
 
   if (loading) return (
     <div style={{
@@ -534,7 +537,7 @@ export default function MissionsPage() {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
           <div>
             <div style={{ fontSize: 22, fontWeight: 900, color: 'white' }}>⭐ צוברים נקודות</div>
-            <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginTop: 2 }}>
+            <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.88)', marginTop: 2, fontWeight: 600 }}>
               {isParent ? 'שלח אתגרים לבני המשפחה' : 'בחרו אתגר קטן וצברו נקודות'}
             </div>
           </div>
@@ -555,7 +558,7 @@ export default function MissionsPage() {
         {(!isParent || isViewingAsKid) && effectiveProfile && (
           <div style={{ background: 'rgba(255,255,255,0.18)', borderRadius: 14, padding: '12px 14px', marginBottom: 12 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-              <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)' }}>יש לך</span>
+              <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.9)', fontWeight: 600 }}>יש לך</span>
               <span style={{ fontSize: 22, fontWeight: 900, color: GOLD }}>{effectiveProfile.total_points} נק׳</span>
             </div>
             {next && (
@@ -566,7 +569,7 @@ export default function MissionsPage() {
                     height: '100%', background: CORAL, borderRadius: 6
                   }} />
                 </div>
-                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)' }}>
+                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.8)', fontWeight: 600 }}>
                   כל אתגר קטן מקרב אותך ל{next.title} ✨
                 </div>
               </>
@@ -631,11 +634,28 @@ export default function MissionsPage() {
         ) : (
           // Default view — sectioned
           <>
+            {/* משימות יומיות */}
+            {dailyCategoryMissions.length > 0 && (
+              <div style={{ marginBottom: 4 }}>
+                <div style={{ fontSize: 15, fontWeight: 800, color: NAVY, marginBottom: 4 }}>🌅 משימות יומיות</div>
+                <div style={{ fontSize: 12, color: '#8a7a60', marginBottom: 12 }}>עבודות הבית היומיות — תעשה ותרוויח!</div>
+                {dailyCategoryMissions.map((mission, i) => (
+                  <ChallengeCard
+                    key={mission.id} mission={mission} index={i}
+                    isParent={isParent && !isViewingAsKid} currentProfile={effectiveProfile}
+                    onStart={handleStart} onAssign={m => setAssignTarget(m)}
+                    onEdit={m => setEditTarget(m)} starting={starting}
+                  />
+                ))}
+              </div>
+            )}
+
             {/* אתגרי היום */}
+            {topMissions.length > 0 && (
             <div style={{ marginBottom: 4 }}>
               <div style={{ fontSize: 15, fontWeight: 800, color: NAVY, marginBottom: 4 }}>⭐ אתגרי היום</div>
               <div style={{ fontSize: 12, color: '#8a7a60', marginBottom: 12 }}>האתגרים הקלים שכדאי לעשות היום</div>
-              {dailyMissions.map((mission, i) => (
+              {topMissions.map((mission, i) => (
                 <ChallengeCard
                   key={mission.id} mission={mission} index={i}
                   isParent={isParent && !isViewingAsKid} currentProfile={effectiveProfile}
@@ -644,6 +664,7 @@ export default function MissionsPage() {
                 />
               ))}
             </div>
+            )}
 
             {/* כיף משפחתי */}
             {familyMissions.length > 0 && (

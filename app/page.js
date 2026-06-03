@@ -32,7 +32,7 @@ const CATEGORY_LABELS = {
   Creative: 'יצירה', Funny: 'מצחיקים', Outdoor: 'בחוץ',
   Reading: 'קריאה', English: 'אנגלית', Hebrew: 'עברית',
   Kindness: 'מעשים טובים', House: 'הבית שלנו', Memory: 'זיכרונות',
-  Health: 'בריאות', Weekend: 'סופ״ש',
+  Health: 'בריאות', Weekend: 'סופ״ש', Daily: 'משימות יומיות',
 }
 
 const CATEGORY_VISUAL = {
@@ -43,6 +43,7 @@ const CATEGORY_VISUAL = {
   Kindness: { emoji: '❤️' }, House:    { emoji: '🏠' },
   Outdoor:  { emoji: '🌿' }, Health:   { emoji: '💪' },
   Family:   { emoji: '👨‍👩‍👧' }, Memory:  { emoji: '📸' },
+  Daily:    { emoji: '🌅' },
 }
 
 function Avatar({ profile, size = 40 }) {
@@ -94,7 +95,7 @@ function SectionTitle({ title, href }) {
 }
 
 // Kid homepage
-function KidHome({ currentProfile, missions, rewards, activeAssignments, recentFeed, reactionData, handleReaction, handleStartMission, startingMission }) {
+function KidHome({ currentProfile, missions, dailyMissions, completedDailyIds, rewards, activeAssignments, recentFeed, reactionData, handleReaction, handleStartMission, startingMission }) {
   const getNextReward = (points) => rewards.find(r => r.points_required > points)
   const next = getNextReward(currentProfile.total_points)
   const todayMissions = missions.slice(0, 3)
@@ -120,11 +121,11 @@ function KidHome({ currentProfile, missions, rewards, activeAssignments, recentF
 
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20, position: 'relative', zIndex: 1 }}>
           <div>
-            <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.75)', fontWeight: 600, letterSpacing: '0.5px' }}>משפחת רמז</div>
+            <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.9)', fontWeight: 700, letterSpacing: '0.5px' }}>משפחת רמז</div>
             <div style={{ fontSize: 26, fontWeight: 900, color: 'white', lineHeight: 1.2, marginTop: 2 }}>
               היי {currentProfile.name} 👋
             </div>
-            <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.8)', marginTop: 4, fontWeight: 600 }}>
+            <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.92)', marginTop: 4, fontWeight: 700 }}>
               מה בא לך לצבור היום?
             </div>
           </div>
@@ -139,13 +140,13 @@ function KidHome({ currentProfile, missions, rewards, activeAssignments, recentF
             <div style={{ fontSize: 56, fontWeight: 900, color: 'white', lineHeight: 1, textShadow: '0 2px 8px rgba(0,0,0,0.15)' }}>
               {currentProfile.total_points}
             </div>
-            <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.85)', marginTop: 4, fontWeight: 600 }}>נקודות 🌟</div>
+            <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.95)', marginTop: 4, fontWeight: 700 }}>נקודות 🌟</div>
           </div>
 
           {next ? (
             <>
               <ProgressBar value={currentProfile.total_points} max={next.points_required} color="white" />
-              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.85)', marginTop: 8, textAlign: 'center', fontWeight: 600 }}>
+              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.95)', marginTop: 8, textAlign: 'center', fontWeight: 700 }}>
                 עוד {next.points_required - currentProfile.total_points} נקודות ו{next.title} נפתח ✨
               </div>
             </>
@@ -168,6 +169,56 @@ function KidHome({ currentProfile, missions, rewards, activeAssignments, recentF
       </div>
 
       <div style={{ padding: '0 14px' }}>
+
+        {/* Daily missions */}
+        {dailyMissions.length > 0 && (
+          <div style={{ marginBottom: 14 }}>
+            <SectionTitle title="🌅 משימות יומיות" href="/missions?filter=daily" />
+            <div style={{ background: 'white', borderRadius: 20, overflow: 'hidden', boxShadow: '0 4px 16px rgba(0,0,0,0.07)' }}>
+              {dailyMissions.map((mission, i) => {
+                const done    = completedDailyIds.has(mission.id)
+                const starting = startingMission === mission.id
+                return (
+                  <div key={mission.id} style={{
+                    display: 'flex', alignItems: 'center', gap: 12,
+                    padding: '14px 16px',
+                    borderBottom: i < dailyMissions.length - 1 ? '1px solid #f5f0e8' : 'none',
+                    background: done ? '#f0faf8' : 'white',
+                    opacity: done ? 0.85 : 1
+                  }}>
+                    <div style={{
+                      width: 40, height: 40, borderRadius: 12, flexShrink: 0,
+                      background: done ? '#4ECDC4' : 'linear-gradient(135deg, #FFB830, #FFD166)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20
+                    }}>
+                      {done ? '✓' : '🏠'}
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 14, fontWeight: 800, color: NAVY, lineHeight: 1.3 }}>{mission.title}</div>
+                      <div style={{ fontSize: 11, color: '#8a7a60', marginTop: 2 }}>+{mission.points} נקודות</div>
+                    </div>
+                    {done ? (
+                      <div style={{
+                        background: '#4ECDC4', color: 'white',
+                        fontSize: 11, fontWeight: 700, padding: '5px 10px', borderRadius: 20, flexShrink: 0
+                      }}>✓ היום</div>
+                    ) : (
+                      <button onClick={() => handleStartMission(mission)} disabled={starting} style={{
+                        background: starting ? '#e8e0d0' : CORAL, color: starting ? '#a09080' : 'white',
+                        border: 'none', borderRadius: 20, padding: '7px 14px',
+                        fontWeight: 700, fontSize: 12, cursor: starting ? 'default' : 'pointer',
+                        fontFamily: 'var(--font-heebo), sans-serif', flexShrink: 0,
+                        boxShadow: starting ? 'none' : '0 3px 8px rgba(255,107,107,0.35)'
+                      }}>
+                        {starting ? '...' : 'עשיתי ⭐'}
+                      </button>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )}
 
         {/* Today's challenges */}
         {todayMissions.length > 0 && (
@@ -512,6 +563,8 @@ export default function HomePage() {
   const [currentProfile, setCurrentProfile] = useState(null)
   const [profiles, setProfiles]             = useState([])
   const [missions, setMissions]             = useState([])
+  const [dailyMissions, setDailyMissions]   = useState([])
+  const [completedDailyIds, setCompletedDailyIds] = useState(new Set())
   const [activeAssignments, setActiveAssignments] = useState([])
   const [recentFeed, setRecentFeed]         = useState([])
   const [rewards, setRewards]               = useState([])
@@ -547,29 +600,40 @@ export default function HomePage() {
     if (!profile) { router.push('/login'); return }
     setCurrentProfile(profile)
 
+    const todayStart = new Date()
+    todayStart.setHours(0, 0, 0, 0)
+
     const [
       { data: allProfiles },
       { data: missionData },
+      { data: dailyMissionData },
       { data: assignments },
       { data: feed },
-      { data: rewardList }
+      { data: rewardList },
+      { data: todayCompleted }
     ] = await Promise.all([
       supabase.from('profiles').select('*').eq('active', true).order('created_at'),
-      supabase.from('missions').select('*').eq('is_active', true).order('points', { ascending: true }).limit(10),
+      supabase.from('missions').select('*').eq('is_active', true).neq('category', 'Daily').order('points', { ascending: true }).limit(10),
+      supabase.from('missions').select('*').eq('is_active', true).eq('category', 'Daily').order('points', { ascending: true }),
       supabase.from('assignments')
         .select('*, mission:missions(*), member:profiles!assignments_assigned_to_fkey(*)')
         .eq('status', 'active')
         .order('created_at', { ascending: false })
         .limit(5),
       supabase.from('feed_posts').select('*').order('created_at', { ascending: false }).limit(4),
-      supabase.from('rewards').select('*').eq('is_active', true).order('points_required')
+      supabase.from('rewards').select('*').eq('is_active', true).order('points_required'),
+      supabase.from('assignments').select('mission_id')
+        .eq('assigned_to', profile.id).eq('status', 'completed')
+        .gte('completed_at', todayStart.toISOString())
     ])
 
     if (allProfiles) setProfiles(allProfiles)
     if (missionData) setMissions(missionData)
+    if (dailyMissionData) setDailyMissions(dailyMissionData)
     if (assignments) setActiveAssignments(assignments)
     if (feed) setRecentFeed(feed)
     if (rewardList) setRewards(rewardList)
+    if (todayCompleted) setCompletedDailyIds(new Set(todayCompleted.map(a => a.mission_id)))
 
     if (feed?.length) {
       const postIds = feed.map(p => p.id)
@@ -635,6 +699,8 @@ export default function HomePage() {
   // Filter today's missions — exclude already active ones
   const activeMissionIds = new Set(myAssignments.map(a => a.mission_id))
   const todayMissions = missions.filter(m => !activeMissionIds.has(m.id)).slice(0, 3)
+  // For daily missions, also exclude ones currently active
+  const visibleDailyMissions = dailyMissions.filter(m => !activeMissionIds.has(m.id))
 
   if (loading) return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #FFF9F0 0%, #FFF0F9 100%)', fontFamily: 'var(--font-heebo), sans-serif' }}>
@@ -695,6 +761,8 @@ export default function HomePage() {
         <KidHome
           currentProfile={effectiveProfile}
           missions={todayMissions}
+          dailyMissions={visibleDailyMissions}
+          completedDailyIds={completedDailyIds}
           rewards={rewards}
           activeAssignments={myAssignments}
           recentFeed={recentFeed}

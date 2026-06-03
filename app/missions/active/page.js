@@ -92,27 +92,29 @@ function Confetti() {
 function DocumentationForm({ assignment, onSubmit, onSkip }) {
   const [show, setShow]           = useState(false)
   const [text, setText]           = useState('')
-  const [photo, setPhoto]         = useState(null)
+  const [media, setMedia]         = useState(null)
   const [preview, setPreview]     = useState(null)
+  const [isVideo, setIsVideo]     = useState(false)
   const [uploading, setUploading] = useState(false)
 
   useEffect(() => { setTimeout(() => setShow(true), 50) }, [])
 
-  const handlePhotoSelect = (e) => {
+  const handleMediaSelect = (e) => {
     const file = e.target.files[0]
     if (!file) return
-    setPhoto(file)
+    setMedia(file)
+    setIsVideo(file.type.startsWith('video/'))
     setPreview(URL.createObjectURL(file))
     e.target.value = ''
   }
 
   const handleSubmit = async () => {
     let photoUrl = null
-    if (photo) {
+    if (media) {
       setUploading(true)
-      const ext = photo.name.split('.').pop()
+      const ext = media.name.split('.').pop()
       const filename = `missions/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
-      const { error } = await supabase.storage.from('family-media').upload(filename, photo, { contentType: photo.type })
+      const { error } = await supabase.storage.from('family-media').upload(filename, media, { contentType: media.type })
       if (!error) {
         const { data } = supabase.storage.from('family-media').getPublicUrl(filename)
         photoUrl = data.publicUrl
@@ -140,21 +142,27 @@ function DocumentationForm({ assignment, onSubmit, onSkip }) {
       }}>
         <div style={{ textAlign: 'center', marginBottom: 20 }}>
           <div style={{ fontSize: 32, marginBottom: 8 }}>📸</div>
-          <div style={{ fontSize: 18, fontWeight: 900, color: 'white', marginBottom: 4 }}>תעדו את הרגע</div>
-          <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)' }}>{assignment.mission.title}</div>
+          <div style={{ fontSize: 18, fontWeight: 900, color: 'white', marginBottom: 4 }}>איך הלך?</div>
+          <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', fontWeight: 600 }}>{assignment.mission.title}</div>
         </div>
 
-        <input type="file" accept="image/*" capture="environment"
-          onChange={handlePhotoSelect} style={{ display: 'none' }} id="doc-camera" />
-        <input type="file" accept="image/*"
-          onChange={handlePhotoSelect} style={{ display: 'none' }} id="doc-gallery" />
+        <input type="file" accept="image/*,video/*" capture="environment"
+          onChange={handleMediaSelect} style={{ display: 'none' }} id="doc-camera" />
+        <input type="file" accept="image/*,video/*"
+          onChange={handleMediaSelect} style={{ display: 'none' }} id="doc-gallery" />
 
         {preview ? (
           <div style={{ position: 'relative', marginBottom: 12 }}>
-            <img src={preview} alt="preview" style={{
-              width: '100%', borderRadius: 12, maxHeight: 200, objectFit: 'cover', display: 'block'
-            }} />
-            <button onClick={() => { setPhoto(null); setPreview(null) }} style={{
+            {isVideo ? (
+              <video src={preview} controls style={{
+                width: '100%', borderRadius: 12, maxHeight: 200, display: 'block', background: '#000'
+              }} />
+            ) : (
+              <img src={preview} alt="preview" style={{
+                width: '100%', borderRadius: 12, maxHeight: 200, objectFit: 'cover', display: 'block'
+              }} />
+            )}
+            <button onClick={() => { setMedia(null); setPreview(null); setIsVideo(false) }} style={{
               position: 'absolute', top: 8, left: 8,
               background: 'rgba(10,22,40,0.7)', border: 'none', borderRadius: '50%',
               width: 28, height: 28, color: 'white', cursor: 'pointer', fontSize: 14,
@@ -164,29 +172,29 @@ function DocumentationForm({ assignment, onSubmit, onSkip }) {
         ) : (
           <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
             <label htmlFor="doc-camera" style={{
-              flex: 1, padding: '10px', background: 'rgba(255,255,255,0.08)',
+              flex: 1, padding: '12px 8px', background: 'rgba(255,255,255,0.08)',
               borderRadius: 12, border: '1.5px dashed rgba(255,255,255,0.2)',
               textAlign: 'center', cursor: 'pointer',
-              fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.7)'
-            }}>📷 מצלמה</label>
+              fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.85)'
+            }}>📷<br /><span style={{ fontSize: 11 }}>מצלמה</span></label>
             <label htmlFor="doc-gallery" style={{
-              flex: 1, padding: '10px', background: 'rgba(255,255,255,0.08)',
+              flex: 1, padding: '12px 8px', background: 'rgba(255,255,255,0.08)',
               borderRadius: 12, border: '1.5px dashed rgba(255,255,255,0.2)',
               textAlign: 'center', cursor: 'pointer',
-              fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.7)'
-            }}>🖼️ גלריה</label>
+              fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.85)'
+            }}>🎬<br /><span style={{ fontSize: 11 }}>גלריה / וידאו</span></label>
           </div>
         )}
 
         <textarea value={text} onChange={e => setText(e.target.value)}
-          placeholder="ספר מה עשית... (לא חובה)"
+          placeholder="משהו קצר על מה שעשית... (לא חובה)"
           style={{
             width: '100%', padding: '10px 12px',
             border: '1px solid rgba(255,255,255,0.15)', borderRadius: 10,
             fontSize: 14, color: 'white', background: 'rgba(255,255,255,0.08)',
             fontFamily: 'var(--font-heebo), sans-serif',
             boxSizing: 'border-box', outline: 'none',
-            resize: 'none', minHeight: 80, lineHeight: 1.6, marginBottom: 16
+            resize: 'none', minHeight: 60, lineHeight: 1.6, marginBottom: 16
           }}
         />
 
@@ -196,13 +204,13 @@ function DocumentationForm({ assignment, onSubmit, onSkip }) {
             cursor: 'pointer', fontWeight: 700, fontSize: 15, color: 'white',
             fontFamily: 'var(--font-heebo), sans-serif'
           }}>
-            {uploading ? 'מעלה תמונה...' : 'סיימתי! תן לי נקודות ⭐'}
+            {uploading ? 'שולח...' : 'סיימתי! תן לי נקודות ⭐'}
           </button>
           <button onClick={onSkip} style={{
             padding: '11px', background: 'transparent', border: 'none',
-            cursor: 'pointer', fontSize: 13, color: 'rgba(255,255,255,0.4)',
+            cursor: 'pointer', fontSize: 13, color: 'rgba(255,255,255,0.5)',
             fontFamily: 'var(--font-heebo), sans-serif'
-          }}>דלג</button>
+          }}>דלג (בלי תמונה)</button>
         </div>
       </div>
     </div>
@@ -487,7 +495,7 @@ export default function ActiveEarningPage() {
         <div style={{ position: 'absolute', top: -30, left: -30, width: 120, height: 120, borderRadius: '50%', background: 'rgba(255,255,255,0.1)' }} />
         <div style={{ position: 'absolute', bottom: -20, right: -20, width: 80, height: 80, borderRadius: '50%', background: 'rgba(255,255,255,0.1)' }} />
         <div style={{ fontSize: 22, fontWeight: 900, color: 'white', position: 'relative', zIndex: 1 }}>🏃 בתהליך</div>
-        <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginTop: 2, position: 'relative', zIndex: 1 }}>
+        <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.85)', marginTop: 2, position: 'relative', zIndex: 1, fontWeight: 600 }}>
           {(isParent && !isViewingAsKid) ? 'אשר השלמות ותן נקודות' : 'סיימת? קבל את הנקודות שלך'}
         </div>
       </div>
