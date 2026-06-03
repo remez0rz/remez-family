@@ -13,10 +13,25 @@ const PAGE_BG   = 'linear-gradient(135deg, #FFF9F0 0%, #FFF0F9 100%)'
 const HEADER_BG = 'linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%)'
 
 const TYPE_CONFIG = {
-  experience: { label: 'חוויה משפחתית', bg: '#FFF0D5', color: '#CC8800' },
-  gift:       { label: 'פינוק',          bg: '#FFE8E8', color: CORAL },
-  privilege:  { label: 'בונוס מיוחד',   bg: '#EDE7F6', color: '#9B7FD4' },
+  experience: { label: 'חוויה', bg: '#FFF0D5', color: '#CC8800' },
+  gift:       { label: 'מתנה',  bg: '#FFE8E8', color: CORAL },
+  privilege:  { label: 'כוח',   bg: '#EDE7F6', color: '#9B7FD4' },
 }
+
+const TIER_FILTERS = [
+  { id: 'all',    label: 'הכל ✨',       min: 0,   max: Infinity },
+  { id: 'small',  label: 'קטנים 🌱',    min: 0,   max: 59 },
+  { id: 'medium', label: 'בינוניים ⭐',  min: 60,  max: 149 },
+  { id: 'large',  label: 'גדולים 🎉',   min: 150, max: 399 },
+  { id: 'dream',  label: 'חלומות 🌟',   min: 400, max: Infinity },
+]
+
+const TYPE_FILTERS = [
+  { id: 'all',        label: 'הכל' },
+  { id: 'privilege',  label: 'כוחות 👑' },
+  { id: 'experience', label: 'חוויות 🎡' },
+  { id: 'gift',       label: 'מתנות 🎁' },
+]
 
 const REWARD_GRADIENTS = [
   ['#FF6B6B', '#FF8E53'], ['#4ECDC4', '#2EBFB8'],
@@ -365,6 +380,8 @@ export default function ExperiencesPage() {
   const [editTarget, setEditTarget]         = useState(null)
   const [showNewForm, setShowNewForm]       = useState(false)
   const [claimed, setClaimed]               = useState(false)
+  const [tierFilter, setTierFilter]         = useState('all')
+  const [typeFilter, setTypeFilter]         = useState('all')
   const [viewAsId, setViewAsId]             = useState(null)
   const router = useRouter()
 
@@ -532,7 +549,7 @@ export default function ExperiencesPage() {
 
         {/* Member selector */}
         {!isViewingAsKid && (
-        <div style={{ display: 'flex', gap: 14, paddingBottom: 18, overflowX: 'auto', scrollbarWidth: 'none', position: 'relative', zIndex: 1 }}>
+        <div style={{ display: 'flex', gap: 14, paddingBottom: 4, overflowX: 'auto', scrollbarWidth: 'none', position: 'relative', zIndex: 1 }}>
           {(isParent ? children : [currentProfile]).filter(Boolean).map(p => (
             <div key={p.id} onClick={() => setSelectedMember(p)}
               style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, cursor: 'pointer', flexShrink: 0 }}>
@@ -544,6 +561,20 @@ export default function ExperiencesPage() {
           ))}
         </div>
         )}
+
+        {/* Tier filter chips */}
+        <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 16, scrollbarWidth: 'none', position: 'relative', zIndex: 1, marginTop: 12 }}>
+          {TIER_FILTERS.map(f => (
+            <button key={f.id} onClick={() => setTierFilter(f.id)} style={{
+              padding: '7px 14px', borderRadius: 20, border: 'none', cursor: 'pointer', flexShrink: 0,
+              background: tierFilter === f.id ? 'white' : 'rgba(255,255,255,0.18)',
+              color: tierFilter === f.id ? CORAL : 'white',
+              fontWeight: tierFilter === f.id ? 800 : 500,
+              fontSize: 12, fontFamily: 'var(--font-heebo), sans-serif',
+              boxShadow: tierFilter === f.id ? '0 2px 8px rgba(0,0,0,0.15)' : 'none'
+            }}>{f.label}</button>
+          ))}
+        </div>
       </div>
 
       <div style={{ padding: '0 14px', boxSizing: 'border-box' }}>
@@ -624,18 +655,48 @@ export default function ExperiencesPage() {
           </div>
         )}
 
-        <div style={{ fontSize: 12, color: '#AAAAAA', fontWeight: 600, marginBottom: 14 }}>
-          {rewards.length} חוויות · {unlockedCount} פתוחות עכשיו
+        {/* Type filter */}
+        <div style={{ display: 'flex', gap: 6, marginBottom: 16, overflowX: 'auto', scrollbarWidth: 'none' }}>
+          {TYPE_FILTERS.map(f => (
+            <button key={f.id} onClick={() => setTypeFilter(f.id)} style={{
+              padding: '6px 14px', borderRadius: 20, border: `1.5px solid ${typeFilter === f.id ? CORAL : '#E8E0D0'}`,
+              cursor: 'pointer', flexShrink: 0,
+              background: typeFilter === f.id ? '#FFE8E8' : 'white',
+              color: typeFilter === f.id ? CORAL : '#8a7a60',
+              fontWeight: typeFilter === f.id ? 700 : 500,
+              fontSize: 12, fontFamily: 'var(--font-heebo), sans-serif'
+            }}>{f.label}</button>
+          ))}
         </div>
 
-        {rewards.map((reward, i) => (
-          <ExperienceCard
-            key={reward.id} reward={reward} index={i}
-            currentPoints={currentPoints} isParent={isParent && !isViewingAsKid}
-            onClaim={r => setClaimTarget(r)}
-            onEdit={r => setEditTarget(r)}
-          />
-        ))}
+        {(() => {
+          const tier = TIER_FILTERS.find(f => f.id === tierFilter) || TIER_FILTERS[0]
+          const filtered = rewards.filter(r => {
+            const inTier = r.points_required >= tier.min && r.points_required <= tier.max
+            const inType = typeFilter === 'all' || r.type === typeFilter
+            return inTier && inType
+          })
+          return (
+            <>
+              <div style={{ fontSize: 12, color: '#AAAAAA', fontWeight: 600, marginBottom: 14 }}>
+                {filtered.length} פרסים · {filtered.filter(r => currentPoints >= r.points_required).length} פתוחים עכשיו
+              </div>
+              {filtered.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '40px 0', color: '#a09080' }}>
+                  <div style={{ fontSize: 40, marginBottom: 8 }}>🤔</div>
+                  <div>אין פרסים בסינון הזה</div>
+                </div>
+              ) : filtered.map((reward, i) => (
+                <ExperienceCard
+                  key={reward.id} reward={reward} index={i}
+                  currentPoints={currentPoints} isParent={isParent && !isViewingAsKid}
+                  onClaim={r => setClaimTarget(r)}
+                  onEdit={r => setEditTarget(r)}
+                />
+              ))}
+            </>
+          )
+        })()}
 
       </div>
 

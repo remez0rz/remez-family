@@ -377,7 +377,7 @@ function KidHome({ currentProfile, missions, dailyMissions, completedDailyIds, r
 }
 
 // Parent homepage
-function ParentHome({ currentProfile, profiles, activeAssignments, recentFeed, rewards, reactionData, handleReaction, handleSignOut, handleViewAs }) {
+function ParentHome({ currentProfile, profiles, activeAssignments, recentFeed, rewards, reactionData, handleReaction, handleSignOut, handleViewAs, pendingClaims }) {
   const children    = profiles.filter(p => p.role === 'child').sort((a, b) => b.total_points - a.total_points)
   const childColors = [GOLD, PURPLE, GREEN]
   const getNextReward = (points) => rewards.find(r => r.points_required > points)
@@ -497,58 +497,88 @@ function ParentHome({ currentProfile, profiles, activeAssignments, recentFeed, r
           </Card>
         )}
 
-        {/* Quick actions */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 12 }}>
-          {[
-            { href: '/missions', bg: 'linear-gradient(135deg, #FF6B6B, #FF8E53)', icon: '⭐', title: 'שלח אתגר', sub: 'לבני המשפחה' },
-            { href: '/tazkir/new', bg: 'linear-gradient(135deg, #4ECDC4, #2EBFB8)', icon: '📝', title: 'תחקיר', sub: 'מה עשינו היום?' },
-          ].map(item => (
-            <a key={item.href} href={item.href} style={{
-              display: 'block', padding: '18px 16px', background: item.bg,
-              borderRadius: 22, textDecoration: 'none',
-              boxShadow: '0 4px 16px rgba(0,0,0,0.12)'
+        {/* Reward claims pending */}
+        {pendingClaims?.length > 0 && (
+          <a href="/rewards" style={{ textDecoration: 'none' }}>
+            <div style={{
+              background: 'linear-gradient(135deg, #9B7FD4, #C084FC)', borderRadius: 20, padding: '16px 18px',
+              display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14,
+              boxShadow: '0 4px 16px rgba(155,127,212,0.35)'
             }}>
-              <div style={{ fontSize: 24, marginBottom: 4 }}>{item.icon}</div>
-              <div style={{ fontWeight: 700, fontSize: 14, color: 'white' }}>{item.title}</div>
-              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.65)', marginTop: 2 }}>{item.sub}</div>
-            </a>
-          ))}
-        </div>
+              <div style={{ fontSize: 24 }}>✨</div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontWeight: 700, fontSize: 14, color: 'white' }}>
+                  {pendingClaims.length} פרסים ממתינים לאישורך
+                </div>
+                <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.8)', marginTop: 2 }}>
+                  {pendingClaims.map(c => `${c.member?.name} רוצה: ${c.reward?.emoji} ${c.reward?.title}`).slice(0,2).join(' · ')}
+                </div>
+              </div>
+              <div style={{ color: 'white', fontSize: 18 }}>←</div>
+            </div>
+          </a>
+        )}
 
-        {/* Recent feed */}
+        {/* Recent feed — consistent with moments page */}
         {recentFeed.length > 0 && (
-          <Card>
+          <div style={{ marginBottom: 14 }}>
             <SectionTitle title="🎉 רגעים שמחים" href="/feed" />
             {recentFeed.map((post, i) => {
               const coverPhoto    = post.media_urls?.[0]
-              const isVideo       = url => /\.(mp4|mov|webm|avi)(\?|$)/i.test(url)
+              const isVid         = url => /\.(mp4|mov|webm|avi)(\?|$)/i.test(url)
+              const isTazkir      = post.type === 'tahkir'
               const postReactions = reactionData[post.id] || {}
+              const participants  = (post.participants || [])
+                .map(name => profiles.find(p => p.name === name))
+                .filter(Boolean)
               return (
                 <div key={post.id} style={{
-                  paddingBottom: i < recentFeed.length - 1 ? 14 : 0,
-                  borderBottom: i < recentFeed.length - 1 ? '1px solid #f5f0e8' : 'none',
-                  marginBottom: i < recentFeed.length - 1 ? 14 : 0
+                  background: 'white', borderRadius: 20, overflow: 'hidden',
+                  boxShadow: '0 4px 16px rgba(0,0,0,0.07)',
+                  marginBottom: i < recentFeed.length - 1 ? 12 : 0
                 }}>
-                  {coverPhoto && !isVideo(coverPhoto) && (
-                    <img src={coverPhoto} alt="cover" style={{
-                      width: '100%', height: 140, objectFit: 'cover',
-                      borderRadius: 12, marginBottom: 8, display: 'block'
-                    }} />
+                  {/* Header row */}
+                  <div style={{ padding: '12px 14px 8px', display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <div style={{ display: 'flex' }}>
+                      {participants.length > 0
+                        ? participants.slice(0, 3).map((p, pi) => (
+                            <div key={p.id} style={{ marginLeft: pi > 0 ? -8 : 0, zIndex: 3 - pi }}>
+                              <Avatar profile={p} size={34} />
+                            </div>
+                          ))
+                        : <div style={{ width: 34, height: 34, borderRadius: '50%', background: '#f0ebe0', border: `2px solid ${CORAL}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>
+                            {isTazkir ? '📝' : '⭐'}
+                          </div>
+                      }
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: NAVY, lineHeight: 1.3 }}>{post.title}</div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
+                        <span style={{
+                          fontSize: 9, fontWeight: 700, padding: '2px 7px', borderRadius: 20,
+                          background: isTazkir ? '#EDE7F6' : '#D5F5F0',
+                          color: isTazkir ? '#9B7FD4' : '#4ECDC4'
+                        }}>{isTazkir ? '📝 תחקיר' : '⭐ אתגר'}</span>
+                        <span style={{ fontSize: 10, color: '#a09080' }}>{timeAgo(post.created_at)}</span>
+                      </div>
+                    </div>
+                  </div>
+                  {coverPhoto && !isVid(coverPhoto) && (
+                    <img src={coverPhoto} alt="cover" style={{ width: '100%', height: 130, objectFit: 'cover', display: 'block' }} />
                   )}
-                  <div style={{ fontSize: 14, fontWeight: 700, color: NAVY }}>{post.title}</div>
-                  {post.content && <div style={{ fontSize: 12, color: '#a09080', marginTop: 2 }}>{post.content}</div>}
-                  <div style={{ fontSize: 11, color: '#b0a090', marginTop: 3 }}>{timeAgo(post.created_at)}</div>
-                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 8 }}>
+                  {post.content && (
+                    <div style={{ padding: '6px 14px 0', fontSize: 12, color: '#6b5e4e', lineHeight: 1.5 }}>{post.content}</div>
+                  )}
+                  <div style={{ padding: '8px 14px 12px', display: 'flex', gap: 5, flexWrap: 'wrap' }}>
                     {REACTIONS.map(r => (
                       <button key={r.type} onClick={() => handleReaction(post.id, r.type)} style={{
                         background: postReactions[r.type] ? '#FFF0D5' : '#F7F4EE',
                         border: `1.5px solid ${postReactions[r.type] ? GOLD : '#EDE8E0'}`,
-                        borderRadius: 20, padding: '5px 12px', cursor: 'pointer',
-                        display: 'flex', alignItems: 'center', gap: 4,
-                        fontFamily: 'var(--font-heebo), sans-serif',
-                        transition: 'all 0.15s ease'
+                        borderRadius: 20, padding: '4px 10px', cursor: 'pointer',
+                        display: 'flex', alignItems: 'center', gap: 3,
+                        fontFamily: 'var(--font-heebo), sans-serif'
                       }}>
-                        <span style={{ fontSize: 14 }}>{r.emoji}</span>
+                        <span style={{ fontSize: 13 }}>{r.emoji}</span>
                         {postReactions[r.type] > 0 && (
                           <span style={{ fontSize: 11, fontWeight: 700, color: NAVY }}>{postReactions[r.type]}</span>
                         )}
@@ -558,7 +588,7 @@ function ParentHome({ currentProfile, profiles, activeAssignments, recentFeed, r
                 </div>
               )
             })}
-          </Card>
+          </div>
         )}
 
       </div>
@@ -575,6 +605,7 @@ export default function HomePage() {
   const [activeAssignments, setActiveAssignments] = useState([])
   const [recentFeed, setRecentFeed]         = useState([])
   const [rewards, setRewards]               = useState([])
+  const [pendingClaims, setPendingClaims]   = useState([])
   const [reactions, setReactions]           = useState({})
   const [loading, setLoading]               = useState(true)
   const [startingMission, setStartingMission] = useState(null)
@@ -618,7 +649,8 @@ export default function HomePage() {
       { data: assignments },
       { data: feed },
       { data: rewardList },
-      { data: todayCompleted }
+      { data: todayCompleted },
+      { data: claimData }
     ] = await Promise.all([
       supabase.from('profiles').select('*').eq('active', true).order('created_at'),
       supabase.from('missions').select('*').eq('is_active', true).neq('category', 'Daily').order('points', { ascending: true }).limit(10),
@@ -632,7 +664,8 @@ export default function HomePage() {
       supabase.from('rewards').select('*').eq('is_active', true).order('points_required'),
       supabase.from('assignments').select('mission_id')
         .eq('assigned_to', profile.id).eq('status', 'completed')
-        .gte('completed_at', todayStart.toISOString())
+        .gte('completed_at', todayStart.toISOString()),
+      supabase.from('reward_claims').select('*, reward:rewards(title,emoji,points_required), member:profiles!reward_claims_member_id_fkey(name,avatar_url)').eq('status', 'claimed')
     ])
 
     if (allProfiles) setProfiles(allProfiles)
@@ -642,6 +675,7 @@ export default function HomePage() {
     if (feed) setRecentFeed(feed)
     if (rewardList) setRewards(rewardList)
     if (todayCompleted) setCompletedDailyIds(new Set(todayCompleted.map(a => a.mission_id)))
+    if (claimData) setPendingClaims(claimData)
 
     if (feed?.length) {
       const postIds = feed.map(p => p.id)
@@ -764,6 +798,7 @@ export default function HomePage() {
           activeAssignments={activeAssignments}
           recentFeed={recentFeed}
           rewards={rewards}
+          pendingClaims={pendingClaims}
           reactionData={reactions}
           handleReaction={handleReaction}
           handleSignOut={handleSignOut}
