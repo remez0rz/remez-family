@@ -377,7 +377,7 @@ function KidHome({ currentProfile, missions, dailyMissions, completedDailyIds, r
 }
 
 // Parent homepage
-function ParentHome({ currentProfile, profiles, activeAssignments, recentFeed, rewards, reactionData, handleReaction, handleSignOut, handleViewAs, pendingClaims }) {
+function ParentHome({ currentProfile, profiles, activeAssignments, recentFeed, rewards, reactionData, handleReaction, handleSignOut, handleViewAs, pendingClaims, dailyReport }) {
   const children    = profiles.filter(p => p.role === 'child').sort((a, b) => b.total_points - a.total_points)
   const childColors = [GOLD, PURPLE, GREEN]
   const getNextReward = (points) => rewards.find(r => r.points_required > points)
@@ -519,6 +519,56 @@ function ParentHome({ currentProfile, profiles, activeAssignments, recentFeed, r
           </a>
         )}
 
+        {/* Daily missions report */}
+        {(() => {
+          const children = profiles.filter(p => p.role === 'child')
+          const today = new Date().toLocaleDateString('he-IL', { weekday: 'long', day: 'numeric', month: 'long' })
+          return (
+            <div style={{ marginBottom: 14 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                <div style={{ fontSize: 15, fontWeight: 800, color: NAVY }}>🌅 דוח יומי — {today}</div>
+                <div style={{ fontSize: 11, color: '#8a7a60' }}>מתאפס כל בוקר</div>
+              </div>
+              {children.map(child => {
+                const childReport = dailyReport.filter(a => a.member?.name === child.name || a.assigned_to === child.id)
+                return (
+                  <div key={child.id} style={{
+                    background: 'white', borderRadius: 16, padding: '12px 14px',
+                    boxShadow: '0 2px 10px rgba(0,0,0,0.06)', marginBottom: 8
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: childReport.length > 0 ? 10 : 0 }}>
+                      <Avatar profile={child} size={30} />
+                      <div style={{ flex: 1 }}>
+                        <span style={{ fontWeight: 700, fontSize: 14, color: NAVY }}>{child.name}</span>
+                        <span style={{ fontSize: 11, color: childReport.length > 0 ? '#4ECDC4' : '#a09080', marginRight: 8, fontWeight: 600 }}>
+                          {childReport.length > 0 ? ` ✓ ${childReport.length} משימות` : ' — עדיין לא עשה היום'}
+                        </span>
+                      </div>
+                    </div>
+                    {childReport.map(a => (
+                      <div key={a.id} style={{
+                        display: 'flex', alignItems: 'flex-start', gap: 8,
+                        padding: '8px 10px', background: '#f8fffe', borderRadius: 10, marginBottom: 6,
+                        border: '1px solid #e0f8f4'
+                      }}>
+                        <span style={{ fontSize: 16, flexShrink: 0 }}>✅</span>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: 13, fontWeight: 700, color: NAVY }}>{a.mission?.title}</div>
+                          {a.proof_text && <div style={{ fontSize: 11, color: '#6b5e4e', marginTop: 2 }}>{a.proof_text}</div>}
+                          {a.proof_image_url && (
+                            <img src={a.proof_image_url} alt="proof"
+                              style={{ width: '100%', maxHeight: 100, objectFit: 'cover', borderRadius: 8, marginTop: 6, display: 'block' }} />
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )
+              })}
+            </div>
+          )
+        })()}
+
         {/* Recent feed — consistent with moments page */}
         {recentFeed.length > 0 && (
           <div style={{ marginBottom: 14 }}>
@@ -606,6 +656,7 @@ export default function HomePage() {
   const [recentFeed, setRecentFeed]         = useState([])
   const [rewards, setRewards]               = useState([])
   const [pendingClaims, setPendingClaims]   = useState([])
+  const [dailyReport, setDailyReport]       = useState([])
   const [reactions, setReactions]           = useState({})
   const [loading, setLoading]               = useState(true)
   const [startingMission, setStartingMission] = useState(null)
@@ -650,7 +701,8 @@ export default function HomePage() {
       { data: feed },
       { data: rewardList },
       { data: todayCompleted },
-      { data: claimData }
+      { data: claimData },
+      { data: dailyReportData }
     ] = await Promise.all([
       supabase.from('profiles').select('*').eq('active', true).order('created_at'),
       supabase.from('missions').select('*').eq('is_active', true).neq('category', 'Daily').order('points', { ascending: true }).limit(10),
@@ -665,7 +717,13 @@ export default function HomePage() {
       supabase.from('assignments').select('mission_id')
         .eq('assigned_to', profile.id).eq('status', 'completed')
         .gte('completed_at', todayStart.toISOString()),
-      supabase.from('reward_claims').select('*, reward:rewards(title,emoji,points_required), member:profiles!reward_claims_member_id_fkey(name,avatar_url)').eq('status', 'claimed')
+      supabase.from('reward_claims').select('*, reward:rewards(title,emoji,points_required), member:profiles!reward_claims_member_id_fkey(name,avatar_url)').eq('status', 'claimed'),
+      supabase.from('assignments')
+        .select('*, mission:missions(title,category), member:profiles!assignments_assigned_to_fkey(name,avatar_url)')
+        .eq('status', 'completed')
+        .eq('mission.category', 'Daily')
+        .gte('completed_at', todayStart.toISOString())
+        .not('mission', 'is', null)
     ])
 
     if (allProfiles) setProfiles(allProfiles)
@@ -676,6 +734,7 @@ export default function HomePage() {
     if (rewardList) setRewards(rewardList)
     if (todayCompleted) setCompletedDailyIds(new Set(todayCompleted.map(a => a.mission_id)))
     if (claimData) setPendingClaims(claimData)
+    if (dailyReportData) setDailyReport(dailyReportData.filter(a => a.mission?.category === 'Daily'))
 
     if (feed?.length) {
       const postIds = feed.map(p => p.id)
@@ -746,7 +805,7 @@ export default function HomePage() {
   const activeMissionIds = new Set(myAssignments.map(a => a.mission_id))
   const todayMissions = missions.filter(m => !activeMissionIds.has(m.id)).slice(0, 3)
   // For daily missions, also exclude ones currently active
-  const visibleDailyMissions = dailyMissions.filter(m => !activeMissionIds.has(m.id))
+  const visibleDailyMissions = dailyMissions.filter(m => !activeMissionIds.has(m.id) && !completedDailyIds.has(m.id))
 
   if (loading) return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #FFF9F0 0%, #FFF0F9 100%)', fontFamily: 'var(--font-heebo), sans-serif' }}>
@@ -799,6 +858,7 @@ export default function HomePage() {
           recentFeed={recentFeed}
           rewards={rewards}
           pendingClaims={pendingClaims}
+          dailyReport={dailyReport}
           reactionData={reactions}
           handleReaction={handleReaction}
           handleSignOut={handleSignOut}

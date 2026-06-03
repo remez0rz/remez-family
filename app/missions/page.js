@@ -438,7 +438,8 @@ export default function MissionsPage() {
   const [profiles, setProfiles]             = useState([])
   const [currentProfile, setCurrentProfile] = useState(null)
   const [rewards, setRewards]               = useState([])
-  const [activeCount, setActiveCount]       = useState(0)
+  const [activeMissionIds, setActiveMissionIds] = useState(new Set())
+  const [completedTodayIds, setCompletedTodayIds] = useState(new Set())
   const [loading, setLoading]               = useState(true)
   const [activeFilter, setActiveFilter]     = useState('all')
   const [showForm, setShowForm]             = useState(false)
@@ -466,17 +467,23 @@ export default function MissionsPage() {
     if (!profile) { router.push('/login'); return }
     setCurrentProfile(profile)
 
-    const [{ data: missionData }, { data: profileData }, { data: rewardData }, { data: activeData }] = await Promise.all([
+    const targetId = sessionStorage.getItem('viewAsProfileId') || profile.id
+    const todayStart = new Date(); todayStart.setHours(0,0,0,0)
+
+    const [{ data: missionData }, { data: profileData }, { data: rewardData }, { data: activeData }, { data: completedData }] = await Promise.all([
       supabase.from('missions').select('*').eq('is_active', true).order('points', { ascending: true }),
       supabase.from('profiles').select('*').eq('active', true),
       supabase.from('rewards').select('*').eq('is_active', true).order('points_required'),
-      supabase.from('assignments').select('id').eq('status', 'active')
+      supabase.from('assignments').select('mission_id').eq('assigned_to', targetId).eq('status', 'active'),
+      supabase.from('assignments').select('mission_id').eq('assigned_to', targetId).eq('status', 'completed')
+        .gte('completed_at', todayStart.toISOString())
     ])
 
     if (missionData) setMissions(missionData)
     if (profileData) setProfiles(profileData)
     if (rewardData) setRewards(rewardData)
-    if (activeData) setActiveCount(activeData.length)
+    if (activeData) setActiveMissionIds(new Set(activeData.map(a => a.mission_id)))
+    if (completedData) setCompletedTodayIds(new Set(completedData.map(a => a.mission_id)))
     setLoading(false)
   }
 
@@ -512,9 +519,14 @@ export default function MissionsPage() {
   const next = getNextReward(effectiveProfile?.total_points || 0)
 
   const filtered = missions.filter(m => {
+    // Hide missions already active or completed today for kids
+    if (!isParent || isViewingAsKid) {
+      if (activeMissionIds.has(m.id)) return false
+      if (m.category === 'Daily' && completedTodayIds.has(m.id)) return false
+    }
     const f = FILTERS.find(f => f.id === activeFilter)
-    if (!f || f.id === 'all') return true
-    if (f.maxPoints) return m.points <= f.maxPoints
+    if (!f || f.id === 'all') return m.category !== 'Daily'  // exclude Daily from 'all'
+    if (f.maxPoints) return m.points <= f.maxPoints && m.category !== 'Daily'
     if (f.categories) return f.categories.includes(m.category)
     return true
   })
@@ -631,20 +643,6 @@ export default function MissionsPage() {
           </div>
         )}
 
-        {/* Active challenges button */}
-        {activeCount > 0 && (
-          <a href="/missions/active" style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            background: 'rgba(255,255,255,0.2)', borderRadius: 12,
-            padding: '10px 14px', marginBottom: 12, textDecoration: 'none',
-            border: '1.5px solid rgba(255,255,255,0.4)'
-          }}>
-            <span style={{ fontSize: 13, color: 'white', fontWeight: 700 }}>
-              🏃 {activeCount} אתגרים בתהליך
-            </span>
-            <span style={{ color: 'white', fontSize: 13, fontWeight: 700 }}>סיים ←</span>
-          </a>
-        )}
 
         {/* Filter chips */}
         <div style={{

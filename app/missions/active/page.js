@@ -315,16 +315,12 @@ function CelebrationScreen({ assignment, newTotal, nextReward, leveledUp, newLev
         )}
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          <button onClick={onTazkir} style={{
-            padding: '13px', background: 'rgba(255,255,255,0.08)', border: 'none',
-            borderRadius: 14, cursor: 'pointer', fontWeight: 600, fontSize: 14,
-            color: 'rgba(255,255,255,0.8)', fontFamily: 'var(--font-heebo), sans-serif'
-          }}>📝 פותחים תחקיר על זה</button>
           <button onClick={onClose} style={{
-            padding: '11px', background: 'transparent', border: 'none',
-            cursor: 'pointer', fontWeight: 500, fontSize: 13,
-            color: 'rgba(255,255,255,0.4)', fontFamily: 'var(--font-heebo), sans-serif'
-          }}>חזרה לבית</button>
+            padding: '14px', background: `linear-gradient(135deg, ${CORAL}, #FF8E53)`,
+            border: 'none', borderRadius: 50, cursor: 'pointer', fontWeight: 800, fontSize: 16,
+            color: 'white', fontFamily: 'var(--font-heebo), sans-serif',
+            boxShadow: '0 4px 16px rgba(255,107,107,0.4)'
+          }}>⭐ לעוד אתגרים!</button>
         </div>
       </div>
     </div>
@@ -384,7 +380,9 @@ export default function ActiveEarningPage() {
     const memberId = assignment.assigned_to
 
     await supabase.from('assignments').update({
-      status: 'completed', completed_at: new Date().toISOString()
+      status: 'completed', completed_at: new Date().toISOString(),
+      proof_text: doc?.text || null,
+      proof_image_url: doc?.photoUrl || null
     }).eq('id', assignment.id)
 
     await supabase.from('point_events').insert({
@@ -434,12 +432,7 @@ export default function ActiveEarningPage() {
     }
   }
 
-  const closeCelebration = () => { setCelebration(null); router.push('/') }
-  const openTazkir = () => {
-    if (celebration) {
-      router.push(`/tazkir/new?mission=${celebration.assignment.mission.id}&member=${celebration.assignment.assigned_to}`)
-    }
-  }
+  const closeCelebration = () => { setCelebration(null); router.push('/missions') }
 
   const isParent = currentProfile?.role === 'parent'
   const viewAsProfile = viewAsId ? profiles.find(p => p.id === viewAsId) : null
@@ -489,7 +482,6 @@ export default function ActiveEarningPage() {
           newLevel={celebration.newLevel}
           newBadges={celebration.newBadges}
           onClose={closeCelebration}
-          onTazkir={openTazkir}
         />
       )}
 

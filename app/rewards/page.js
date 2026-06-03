@@ -380,8 +380,7 @@ export default function ExperiencesPage() {
   const [editTarget, setEditTarget]         = useState(null)
   const [showNewForm, setShowNewForm]       = useState(false)
   const [claimed, setClaimed]               = useState(false)
-  const [tierFilter, setTierFilter]         = useState('all')
-  const [typeFilter, setTypeFilter]         = useState('all')
+  const [activeTier, setActiveTier]         = useState('all')
   const [viewAsId, setViewAsId]             = useState(null)
   const router = useRouter()
 
@@ -562,16 +561,16 @@ export default function ExperiencesPage() {
         </div>
         )}
 
-        {/* Tier filter chips */}
+        {/* Tier nav */}
         <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 16, scrollbarWidth: 'none', position: 'relative', zIndex: 1, marginTop: 12 }}>
           {TIER_FILTERS.map(f => (
-            <button key={f.id} onClick={() => setTierFilter(f.id)} style={{
+            <button key={f.id} onClick={() => setActiveTier(f.id)} style={{
               padding: '7px 14px', borderRadius: 20, border: 'none', cursor: 'pointer', flexShrink: 0,
-              background: tierFilter === f.id ? 'white' : 'rgba(255,255,255,0.18)',
-              color: tierFilter === f.id ? CORAL : 'white',
-              fontWeight: tierFilter === f.id ? 800 : 500,
+              background: activeTier === f.id ? 'white' : 'rgba(255,255,255,0.18)',
+              color: activeTier === f.id ? CORAL : 'white',
+              fontWeight: activeTier === f.id ? 800 : 500,
               fontSize: 12, fontFamily: 'var(--font-heebo), sans-serif',
-              boxShadow: tierFilter === f.id ? '0 2px 8px rgba(0,0,0,0.15)' : 'none'
+              boxShadow: activeTier === f.id ? '0 2px 8px rgba(0,0,0,0.15)' : 'none'
             }}>{f.label}</button>
           ))}
         </div>
@@ -655,48 +654,55 @@ export default function ExperiencesPage() {
           </div>
         )}
 
-        {/* Type filter */}
-        <div style={{ display: 'flex', gap: 6, marginBottom: 16, overflowX: 'auto', scrollbarWidth: 'none' }}>
-          {TYPE_FILTERS.map(f => (
-            <button key={f.id} onClick={() => setTypeFilter(f.id)} style={{
-              padding: '6px 14px', borderRadius: 20, border: `1.5px solid ${typeFilter === f.id ? CORAL : '#E8E0D0'}`,
-              cursor: 'pointer', flexShrink: 0,
-              background: typeFilter === f.id ? '#FFE8E8' : 'white',
-              color: typeFilter === f.id ? CORAL : '#8a7a60',
-              fontWeight: typeFilter === f.id ? 700 : 500,
-              fontSize: 12, fontFamily: 'var(--font-heebo), sans-serif'
-            }}>{f.label}</button>
-          ))}
-        </div>
-
-        {(() => {
-          const tier = TIER_FILTERS.find(f => f.id === tierFilter) || TIER_FILTERS[0]
-          const filtered = rewards.filter(r => {
-            const inTier = r.points_required >= tier.min && r.points_required <= tier.max
-            const inType = typeFilter === 'all' || r.type === typeFilter
-            return inTier && inType
-          })
-          return (
-            <>
-              <div style={{ fontSize: 12, color: '#AAAAAA', fontWeight: 600, marginBottom: 14 }}>
-                {filtered.length} פרסים · {filtered.filter(r => currentPoints >= r.points_required).length} פתוחים עכשיו
-              </div>
-              {filtered.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '40px 0', color: '#a09080' }}>
-                  <div style={{ fontSize: 40, marginBottom: 8 }}>🤔</div>
-                  <div>אין פרסים בסינון הזה</div>
+        {activeTier === 'all' ? (
+          // Sectioned view — scroll through all tiers
+          TIER_FILTERS.filter(f => f.id !== 'all').map(tier => {
+            const tierRewards = rewards.filter(r => r.points_required >= tier.min && r.points_required <= tier.max)
+            if (tierRewards.length === 0) return null
+            const unlockedInTier = tierRewards.filter(r => currentPoints >= r.points_required).length
+            return (
+              <div key={tier.id} style={{ marginBottom: 8 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                  <div style={{ fontSize: 16, fontWeight: 900, color: NAVY }}>{tier.label}</div>
+                  {unlockedInTier > 0 && (
+                    <div style={{ background: '#D5F5F0', color: '#2EBFB8', borderRadius: 20, padding: '3px 10px', fontSize: 11, fontWeight: 700 }}>
+                      {unlockedInTier} פתוחים ✓
+                    </div>
+                  )}
                 </div>
-              ) : filtered.map((reward, i) => (
-                <ExperienceCard
-                  key={reward.id} reward={reward} index={i}
-                  currentPoints={currentPoints} isParent={isParent && !isViewingAsKid}
-                  onClaim={r => setClaimTarget(r)}
-                  onEdit={r => setEditTarget(r)}
-                />
-              ))}
-            </>
-          )
-        })()}
+                {tierRewards.map((reward, i) => (
+                  <ExperienceCard
+                    key={reward.id} reward={reward} index={i}
+                    currentPoints={currentPoints} isParent={isParent && !isViewingAsKid}
+                    onClaim={r => setClaimTarget(r)}
+                    onEdit={r => setEditTarget(r)}
+                  />
+                ))}
+              </div>
+            )
+          })
+        ) : (
+          // Filtered flat list for selected tier
+          (() => {
+            const tier = TIER_FILTERS.find(f => f.id === activeTier)
+            const filtered = rewards.filter(r => r.points_required >= tier.min && r.points_required <= tier.max)
+            return (
+              <>
+                <div style={{ fontSize: 12, color: '#AAAAAA', fontWeight: 600, marginBottom: 14 }}>
+                  {filtered.length} פרסים · {filtered.filter(r => currentPoints >= r.points_required).length} פתוחים עכשיו
+                </div>
+                {filtered.map((reward, i) => (
+                  <ExperienceCard
+                    key={reward.id} reward={reward} index={i}
+                    currentPoints={currentPoints} isParent={isParent && !isViewingAsKid}
+                    onClaim={r => setClaimTarget(r)}
+                    onEdit={r => setEditTarget(r)}
+                  />
+                ))}
+              </>
+            )
+          })()
+        )}
 
       </div>
 
