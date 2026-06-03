@@ -4,9 +4,8 @@ import { supabase } from '../lib/supabase'
 import { useSearchParams } from 'next/navigation'
 import { Suspense } from 'react'
 
-const NAVY = '#0a1628'
-const GOLD = '#c9a84c'
-const CREAM = '#f7f4ee'
+const NAVY  = '#2D2D2D'
+const CORAL = '#FF6B6B'
 
 function LoginForm() {
   const [loading, setLoading] = useState(false)
@@ -17,9 +16,7 @@ function LoginForm() {
     setLoading(true)
     await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback`
-      }
+      options: { redirectTo: `${window.location.origin}/auth/callback` }
     })
   }
 
@@ -27,7 +24,8 @@ function LoginForm() {
     <div style={{
       minHeight: '100vh', display: 'flex', flexDirection: 'column',
       alignItems: 'center', justifyContent: 'center',
-      background: NAVY, fontFamily: 'var(--font-heebo), sans-serif',
+      background: 'linear-gradient(135deg, #1a1a2e 0%, #2d1b3d 100%)',
+      fontFamily: 'var(--font-heebo), sans-serif',
       direction: 'rtl', padding: '24px', boxSizing: 'border-box'
     }}>
 
@@ -35,8 +33,8 @@ function LoginForm() {
       <div style={{
         position: 'absolute', top: '20%', left: '50%',
         transform: 'translateX(-50%)',
-        width: 300, height: 300, borderRadius: '50%',
-        background: `radial-gradient(circle, ${GOLD}15, transparent 70%)`,
+        width: 320, height: 320, borderRadius: '50%',
+        background: 'radial-gradient(circle, rgba(255,107,107,0.15), transparent 70%)',
         pointerEvents: 'none'
       }} />
 
@@ -48,10 +46,10 @@ function LoginForm() {
         {/* Logo */}
         <div style={{
           width: 88, height: 88, borderRadius: '50%',
-          background: `linear-gradient(135deg, ${GOLD}, #e8c870)`,
+          background: 'linear-gradient(135deg, #FF6B6B, #FF8E53)',
           margin: '0 auto 24px',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: 40, boxShadow: `0 8px 32px ${GOLD}40`
+          fontSize: 40, boxShadow: '0 8px 32px rgba(255,107,107,0.4)'
         }}>
           {error ? '🔒' : '🏡'}
         </div>
@@ -67,10 +65,10 @@ function LoginForm() {
             </div>
             <button onClick={handleLogin} style={{
               width: '100%', padding: '14px',
-              background: 'rgba(255,255,255,0.08)',
-              color: 'rgba(255,255,255,0.6)',
-              border: '1px solid rgba(255,255,255,0.15)',
-              borderRadius: 16, cursor: 'pointer',
+              background: 'rgba(255,255,255,0.1)',
+              color: 'rgba(255,255,255,0.7)',
+              border: '1px solid rgba(255,255,255,0.2)',
+              borderRadius: 50, cursor: 'pointer',
               fontWeight: 600, fontSize: 14,
               fontFamily: 'var(--font-heebo), sans-serif',
             }}>
@@ -89,7 +87,7 @@ function LoginForm() {
               width: '100%', padding: '16px',
               background: loading ? 'rgba(255,255,255,0.08)' : 'white',
               color: loading ? 'rgba(255,255,255,0.4)' : NAVY,
-              border: 'none', borderRadius: 16, cursor: loading ? 'default' : 'pointer',
+              border: 'none', borderRadius: 50, cursor: loading ? 'default' : 'pointer',
               fontWeight: 700, fontSize: 16,
               fontFamily: 'var(--font-heebo), sans-serif',
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
@@ -112,12 +110,13 @@ function LoginForm() {
               {['ר', 'ב', 'ג', 'ת', 'א'].map((letter, i) => (
                 <div key={i} style={{
                   width: 44, height: 44, borderRadius: '50%',
-                  background: ['#1a6b3c', '#7b2d8b', '#c45000', '#1a6b8a', '#9a6500'][i],
-                  border: `2.5px solid ${NAVY}`,
+                  background: ['#FF6B6B', '#4ECDC4', '#9B7FD4', '#FFB830', '#3B9FE8'][i],
+                  border: '2.5px solid rgba(255,255,255,0.2)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   fontSize: 16, fontWeight: 700, color: 'white',
                   marginLeft: i > 0 ? -10 : 0, zIndex: 5 - i,
-                  position: 'relative'
+                  position: 'relative',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.3)'
                 }}>{letter}</div>
               ))}
             </div>
@@ -126,7 +125,7 @@ function LoginForm() {
               width: '100%', padding: '16px',
               background: loading ? 'rgba(255,255,255,0.08)' : 'white',
               color: loading ? 'rgba(255,255,255,0.4)' : NAVY,
-              border: 'none', borderRadius: 16, cursor: loading ? 'default' : 'pointer',
+              border: 'none', borderRadius: 50, cursor: loading ? 'default' : 'pointer',
               fontWeight: 700, fontSize: 16,
               fontFamily: 'var(--font-heebo), sans-serif',
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
@@ -153,8 +152,8 @@ function LoginForm() {
             </div>
 
             <div style={{
-              width: 40, height: 2, background: GOLD,
-              borderRadius: 2, margin: '24px auto 0', opacity: 0.4
+              width: 40, height: 2, background: CORAL,
+              borderRadius: 2, margin: '24px auto 0', opacity: 0.5
             }} />
           </>
         )}
@@ -166,8 +165,8 @@ function LoginForm() {
 export default function LoginPage() {
   return (
     <Suspense fallback={
-      <div style={{ minHeight: '100vh', background: NAVY, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ fontSize: 32 }}>🏡</div>
+      <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #1a1a2e 0%, #2d1b3d 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ fontSize: 40 }}>🏡</div>
       </div>
     }>
       <LoginForm />

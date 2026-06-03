@@ -4,11 +4,13 @@ import { supabase, getCurrentProfile } from './lib/supabase'
 import { useRouter } from 'next/navigation'
 import BottomNav from './components/BottomNav'
 
-const NAVY = '#0a1628'
-const GOLD = '#c9a84c'
-const CREAM = '#f7f4ee'
-const GREEN = '#1a6b3c'
-const PURPLE = '#5c3d8f'
+const NAVY = '#2D2D2D'
+const GOLD = '#FFB830'
+const CREAM = 'linear-gradient(135deg, #FFF9F0 0%, #FFF0F9 100%)'
+const GREEN = '#4ECDC4'
+const PURPLE = '#9B7FD4'
+const CORAL = '#FF6B6B'
+const HEADER_BG = 'linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%)'
 
 const REACTIONS = [
   { type: 'proud',  emoji: '❤️' },
@@ -20,9 +22,9 @@ const REACTIONS = [
 ]
 
 const MISSION_GRADIENTS = [
-  ['#1a6b3c', '#2d9e5f'], ['#0a1628', '#1e3a5f'],
-  ['#7b2d8b', '#a855c8'], ['#c45000', '#e07030'],
-  ['#1a6b8a', '#2892b8'],
+  ['#FF6B6B', '#FF8E53'], ['#4ECDC4', '#2EBFB8'],
+  ['#9B7FD4', '#C084FC'], ['#FFB830', '#FFD166'],
+  ['#3B9FE8', '#60B8FF'],
 ]
 
 const CATEGORY_LABELS = {
@@ -48,9 +50,10 @@ function Avatar({ profile, size = 40 }) {
   return (
     <div style={{
       width: size, height: size, borderRadius: '50%',
-      border: `2px solid ${GOLD}`, overflow: 'hidden', flexShrink: 0,
-      background: '#e8d5a3', display: 'flex', alignItems: 'center',
-      justifyContent: 'center', fontSize: size * 0.38, fontWeight: 700, color: NAVY
+      border: `3px solid rgba(255,255,255,0.8)`, overflow: 'hidden', flexShrink: 0,
+      background: '#FFD5E8', display: 'flex', alignItems: 'center',
+      justifyContent: 'center', fontSize: size * 0.38, fontWeight: 800, color: CORAL,
+      boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
     }}>
       {profile?.avatar_url && !imgError
         ? <img src={profile.avatar_url} alt={profile?.name}
@@ -64,8 +67,8 @@ function Avatar({ profile, size = 40 }) {
 function ProgressBar({ value, max, color = GOLD }) {
   const pct = max > 0 ? Math.min(Math.round((value / max) * 100), 100) : 100
   return (
-    <div style={{ background: 'rgba(255,255,255,0.15)', borderRadius: 6, height: 8 }}>
-      <div style={{ width: `${pct}%`, height: '100%', background: color, borderRadius: 6, transition: 'width 0.4s ease' }} />
+    <div style={{ background: 'rgba(255,255,255,0.3)', borderRadius: 8, height: 10 }}>
+      <div style={{ width: `${pct}%`, height: '100%', background: color, borderRadius: 8, transition: 'width 0.4s ease', boxShadow: `0 2px 6px ${color}66` }} />
     </div>
   )
 }
@@ -73,8 +76,8 @@ function ProgressBar({ value, max, color = GOLD }) {
 function Card({ children, style = {} }) {
   return (
     <div style={{
-      background: 'white', borderRadius: 18, padding: '14px 16px',
-      border: '1px solid #e8e0d0', marginBottom: 12, ...style
+      background: 'white', borderRadius: 24, padding: '18px 20px',
+      boxShadow: '0 4px 20px rgba(0,0,0,0.07)', marginBottom: 14, ...style
     }}>
       {children}
     </div>
@@ -83,9 +86,9 @@ function Card({ children, style = {} }) {
 
 function SectionTitle({ title, href }) {
   return (
-    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-      <div style={{ fontSize: 14, fontWeight: 700, color: NAVY }}>{title}</div>
-      {href && <a href={href} style={{ fontSize: 12, color: GOLD, textDecoration: 'none', fontWeight: 600 }}>הכל ←</a>}
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+      <div style={{ fontSize: 15, fontWeight: 800, color: NAVY }}>{title}</div>
+      {href && <a href={href} style={{ fontSize: 12, color: CORAL, textDecoration: 'none', fontWeight: 700, background: '#FFE8E8', borderRadius: 20, padding: '3px 10px' }}>הכל ←</a>}
     </div>
   )
 }
@@ -107,51 +110,57 @@ function KidHome({ currentProfile, missions, rewards, activeAssignments, recentF
     <>
       {/* Header */}
       <div style={{
-        background: NAVY, padding: '20px 18px 28px',
-        borderRadius: '0 0 28px 28px', marginBottom: 16
+        background: HEADER_BG, padding: '24px 18px 32px',
+        borderRadius: '0 0 32px 32px', marginBottom: 18,
+        position: 'relative', overflow: 'hidden'
       }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 }}>
+        {/* Decorative circles */}
+        <div style={{ position: 'absolute', top: -40, left: -40, width: 160, height: 160, borderRadius: '50%', background: 'rgba(255,255,255,0.1)' }} />
+        <div style={{ position: 'absolute', bottom: -20, right: -20, width: 100, height: 100, borderRadius: '50%', background: 'rgba(255,255,255,0.08)' }} />
+
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20, position: 'relative', zIndex: 1 }}>
           <div>
-            <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)' }}>משפחת רמז</div>
-            <div style={{ fontSize: 24, fontWeight: 900, color: 'white', lineHeight: 1.1 }}>
+            <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.75)', fontWeight: 600, letterSpacing: '0.5px' }}>משפחת רמז</div>
+            <div style={{ fontSize: 26, fontWeight: 900, color: 'white', lineHeight: 1.2, marginTop: 2 }}>
               היי {currentProfile.name} 👋
             </div>
-            <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.55)', marginTop: 2 }}>
+            <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.8)', marginTop: 4, fontWeight: 600 }}>
               מה בא לך לצבור היום?
             </div>
           </div>
           <a href="/profiles" style={{ textDecoration: 'none' }}>
-            <Avatar profile={currentProfile} size={44} />
+            <Avatar profile={currentProfile} size={48} />
           </a>
         </div>
 
         {/* Points hero */}
-        <div style={{ background: 'rgba(255,255,255,0.07)', borderRadius: 18, padding: '18px 16px' }}>
-          <div style={{ textAlign: 'center', marginBottom: 12 }}>
-            <div style={{ fontSize: 48, fontWeight: 900, color: GOLD, lineHeight: 1 }}>
+        <div style={{ background: 'rgba(255,255,255,0.18)', borderRadius: 24, padding: '20px 18px', backdropFilter: 'blur(4px)', position: 'relative', zIndex: 1 }}>
+          <div style={{ textAlign: 'center', marginBottom: 14 }}>
+            <div style={{ fontSize: 56, fontWeight: 900, color: 'white', lineHeight: 1, textShadow: '0 2px 8px rgba(0,0,0,0.15)' }}>
               {currentProfile.total_points}
             </div>
-            <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginTop: 2 }}>נקודות</div>
+            <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.85)', marginTop: 4, fontWeight: 600 }}>נקודות 🌟</div>
           </div>
 
           {next ? (
             <>
-              <ProgressBar value={currentProfile.total_points} max={next.points_required} color={GOLD} />
-              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)', marginTop: 6, textAlign: 'center' }}>
+              <ProgressBar value={currentProfile.total_points} max={next.points_required} color="white" />
+              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.85)', marginTop: 8, textAlign: 'center', fontWeight: 600 }}>
                 עוד {next.points_required - currentProfile.total_points} נקודות ו{next.title} נפתח ✨
               </div>
             </>
           ) : (
-            <div style={{ fontSize: 13, color: GOLD, textAlign: 'center', fontWeight: 700 }}>
+            <div style={{ fontSize: 13, color: 'white', textAlign: 'center', fontWeight: 800 }}>
               השגת את כל החוויות! 🏆
             </div>
           )}
 
           <a href="/missions" style={{
-            display: 'block', marginTop: 14,
-            background: GOLD, color: NAVY, borderRadius: 14,
-            padding: '12px', textAlign: 'center',
-            textDecoration: 'none', fontWeight: 900, fontSize: 15
+            display: 'block', marginTop: 16,
+            background: 'white', color: CORAL, borderRadius: 50,
+            padding: '13px', textAlign: 'center',
+            textDecoration: 'none', fontWeight: 900, fontSize: 15,
+            boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
           }}>
             ✨ צוברים נקודות עכשיו
           </a>
@@ -171,36 +180,36 @@ function KidHome({ currentProfile, missions, rewards, activeAssignments, recentF
 
               return (
                 <div key={mission.id} style={{
-                  borderRadius: 16, marginBottom: 10, overflow: 'hidden',
-                  border: '1px solid #e8e0d0'
+                  borderRadius: 24, marginBottom: 12, overflow: 'hidden',
+                  boxShadow: '0 4px 16px rgba(0,0,0,0.1)'
                 }}>
                   <div style={{
                     background: `linear-gradient(135deg, ${gradient[0]}, ${gradient[1]})`,
-                    padding: '14px 16px',
+                    padding: '16px 18px',
                     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                    position: 'relative'
                   }}>
-                    <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.15)' }} />
-                    <div style={{ position: 'relative', zIndex: 1 }}>
-                      <div style={{ fontSize: 22 }}>{visual.emoji}</div>
-                      <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.7)', marginTop: 2 }}>
+                    <div>
+                      <div style={{ fontSize: 28 }}>{visual.emoji}</div>
+                      <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.85)', marginTop: 3, fontWeight: 700 }}>
                         {CATEGORY_LABELS[mission.category] || mission.category}
                       </div>
                     </div>
-                    <div style={{ position: 'relative', zIndex: 1, textAlign: 'center' }}>
-                      <div style={{ fontSize: 22, fontWeight: 900, color: 'white' }}>+{mission.points}</div>
-                      <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.7)' }}>נק׳ · {mission.estimated_minutes} דק׳</div>
+                    <div style={{ textAlign: 'center', background: 'rgba(255,255,255,0.2)', borderRadius: 16, padding: '8px 14px' }}>
+                      <div style={{ fontSize: 24, fontWeight: 900, color: 'white', lineHeight: 1 }}>+{mission.points}</div>
+                      <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.85)', marginTop: 2, fontWeight: 600 }}>נק׳ · {mission.estimated_minutes} דק׳</div>
                     </div>
                   </div>
-                  <div style={{ background: 'white', padding: '12px 16px' }}>
-                    <div style={{ fontSize: 14, fontWeight: 700, color: NAVY, marginBottom: 8 }}>{mission.title}</div>
+                  <div style={{ background: 'white', padding: '14px 18px' }}>
+                    <div style={{ fontSize: 14, fontWeight: 800, color: NAVY, marginBottom: 10 }}>{mission.title}</div>
                     <button onClick={() => handleStartMission(mission)} disabled={starting} style={{
-                      width: '100%', padding: '10px',
-                      background: starting ? '#e8e0d0' : NAVY,
+                      width: '100%', padding: '11px',
+                      background: starting ? '#F0EBE0' : CORAL,
                       color: starting ? '#a09080' : 'white',
-                      border: 'none', borderRadius: 10, cursor: starting ? 'default' : 'pointer',
-                      fontWeight: 700, fontSize: 13,
-                      fontFamily: 'var(--font-heebo), sans-serif'
+                      border: 'none', borderRadius: 50, cursor: starting ? 'default' : 'pointer',
+                      fontWeight: 800, fontSize: 13,
+                      fontFamily: 'var(--font-heebo), sans-serif',
+                      boxShadow: starting ? 'none' : '0 4px 12px rgba(255,107,107,0.35)',
+                      transition: 'all 0.2s ease'
                     }}>
                       {starting ? 'שולח...' : 'אני רוצה לנסות ⭐'}
                     </button>
@@ -210,7 +219,7 @@ function KidHome({ currentProfile, missions, rewards, activeAssignments, recentF
             })}
             <a href="/missions" style={{
               display: 'block', textAlign: 'center', fontSize: 13,
-              color: GOLD, textDecoration: 'none', fontWeight: 600, marginBottom: 12
+              color: CORAL, textDecoration: 'none', fontWeight: 700, marginBottom: 12
             }}>לכל אתגרי הנקודות ←</a>
           </div>
         )}
@@ -226,10 +235,11 @@ function KidHome({ currentProfile, missions, rewards, activeAssignments, recentF
                 <div style={{ fontSize: 12, color: '#8a7a60', marginTop: 2 }}>
                   עוד {next.points_required - currentProfile.total_points} נקודות והיא נפתחת
                 </div>
-                <div style={{ background: '#f0ebe0', borderRadius: 6, height: 6, marginTop: 6 }}>
+                <div style={{ background: '#F0EBE0', borderRadius: 8, height: 8, marginTop: 8 }}>
                   <div style={{
                     width: `${Math.min(Math.round((currentProfile.total_points / next.points_required) * 100), 100)}%`,
-                    height: '100%', background: GOLD, borderRadius: 6
+                    height: '100%', background: GOLD, borderRadius: 8,
+                    boxShadow: `0 2px 6px ${GOLD}88`
                   }} />
                 </div>
               </div>
@@ -249,7 +259,7 @@ function KidHome({ currentProfile, missions, rewards, activeAssignments, recentF
                 marginBottom: i < activeAssignments.length - 1 ? 10 : 0
               }}>
                 <div style={{ fontSize: 13, fontWeight: 600, color: NAVY, flex: 1, paddingLeft: 8 }}>{a.mission.title}</div>
-                <div style={{ fontWeight: 700, fontSize: 13, color: GREEN, background: '#edf7f1', padding: '3px 10px', borderRadius: 20 }}>
+                <div style={{ fontWeight: 800, fontSize: 13, color: 'white', background: GREEN, padding: '4px 12px', borderRadius: 20, boxShadow: '0 2px 6px rgba(78,205,196,0.4)' }}>
                   +{a.mission.points}
                 </div>
               </div>
@@ -283,11 +293,12 @@ function KidHome({ currentProfile, missions, rewards, activeAssignments, recentF
                   <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 8 }}>
                     {REACTIONS.map(r => (
                       <button key={r.type} onClick={() => handleReaction(post.id, r.type)} style={{
-                        background: postReactions[r.type] ? '#faf6ec' : '#f7f4ee',
-                        border: `1px solid ${postReactions[r.type] ? GOLD : '#e8e0d0'}`,
-                        borderRadius: 20, padding: '4px 10px', cursor: 'pointer',
+                        background: postReactions[r.type] ? '#FFF0D5' : '#F7F4EE',
+                        border: `1.5px solid ${postReactions[r.type] ? GOLD : '#EDE8E0'}`,
+                        borderRadius: 20, padding: '5px 12px', cursor: 'pointer',
                         display: 'flex', alignItems: 'center', gap: 4,
-                        fontFamily: 'var(--font-heebo), sans-serif'
+                        fontFamily: 'var(--font-heebo), sans-serif',
+                        transition: 'all 0.15s ease'
                       }}>
                         <span style={{ fontSize: 14 }}>{r.emoji}</span>
                         {postReactions[r.type] > 0 && (
@@ -308,7 +319,7 @@ function KidHome({ currentProfile, missions, rewards, activeAssignments, recentF
 }
 
 // Parent homepage
-function ParentHome({ currentProfile, profiles, activeAssignments, recentFeed, rewards, reactionData, handleReaction, handleSignOut }) {
+function ParentHome({ currentProfile, profiles, activeAssignments, recentFeed, rewards, reactionData, handleReaction, handleSignOut, handleViewAs }) {
   const children    = profiles.filter(p => p.role === 'child').sort((a, b) => b.total_points - a.total_points)
   const childColors = [GOLD, PURPLE, GREEN]
   const getNextReward = (points) => rewards.find(r => r.points_required > points)
@@ -325,25 +336,50 @@ function ParentHome({ currentProfile, profiles, activeAssignments, recentFeed, r
     <>
       {/* Header */}
       <div style={{
-        background: NAVY, padding: '20px 18px 24px',
-        borderRadius: '0 0 28px 28px', marginBottom: 16
+        background: HEADER_BG, padding: '24px 18px 28px',
+        borderRadius: '0 0 32px 32px', marginBottom: 18,
+        position: 'relative', overflow: 'hidden'
       }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ position: 'absolute', top: -40, left: -40, width: 160, height: 160, borderRadius: '50%', background: 'rgba(255,255,255,0.1)' }} />
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'relative', zIndex: 1 }}>
           <div>
-            <div style={{ fontSize: 22, fontWeight: 900, color: 'white' }}>משפחת רמז 🏡</div>
-            <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginTop: 2 }}>מה עושים היום?</div>
+            <div style={{ fontSize: 24, fontWeight: 900, color: 'white' }}>משפחת רמז 🏡</div>
+            <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.8)', marginTop: 3, fontWeight: 600 }}>מה עושים היום?</div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <a href="/profiles" style={{ textDecoration: 'none' }}>
-              <Avatar profile={currentProfile} size={42} />
+              <Avatar profile={currentProfile} size={44} />
             </a>
             <button onClick={handleSignOut} style={{
-              background: 'transparent', border: '1px solid rgba(255,255,255,0.2)',
-              borderRadius: 20, color: 'rgba(255,255,255,0.6)', fontSize: 11,
-              padding: '4px 10px', cursor: 'pointer', fontFamily: 'var(--font-heebo), sans-serif'
+              background: 'rgba(255,255,255,0.2)', border: 'none',
+              borderRadius: 20, color: 'white', fontSize: 12,
+              padding: '6px 14px', cursor: 'pointer', fontFamily: 'var(--font-heebo), sans-serif',
+              fontWeight: 700
             }}>יציאה</button>
           </div>
         </div>
+
+        {/* View-as child switcher */}
+        {children.length > 0 && (
+          <div style={{ marginTop: 14, position: 'relative', zIndex: 1 }}>
+            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.7)', fontWeight: 600, marginBottom: 8 }}>👁 הצג את האפליקציה כ:</div>
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              {children.map(child => (
+                <button key={child.id} onClick={() => handleViewAs(child.id)} style={{
+                  display: 'flex', alignItems: 'center', gap: 6,
+                  background: 'rgba(255,255,255,0.2)', border: '1.5px solid rgba(255,255,255,0.4)',
+                  borderRadius: 20, padding: '6px 12px', cursor: 'pointer',
+                  color: 'white', fontSize: 13, fontWeight: 700,
+                  fontFamily: 'var(--font-heebo), sans-serif',
+                  transition: 'all 0.15s ease'
+                }}>
+                  <Avatar profile={child} size={22} />
+                  {child.name}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       <div style={{ padding: '0 14px' }}>
@@ -352,8 +388,9 @@ function ParentHome({ currentProfile, profiles, activeAssignments, recentFeed, r
         {pending.length > 0 && (
           <a href="/missions?tab=active" style={{ textDecoration: 'none' }}>
             <div style={{
-              background: GOLD, borderRadius: 16, padding: '14px 16px',
-              display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12
+              background: 'linear-gradient(135deg, #FFB830, #FFD166)', borderRadius: 20, padding: '16px 18px',
+              display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14,
+              boxShadow: '0 4px 16px rgba(255,184,48,0.35)'
             }}>
               <div style={{ fontSize: 24 }}>⏳</div>
               <div style={{ flex: 1 }}>
@@ -384,10 +421,11 @@ function ParentHome({ currentProfile, profiles, activeAssignments, recentFeed, r
                         <span style={{ fontWeight: 700, fontSize: 14, color: NAVY }}>{child.name}</span>
                         <span style={{ fontWeight: 700, color, fontSize: 14 }}>{child.total_points} נק׳</span>
                       </div>
-                      <div style={{ background: '#f0ebe0', borderRadius: 6, height: 6, marginTop: 4 }}>
+                      <div style={{ background: '#F0EBE0', borderRadius: 8, height: 8, marginTop: 5 }}>
                         <div style={{
                           width: `${next ? Math.min(Math.round((child.total_points / next.points_required) * 100), 100) : 100}%`,
-                          height: '100%', background: color, borderRadius: 6
+                          height: '100%', background: color, borderRadius: 8,
+                          boxShadow: `0 2px 6px ${color}88`
                         }} />
                       </div>
                       {next && <div style={{ color: '#a09080', fontSize: 11, marginTop: 2 }}>
@@ -404,12 +442,13 @@ function ParentHome({ currentProfile, profiles, activeAssignments, recentFeed, r
         {/* Quick actions */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 12 }}>
           {[
-            { href: '/missions', bg: NAVY, icon: '⭐', title: 'שלח אתגר', sub: 'לבני המשפחה' },
-            { href: '/tazkir/new', bg: GREEN, icon: '📝', title: 'תחקיר', sub: 'מה עשינו היום?' },
+            { href: '/missions', bg: 'linear-gradient(135deg, #FF6B6B, #FF8E53)', icon: '⭐', title: 'שלח אתגר', sub: 'לבני המשפחה' },
+            { href: '/tazkir/new', bg: 'linear-gradient(135deg, #4ECDC4, #2EBFB8)', icon: '📝', title: 'תחקיר', sub: 'מה עשינו היום?' },
           ].map(item => (
             <a key={item.href} href={item.href} style={{
-              display: 'block', padding: '16px 14px', background: item.bg,
-              borderRadius: 16, textDecoration: 'none'
+              display: 'block', padding: '18px 16px', background: item.bg,
+              borderRadius: 22, textDecoration: 'none',
+              boxShadow: '0 4px 16px rgba(0,0,0,0.12)'
             }}>
               <div style={{ fontSize: 24, marginBottom: 4 }}>{item.icon}</div>
               <div style={{ fontWeight: 700, fontSize: 14, color: 'white' }}>{item.title}</div>
@@ -444,11 +483,12 @@ function ParentHome({ currentProfile, profiles, activeAssignments, recentFeed, r
                   <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 8 }}>
                     {REACTIONS.map(r => (
                       <button key={r.type} onClick={() => handleReaction(post.id, r.type)} style={{
-                        background: postReactions[r.type] ? '#faf6ec' : '#f7f4ee',
-                        border: `1px solid ${postReactions[r.type] ? GOLD : '#e8e0d0'}`,
-                        borderRadius: 20, padding: '4px 10px', cursor: 'pointer',
+                        background: postReactions[r.type] ? '#FFF0D5' : '#F7F4EE',
+                        border: `1.5px solid ${postReactions[r.type] ? GOLD : '#EDE8E0'}`,
+                        borderRadius: 20, padding: '5px 12px', cursor: 'pointer',
                         display: 'flex', alignItems: 'center', gap: 4,
-                        fontFamily: 'var(--font-heebo), sans-serif'
+                        fontFamily: 'var(--font-heebo), sans-serif',
+                        transition: 'all 0.15s ease'
                       }}>
                         <span style={{ fontSize: 14 }}>{r.emoji}</span>
                         {postReactions[r.type] > 0 && (
@@ -478,7 +518,22 @@ export default function HomePage() {
   const [reactions, setReactions]           = useState({})
   const [loading, setLoading]               = useState(true)
   const [startingMission, setStartingMission] = useState(null)
+  const [viewAsId, setViewAsId]             = useState(null)
   const router = useRouter()
+
+  useEffect(() => {
+    const saved = sessionStorage.getItem('viewAsProfileId')
+    if (saved) setViewAsId(saved)
+  }, [])
+
+  const handleViewAs = (profileId) => {
+    if (profileId) {
+      sessionStorage.setItem('viewAsProfileId', profileId)
+    } else {
+      sessionStorage.removeItem('viewAsProfileId')
+    }
+    setViewAsId(profileId)
+  }
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -569,19 +624,23 @@ export default function HomePage() {
   }
 
   const isParent = currentProfile?.role === 'parent'
-  const myAssignments = isParent
+  const viewAsProfile = viewAsId ? profiles.find(p => p.id === viewAsId) : null
+  const isViewingAsKid = isParent && !!viewAsProfile
+  const effectiveProfile = viewAsProfile || currentProfile
+
+  const myAssignments = (isParent && !isViewingAsKid)
     ? activeAssignments
-    : activeAssignments.filter(a => a.member?.id === currentProfile?.id)
+    : activeAssignments.filter(a => a.member?.id === effectiveProfile?.id)
 
   // Filter today's missions — exclude already active ones
   const activeMissionIds = new Set(myAssignments.map(a => a.mission_id))
   const todayMissions = missions.filter(m => !activeMissionIds.has(m.id)).slice(0, 3)
 
   if (loading) return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: CREAM, fontFamily: 'var(--font-heebo), sans-serif' }}>
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #FFF9F0 0%, #FFF0F9 100%)', fontFamily: 'var(--font-heebo), sans-serif' }}>
       <div style={{ textAlign: 'center' }}>
-        <div style={{ fontSize: 32, marginBottom: 8 }}>🏡</div>
-        <div style={{ color: '#8a7a60', fontSize: 14 }}>טוענים את הבית...</div>
+        <div style={{ fontSize: 48, marginBottom: 12 }}>🏡</div>
+        <div style={{ color: CORAL, fontSize: 16, fontWeight: 700 }}>טוענים את הבית...</div>
       </div>
     </div>
   )
@@ -590,11 +649,37 @@ export default function HomePage() {
     <div style={{
       maxWidth: 480, margin: '0 auto',
       fontFamily: 'var(--font-heebo), sans-serif',
-      direction: 'rtl', background: CREAM,
+      direction: 'rtl', background: 'linear-gradient(135deg, #FFF9F0 0%, #FFF0F9 100%)',
       minHeight: '100vh', paddingBottom: '5.5rem',
       boxSizing: 'border-box', overflowX: 'hidden'
     }}>
-      {isParent ? (
+      {/* View-as banner */}
+      {isViewingAsKid && (
+        <div style={{
+          position: 'sticky', top: 0, zIndex: 200,
+          background: 'linear-gradient(90deg, #9B7FD4, #C084FC)',
+          padding: '10px 16px',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          boxShadow: '0 2px 8px rgba(155,127,212,0.4)'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ fontSize: 16 }}>👁</span>
+            <span style={{ color: 'white', fontWeight: 700, fontSize: 13 }}>
+              מציג כ: {viewAsProfile.name}
+            </span>
+          </div>
+          <button onClick={() => handleViewAs(null)} style={{
+            background: 'rgba(255,255,255,0.25)', border: 'none',
+            borderRadius: 20, color: 'white', fontSize: 12, fontWeight: 700,
+            padding: '5px 14px', cursor: 'pointer',
+            fontFamily: 'var(--font-heebo), sans-serif'
+          }}>
+            חזרה לתצוגת הורה
+          </button>
+        </div>
+      )}
+
+      {isParent && !isViewingAsKid ? (
         <ParentHome
           currentProfile={currentProfile}
           profiles={profiles}
@@ -604,10 +689,11 @@ export default function HomePage() {
           reactionData={reactions}
           handleReaction={handleReaction}
           handleSignOut={handleSignOut}
+          handleViewAs={handleViewAs}
         />
       ) : (
         <KidHome
-          currentProfile={currentProfile}
+          currentProfile={effectiveProfile}
           missions={todayMissions}
           rewards={rewards}
           activeAssignments={myAssignments}

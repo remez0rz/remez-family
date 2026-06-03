@@ -3,19 +3,24 @@ import { useEffect, useState } from 'react'
 import { supabase, getCurrentProfile } from '../lib/supabase'
 import { useRouter } from 'next/navigation'
 import BottomNav from '../components/BottomNav'
+import ViewAsBanner from '../components/ViewAsBanner'
 
-const NAVY = '#0a1628'
-const GOLD = '#c9a84c'
+const NAVY = '#2D2D2D'
+const GOLD = '#FFB830'
 const CREAM = '#f7f4ee'
 const GREEN = '#1a6b3c'
 const PURPLE = '#5c3d8f'
+const CORAL = '#FF6B6B'
+const TEAL = '#4ECDC4'
+const PAGE_BG = 'linear-gradient(135deg, #FFF9F0 0%, #FFF0F9 100%)'
+const HEADER_BG = 'linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%)'
 
 const MISSION_GRADIENTS = [
-  ['#1a6b3c', '#2d9e5f'], ['#0a1628', '#1e3a5f'],
-  ['#7b2d8b', '#a855c8'], ['#c45000', '#e07030'],
-  ['#1a6b8a', '#2892b8'], ['#9a6500', '#c9a84c'],
-  ['#ad1457', '#d81b60'], ['#0a1628', '#2d4a9e'],
-  ['#1a6b3c', '#43a870'], ['#5c3d8f', '#8b5cf6'],
+  ['#FF6B6B','#FF8E53'], ['#4ECDC4','#2EBFB8'],
+  ['#9B7FD4','#C084FC'], ['#FFB830','#FFD166'],
+  ['#3B9FE8','#60B8FF'], ['#FF6B6B','#FF8E53'],
+  ['#4ECDC4','#2EBFB8'], ['#9B7FD4','#C084FC'],
+  ['#FFB830','#FFD166'], ['#3B9FE8','#60B8FF'],
 ]
 
 const CATEGORY_VISUAL = {
@@ -47,9 +52,9 @@ const FILTERS = [
 ]
 
 const DIFFICULTY = {
-  easy:   { label: 'קל',     color: GREEN },
-  medium: { label: 'בינוני', color: '#9a6500' },
-  hard:   { label: 'קשה',   color: '#c45000' },
+  easy:   { label: 'קל',     color: TEAL },
+  medium: { label: 'בינוני', color: '#FFB830' },
+  hard:   { label: 'קשה',   color: CORAL },
 }
 
 function Avatar({ profile, size = 44, selected = false, onClick }) {
@@ -127,7 +132,7 @@ function MissionFormModal({ mission, onClose, onSaved }) {
       fontFamily: 'var(--font-heebo), sans-serif', direction: 'rtl'
     }}>
       <div style={{
-        background: CREAM, borderRadius: '24px 24px 0 0',
+        background: 'white', borderRadius: '24px 24px 0 0',
         padding: '24px 20px 40px', width: '100%', maxWidth: 480,
         maxHeight: '92vh', overflowY: 'auto'
       }}>
@@ -201,11 +206,12 @@ function MissionFormModal({ mission, onClose, onSaved }) {
 
         <button onClick={handleSave} disabled={saving || !form.title.trim()} style={{
           width: '100%', padding: '14px',
-          background: form.title.trim() ? GOLD : '#e0d8c8',
-          color: form.title.trim() ? NAVY : '#a09080',
-          border: 'none', borderRadius: 14,
+          background: form.title.trim() ? CORAL : '#e0d8c8',
+          color: 'white',
+          border: 'none', borderRadius: 50,
           cursor: form.title.trim() ? 'pointer' : 'default',
-          fontWeight: 700, fontSize: 16, fontFamily: 'var(--font-heebo), sans-serif'
+          fontWeight: 700, fontSize: 16, fontFamily: 'var(--font-heebo), sans-serif',
+          boxShadow: form.title.trim() ? '0 4px 12px rgba(255,107,107,0.35)' : 'none'
         }}>
           {saving ? 'שומר...' : isNew ? '+ הוסף אתגר' : 'שמור אתגר'}
         </button>
@@ -240,7 +246,7 @@ function ParentAssignModal({ mission, profiles, onClose, onAssigned }) {
       fontFamily: 'var(--font-heebo), sans-serif', direction: 'rtl'
     }}>
       <div style={{
-        background: CREAM, borderRadius: '24px 24px 0 0',
+        background: 'white', borderRadius: '24px 24px 0 0',
         padding: '24px 20px 40px', width: '100%', maxWidth: 480
       }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
@@ -271,10 +277,11 @@ function ParentAssignModal({ mission, profiles, onClose, onAssigned }) {
 
         <button onClick={handleAssign} disabled={!assignedTo.length || assigning} style={{
           width: '100%', padding: '13px',
-          background: assignedTo.length ? GOLD : '#e0d8c8',
-          color: assignedTo.length ? NAVY : '#a09080',
-          border: 'none', borderRadius: 14, cursor: assignedTo.length ? 'pointer' : 'default',
-          fontWeight: 700, fontSize: 15, fontFamily: 'var(--font-heebo), sans-serif'
+          background: assignedTo.length ? CORAL : '#e0d8c8',
+          color: 'white',
+          border: 'none', borderRadius: 50, cursor: assignedTo.length ? 'pointer' : 'default',
+          fontWeight: 700, fontSize: 15, fontFamily: 'var(--font-heebo), sans-serif',
+          boxShadow: assignedTo.length ? '0 4px 12px rgba(255,107,107,0.35)' : 'none'
         }}>
           {assigning ? 'שולח...' : `📤 שלח אתגר${assignedTo.length > 1 ? ` ל-${assignedTo.length}` : ''}`}
         </button>
@@ -292,8 +299,8 @@ function ChallengeCard({ mission, index, isParent, currentProfile, onStart, onAs
 
   return (
     <div style={{
-      borderRadius: 20, marginBottom: 14, overflow: 'hidden',
-      border: '1px solid #e8e0d0'
+      borderRadius: 24, marginBottom: 14, overflow: 'hidden',
+      boxShadow: '0 4px 20px rgba(0,0,0,0.07)'
     }}>
       {/* Gradient header */}
       <div style={{
@@ -302,7 +309,6 @@ function ChallengeCard({ mission, index, isParent, currentProfile, onStart, onAs
         display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between',
         minHeight: 90, position: 'relative'
       }}>
-        <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.2)' }} />
         <div style={{ position: 'relative', zIndex: 1 }}>
           <div style={{ fontSize: 30, marginBottom: 4, filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))' }}>
             {visual.emoji}
@@ -350,18 +356,19 @@ function ChallengeCard({ mission, index, isParent, currentProfile, onStart, onAs
         {isParent ? (
           <button onClick={() => onAssign(mission)} style={{
             width: '100%', padding: '11px',
-            background: '#f7f4ee', color: NAVY,
-            border: `1px solid #e8e0d0`, borderRadius: 12, cursor: 'pointer',
+            background: TEAL, color: 'white',
+            border: 'none', borderRadius: 50, cursor: 'pointer',
             fontWeight: 700, fontSize: 14, fontFamily: 'var(--font-heebo), sans-serif'
           }}>📤 שלח לילד</button>
         ) : (
           <button onClick={() => onStart(mission)} disabled={starting === mission.id} style={{
             width: '100%', padding: '12px',
-            background: starting === mission.id ? '#e8e0d0' : NAVY,
+            background: starting === mission.id ? '#e8e0d0' : CORAL,
             color: starting === mission.id ? '#a09080' : 'white',
-            border: 'none', borderRadius: 12,
+            border: 'none', borderRadius: 50,
             cursor: starting === mission.id ? 'default' : 'pointer',
-            fontWeight: 700, fontSize: 14, fontFamily: 'var(--font-heebo), sans-serif'
+            fontWeight: 700, fontSize: 14, fontFamily: 'var(--font-heebo), sans-serif',
+            boxShadow: starting === mission.id ? 'none' : '0 4px 12px rgba(255,107,107,0.35)'
           }}>
             {starting === mission.id ? 'שולח...' : 'אני עושה את זה ⭐'}
           </button>
@@ -384,7 +391,13 @@ export default function MissionsPage() {
   const [assignTarget, setAssignTarget]     = useState(null)
   const [starting, setStarting]             = useState(null)
   const [assignedDone, setAssignedDone]     = useState(false)
+  const [viewAsId, setViewAsId] = useState(null)
   const router = useRouter()
+
+  useEffect(() => {
+    const saved = sessionStorage.getItem('viewAsProfileId')
+    if (saved) setViewAsId(saved)
+  }, [])
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -436,8 +449,11 @@ export default function MissionsPage() {
   }
 
   const isParent = currentProfile?.role === 'parent'
+  const viewAsProfile = viewAsId ? profiles.find(p => p.id === viewAsId) : null
+  const isViewingAsKid = isParent && !!viewAsProfile
+  const effectiveProfile = viewAsProfile || currentProfile
   const getNextReward = (points) => rewards.find(r => r.points_required > points)
-  const next = getNextReward(currentProfile?.total_points || 0)
+  const next = getNextReward(effectiveProfile?.total_points || 0)
 
   const filtered = missions.filter(m => {
     const f = FILTERS.find(f => f.id === activeFilter)
@@ -456,12 +472,12 @@ export default function MissionsPage() {
   if (loading) return (
     <div style={{
       minHeight: '100vh', display: 'flex', alignItems: 'center',
-      justifyContent: 'center', background: CREAM,
+      justifyContent: 'center', background: PAGE_BG,
       fontFamily: 'var(--font-heebo), sans-serif'
     }}>
       <div style={{ textAlign: 'center' }}>
         <div style={{ fontSize: 32, marginBottom: 8 }}>⭐</div>
-        <div style={{ color: '#8a7a60', fontSize: 14 }}>טוענים אתגרים...</div>
+        <div style={{ color: CORAL, fontSize: 14 }}>טוענים אתגרים...</div>
       </div>
     </div>
   )
@@ -470,10 +486,12 @@ export default function MissionsPage() {
     <div style={{
       width: '100%', maxWidth: 480, margin: '0 auto',
       fontFamily: 'var(--font-heebo), sans-serif',
-      direction: 'rtl', background: CREAM,
+      direction: 'rtl', background: PAGE_BG,
       minHeight: '100vh', paddingBottom: '5.5rem',
       boxSizing: 'border-box', overflowX: 'hidden'
     }}>
+
+      <ViewAsBanner viewAsProfile={viewAsProfile} />
 
       {(showForm || editTarget) && (
         <MissionFormModal
@@ -506,9 +524,13 @@ export default function MissionsPage() {
 
       {/* Header */}
       <div style={{
-        background: NAVY, padding: '20px 16px 0',
-        borderRadius: '0 0 24px 24px', marginBottom: 16
+        background: HEADER_BG, padding: '20px 16px 0',
+        borderRadius: '0 0 24px 24px', marginBottom: 16,
+        position: 'relative', overflow: 'hidden'
       }}>
+        <div style={{ position: 'absolute', top: -20, left: -20, width: 100, height: 100, borderRadius: '50%', background: 'rgba(255,255,255,0.1)', pointerEvents: 'none' }} />
+        <div style={{ position: 'absolute', top: 10, left: 60, width: 60, height: 60, borderRadius: '50%', background: 'rgba(255,255,255,0.07)', pointerEvents: 'none' }} />
+        <div style={{ position: 'absolute', bottom: 20, right: -10, width: 80, height: 80, borderRadius: '50%', background: 'rgba(255,255,255,0.08)', pointerEvents: 'none' }} />
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
           <div>
             <div style={{ fontSize: 22, fontWeight: 900, color: 'white' }}>⭐ צוברים נקודות</div>
@@ -517,30 +539,31 @@ export default function MissionsPage() {
             </div>
           </div>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-            {isParent && (
+            {isParent && !isViewingAsKid && (
               <button onClick={() => setShowForm(true)} style={{
-                background: GOLD, color: NAVY, border: 'none',
-                borderRadius: 20, padding: '7px 14px',
+                background: 'white', color: CORAL, border: 'none',
+                borderRadius: 50, padding: '7px 14px',
                 fontWeight: 700, fontSize: 13, cursor: 'pointer',
-                fontFamily: 'var(--font-heebo), sans-serif'
+                fontFamily: 'var(--font-heebo), sans-serif',
+                boxShadow: '0 4px 12px rgba(255,107,107,0.35)'
               }}>+ אתגר</button>
             )}
           </div>
         </div>
 
         {/* Points hero for kids */}
-        {!isParent && currentProfile && (
-          <div style={{ background: 'rgba(255,255,255,0.07)', borderRadius: 14, padding: '12px 14px', marginBottom: 12 }}>
+        {(!isParent || isViewingAsKid) && effectiveProfile && (
+          <div style={{ background: 'rgba(255,255,255,0.18)', borderRadius: 14, padding: '12px 14px', marginBottom: 12 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
               <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)' }}>יש לך</span>
-              <span style={{ fontSize: 22, fontWeight: 900, color: GOLD }}>{currentProfile.total_points} נק׳</span>
+              <span style={{ fontSize: 22, fontWeight: 900, color: GOLD }}>{effectiveProfile.total_points} נק׳</span>
             </div>
             {next && (
               <>
-                <div style={{ background: 'rgba(255,255,255,0.1)', borderRadius: 6, height: 6, marginBottom: 5 }}>
+                <div style={{ background: 'rgba(255,255,255,0.3)', borderRadius: 6, height: 8, marginBottom: 5 }}>
                   <div style={{
-                    width: `${Math.min(Math.round((currentProfile.total_points / next.points_required) * 100), 100)}%`,
-                    height: '100%', background: GOLD, borderRadius: 6
+                    width: `${Math.min(Math.round((effectiveProfile.total_points / next.points_required) * 100), 100)}%`,
+                    height: '100%', background: CORAL, borderRadius: 6
                   }} />
                 </div>
                 <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)' }}>
@@ -555,13 +578,13 @@ export default function MissionsPage() {
         {activeCount > 0 && (
           <a href="/missions/active" style={{
             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            background: 'rgba(255,255,255,0.08)', borderRadius: 12,
+            background: 'rgba(255,107,107,0.1)', borderRadius: 12,
             padding: '10px 14px', marginBottom: 12, textDecoration: 'none'
           }}>
-            <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', fontWeight: 600 }}>
+            <span style={{ fontSize: 13, color: CORAL, fontWeight: 600 }}>
               🏃 {activeCount} אתגרים בתהליך
             </span>
-            <span style={{ color: GOLD, fontSize: 13, fontWeight: 700 }}>סיים ←</span>
+            <span style={{ color: CORAL, fontSize: 13, fontWeight: 700 }}>סיים ←</span>
           </a>
         )}
 
@@ -574,8 +597,8 @@ export default function MissionsPage() {
             <button key={f.id} onClick={() => setActiveFilter(f.id)} style={{
               padding: '7px 14px', borderRadius: 20, border: 'none',
               cursor: 'pointer', flexShrink: 0,
-              background: activeFilter === f.id ? GOLD : 'rgba(255,255,255,0.1)',
-              color: activeFilter === f.id ? NAVY : 'rgba(255,255,255,0.8)',
+              background: activeFilter === f.id ? CORAL : 'rgba(255,255,255,0.1)',
+              color: activeFilter === f.id ? 'white' : 'rgba(255,255,255,0.8)',
               fontWeight: activeFilter === f.id ? 700 : 500,
               fontSize: 13, fontFamily: 'var(--font-heebo), sans-serif'
             }}>{f.label}</button>
@@ -599,7 +622,7 @@ export default function MissionsPage() {
             {filtered.map((mission, i) => (
               <ChallengeCard
                 key={mission.id} mission={mission} index={i}
-                isParent={isParent} currentProfile={currentProfile}
+                isParent={isParent && !isViewingAsKid} currentProfile={effectiveProfile}
                 onStart={handleStart} onAssign={m => setAssignTarget(m)}
                 onEdit={m => setEditTarget(m)} starting={starting}
               />
@@ -610,12 +633,12 @@ export default function MissionsPage() {
           <>
             {/* אתגרי היום */}
             <div style={{ marginBottom: 4 }}>
-              <div style={{ fontSize: 15, fontWeight: 900, color: NAVY, marginBottom: 4 }}>⭐ אתגרי היום</div>
+              <div style={{ fontSize: 15, fontWeight: 800, color: NAVY, marginBottom: 4 }}>⭐ אתגרי היום</div>
               <div style={{ fontSize: 12, color: '#8a7a60', marginBottom: 12 }}>האתגרים הקלים שכדאי לעשות היום</div>
               {dailyMissions.map((mission, i) => (
                 <ChallengeCard
                   key={mission.id} mission={mission} index={i}
-                  isParent={isParent} currentProfile={currentProfile}
+                  isParent={isParent && !isViewingAsKid} currentProfile={effectiveProfile}
                   onStart={handleStart} onAssign={m => setAssignTarget(m)}
                   onEdit={m => setEditTarget(m)} starting={starting}
                 />
@@ -625,12 +648,12 @@ export default function MissionsPage() {
             {/* כיף משפחתי */}
             {familyMissions.length > 0 && (
               <div style={{ marginBottom: 4 }}>
-                <div style={{ fontSize: 15, fontWeight: 900, color: NAVY, marginBottom: 4 }}>👨‍👩‍👧 כיף משפחתי</div>
+                <div style={{ fontSize: 15, fontWeight: 800, color: NAVY, marginBottom: 4 }}>👨‍👩‍👧 כיף משפחתי</div>
                 <div style={{ fontSize: 12, color: '#8a7a60', marginBottom: 12 }}>אתגרים שעושים טוב למשפחה</div>
                 {familyMissions.map((mission, i) => (
                   <ChallengeCard
                     key={mission.id} mission={mission} index={i + 5}
-                    isParent={isParent} currentProfile={currentProfile}
+                    isParent={isParent && !isViewingAsKid} currentProfile={effectiveProfile}
                     onStart={handleStart} onAssign={m => setAssignTarget(m)}
                     onEdit={m => setEditTarget(m)} starting={starting}
                   />
@@ -641,12 +664,12 @@ export default function MissionsPage() {
             {/* לומדים וצוברים */}
             {learningMissions.length > 0 && (
               <div style={{ marginBottom: 4 }}>
-                <div style={{ fontSize: 15, fontWeight: 900, color: NAVY, marginBottom: 4 }}>🧠 לומדים וצוברים</div>
+                <div style={{ fontSize: 15, fontWeight: 800, color: NAVY, marginBottom: 4 }}>🧠 לומדים וצוברים</div>
                 <div style={{ fontSize: 12, color: '#8a7a60', marginBottom: 12 }}>דברים קטנים שמגלים, אומרים או מלמדים</div>
                 {learningMissions.map((mission, i) => (
                   <ChallengeCard
                     key={mission.id} mission={mission} index={i + 10}
-                    isParent={isParent} currentProfile={currentProfile}
+                    isParent={isParent && !isViewingAsKid} currentProfile={effectiveProfile}
                     onStart={handleStart} onAssign={m => setAssignTarget(m)}
                     onEdit={m => setEditTarget(m)} starting={starting}
                   />
@@ -657,12 +680,12 @@ export default function MissionsPage() {
             {/* שאר האתגרים */}
             {otherMissions.length > 0 && (
               <div style={{ marginBottom: 4 }}>
-                <div style={{ fontSize: 15, fontWeight: 900, color: NAVY, marginBottom: 4 }}>✨ עוד אתגרים</div>
+                <div style={{ fontSize: 15, fontWeight: 800, color: NAVY, marginBottom: 4 }}>✨ עוד אתגרים</div>
                 <div style={{ fontSize: 12, color: '#8a7a60', marginBottom: 12 }}>עוד דרכים לצבור נקודות</div>
                 {otherMissions.map((mission, i) => (
                   <ChallengeCard
                     key={mission.id} mission={mission} index={i + 20}
-                    isParent={isParent} currentProfile={currentProfile}
+                    isParent={isParent && !isViewingAsKid} currentProfile={effectiveProfile}
                     onStart={handleStart} onAssign={m => setAssignTarget(m)}
                     onEdit={m => setEditTarget(m)} starting={starting}
                   />

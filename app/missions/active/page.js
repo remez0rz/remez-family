@@ -3,19 +3,22 @@ import { useEffect, useState } from 'react'
 import { supabase, getCurrentProfile } from '../../lib/supabase'
 import { useRouter } from 'next/navigation'
 import BottomNav from '../../components/BottomNav'
+import ViewAsBanner from '../../components/ViewAsBanner'
 
-const NAVY = '#0a1628'
-const GOLD = '#c9a84c'
-const CREAM = '#f7f4ee'
-const GREEN = '#1a6b3c'
+const CORAL = '#FF6B6B'
+const TEAL = '#4ECDC4'
+const GOLD = '#FFB830'
+const NAVY = '#2D2D2D'
 const PURPLE = '#5c3d8f'
+const PAGE_BG = 'linear-gradient(135deg, #FFF9F0 0%, #FFF0F9 100%)'
+const HEADER_BG = 'linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%)'
 
 const MISSION_GRADIENTS = [
-  ['#1a6b3c', '#2d9e5f'], ['#0a1628', '#1e3a5f'],
-  ['#7b2d8b', '#a855c8'], ['#c45000', '#e07030'],
-  ['#1a6b8a', '#2892b8'], ['#9a6500', '#c9a84c'],
-  ['#ad1457', '#d81b60'], ['#0a1628', '#2d4a9e'],
-  ['#1a6b3c', '#43a870'], ['#5c3d8f', '#8b5cf6'],
+  ['#FF6B6B','#FF8E53'], ['#4ECDC4','#2EBFB8'],
+  ['#9B7FD4','#C084FC'], ['#FFB830','#FFD166'],
+  ['#3B9FE8','#60B8FF'], ['#FF6B6B','#FF8E53'],
+  ['#4ECDC4','#2EBFB8'], ['#9B7FD4','#C084FC'],
+  ['#FFB830','#FFD166'], ['#3B9FE8','#60B8FF'],
 ]
 
 const CATEGORY_VISUAL = {
@@ -42,7 +45,7 @@ function Avatar({ profile, size = 36 }) {
   return (
     <div style={{
       width: size, height: size, borderRadius: '50%',
-      border: `2px solid ${GOLD}`, overflow: 'hidden', flexShrink: 0,
+      border: '3px solid rgba(255,255,255,0.8)', overflow: 'hidden', flexShrink: 0,
       background: '#e8d5a3', display: 'flex', alignItems: 'center',
       justifyContent: 'center', fontSize: size * 0.38, fontWeight: 700, color: NAVY
     }}>
@@ -58,8 +61,8 @@ function Avatar({ profile, size = 36 }) {
 function ProgressBar({ value, max, color = GOLD }) {
   const pct = max > 0 ? Math.min(Math.round((value / max) * 100), 100) : 100
   return (
-    <div style={{ background: 'rgba(255,255,255,0.2)', borderRadius: 6, height: 8 }}>
-      <div style={{ width: `${pct}%`, height: '100%', background: color, borderRadius: 6, transition: 'width 0.6s ease' }} />
+    <div style={{ background: 'rgba(255,255,255,0.2)', borderRadius: 6, height: 10 }}>
+      <div style={{ width: `${pct}%`, height: '100%', background: color, borderRadius: 6, transition: 'width 0.6s ease', boxShadow: `0 0 8px ${color}80` }} />
     </div>
   )
 }
@@ -68,7 +71,7 @@ function Confetti() {
   const pieces = Array.from({ length: 30 }, (_, i) => ({
     id: i, left: `${Math.random() * 100}%`,
     delay: `${Math.random() * 0.8}s`,
-    color: [GOLD, '#fff', '#c9a84c', '#e8d5a3', GREEN][Math.floor(Math.random() * 5)],
+    color: [CORAL, TEAL, GOLD, '#fff', '#ffffff'][Math.floor(Math.random() * 5)],
     size: Math.random() * 8 + 6, duration: `${Math.random() * 1.5 + 1.5}s`
   }))
   return (
@@ -131,7 +134,7 @@ function DocumentationForm({ assignment, onSubmit, onSkip }) {
       <div style={{
         background: NAVY, borderRadius: 28, padding: '28px 22px',
         maxWidth: 360, width: '100%',
-        border: `1px solid ${GOLD}40`, position: 'relative', zIndex: 1,
+        boxShadow: '0 4px 20px rgba(0,0,0,0.07)', position: 'relative', zIndex: 1,
         transform: show ? 'scale(1)' : 'scale(0.85)',
         transition: 'transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
       }}>
@@ -189,8 +192,8 @@ function DocumentationForm({ assignment, onSubmit, onSkip }) {
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           <button onClick={handleSubmit} disabled={uploading} style={{
-            padding: '13px', background: GOLD, border: 'none', borderRadius: 14,
-            cursor: 'pointer', fontWeight: 700, fontSize: 15, color: NAVY,
+            padding: '13px', background: CORAL, border: 'none', borderRadius: 50,
+            cursor: 'pointer', fontWeight: 700, fontSize: 15, color: 'white',
             fontFamily: 'var(--font-heebo), sans-serif'
           }}>
             {uploading ? 'מעלה תמונה...' : 'סיימתי! תן לי נקודות ⭐'}
@@ -226,7 +229,7 @@ function CelebrationScreen({ assignment, newTotal, nextReward, leveledUp, newLev
       <div style={{
         background: NAVY, borderRadius: 28, padding: '28px 22px',
         maxWidth: 360, width: '100%', textAlign: 'center',
-        border: `1px solid ${GOLD}40`, position: 'relative', zIndex: 1,
+        boxShadow: '0 4px 20px rgba(0,0,0,0.07)', position: 'relative', zIndex: 1,
         transform: show ? 'scale(1)' : 'scale(0.85)',
         transition: 'transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
       }}>
@@ -262,7 +265,7 @@ function CelebrationScreen({ assignment, newTotal, nextReward, leveledUp, newLev
         )}
 
         <div style={{
-          background: isLearning ? PURPLE : GREEN,
+          background: isLearning ? PURPLE : TEAL,
           borderRadius: 20, padding: '16px 24px', marginBottom: 16
         }}>
           <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.7)', fontWeight: 700, marginBottom: 4 }}>צברת</div>
@@ -328,7 +331,13 @@ export default function ActiveEarningPage() {
   const [loading, setLoading]               = useState(true)
   const [docTarget, setDocTarget]           = useState(null)
   const [celebration, setCelebration]       = useState(null)
+  const [viewAsId, setViewAsId]             = useState(null)
   const router = useRouter()
+
+  useEffect(() => {
+    const saved = sessionStorage.getItem('viewAsProfileId')
+    if (saved) setViewAsId(saved)
+  }, [])
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -420,19 +429,21 @@ export default function ActiveEarningPage() {
   }
 
   const isParent = currentProfile?.role === 'parent'
-  const visibleAssignments = isParent
+  const viewAsProfile = viewAsId ? profiles.find(p => p.id === viewAsId) : null
+  const isViewingAsKid = isParent && !!viewAsProfile
+  const visibleAssignments = (isParent && !isViewingAsKid)
     ? assignments
-    : assignments.filter(a => a.member?.id === currentProfile?.id)
+    : assignments.filter(a => a.member?.id === (isViewingAsKid ? viewAsProfile?.id : currentProfile?.id))
 
   if (loading) return (
     <div style={{
       minHeight: '100vh', display: 'flex', alignItems: 'center',
-      justifyContent: 'center', background: CREAM,
+      justifyContent: 'center', background: PAGE_BG,
       fontFamily: 'var(--font-heebo), sans-serif'
     }}>
       <div style={{ textAlign: 'center' }}>
         <div style={{ fontSize: 32, marginBottom: 8 }}>⭐</div>
-        <div style={{ color: '#8a7a60', fontSize: 14 }}>טוענים...</div>
+        <div style={{ color: CORAL, fontSize: 14 }}>טוענים...</div>
       </div>
     </div>
   )
@@ -441,10 +452,12 @@ export default function ActiveEarningPage() {
     <div style={{
       width: '100%', maxWidth: 480, margin: '0 auto',
       fontFamily: 'var(--font-heebo), sans-serif',
-      direction: 'rtl', background: CREAM,
+      direction: 'rtl', background: PAGE_BG,
       minHeight: '100vh', paddingBottom: '5.5rem',
       boxSizing: 'border-box', overflowX: 'hidden'
     }}>
+
+      <ViewAsBanner viewAsProfile={viewAsProfile} />
 
       {docTarget && (
         <DocumentationForm
@@ -468,12 +481,14 @@ export default function ActiveEarningPage() {
       )}
 
       <div style={{
-        background: NAVY, padding: '20px 16px 24px',
-        borderRadius: '0 0 24px 24px', marginBottom: 16
+        background: HEADER_BG, padding: '20px 16px 24px',
+        borderRadius: '0 0 24px 24px', marginBottom: 16, position: 'relative', overflow: 'hidden'
       }}>
-        <div style={{ fontSize: 22, fontWeight: 900, color: 'white' }}>🏃 בתהליך</div>
-        <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginTop: 2 }}>
-          {isParent ? 'אשר השלמות ותן נקודות' : 'סיימת? קבל את הנקודות שלך'}
+        <div style={{ position: 'absolute', top: -30, left: -30, width: 120, height: 120, borderRadius: '50%', background: 'rgba(255,255,255,0.1)' }} />
+        <div style={{ position: 'absolute', bottom: -20, right: -20, width: 80, height: 80, borderRadius: '50%', background: 'rgba(255,255,255,0.1)' }} />
+        <div style={{ fontSize: 22, fontWeight: 900, color: 'white', position: 'relative', zIndex: 1 }}>🏃 בתהליך</div>
+        <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginTop: 2, position: 'relative', zIndex: 1 }}>
+          {(isParent && !isViewingAsKid) ? 'אשר השלמות ותן נקודות' : 'סיימת? קבל את הנקודות שלך'}
         </div>
       </div>
 
@@ -485,7 +500,7 @@ export default function ActiveEarningPage() {
             <div style={{ fontSize: 13, color: '#8a7a60', marginBottom: 20 }}>בחר אתגר ותתחיל לצבור נקודות</div>
             <a href="/missions" style={{
               display: 'inline-block', padding: '12px 24px',
-              background: NAVY, color: 'white', borderRadius: 14,
+              background: CORAL, color: 'white', borderRadius: 50,
               textDecoration: 'none', fontWeight: 700, fontSize: 14
             }}>צוברים נקודות →</a>
           </div>
@@ -497,8 +512,8 @@ export default function ActiveEarningPage() {
 
             return (
               <div key={a.id} style={{
-                borderRadius: 20, marginBottom: 14, overflow: 'hidden',
-                border: '1px solid #e8e0d0'
+                borderRadius: 24, marginBottom: 14, overflow: 'hidden',
+                boxShadow: '0 4px 20px rgba(0,0,0,0.07)'
               }}>
                 {/* Same gradient header as mission cards */}
                 <div style={{
@@ -507,7 +522,6 @@ export default function ActiveEarningPage() {
                   display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between',
                   minHeight: 90, position: 'relative'
                 }}>
-                  <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.2)' }} />
                   <div style={{ position: 'relative', zIndex: 1 }}>
                     <div style={{ fontSize: 30, marginBottom: 4 }}>{visual.emoji}</div>
                     <div style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.7)', letterSpacing: '0.05em' }}>
@@ -540,19 +554,19 @@ export default function ActiveEarningPage() {
                     </div>
                   </div>
 
-                  {!isParent && (
+                  {(!isParent || isViewingAsKid) && (
                     <button onClick={() => handleComplete(a)} style={{
-                      width: '100%', padding: '12px', background: NAVY,
-                      color: 'white', border: 'none', borderRadius: 12,
+                      width: '100%', padding: '12px', background: CORAL,
+                      color: 'white', border: 'none', borderRadius: 50,
                       cursor: 'pointer', fontWeight: 700, fontSize: 15,
                       fontFamily: 'var(--font-heebo), sans-serif'
                     }}>סיימתי! 🙌</button>
                   )}
 
-                  {isParent && (
+                  {isParent && !isViewingAsKid && (
                     <button onClick={() => handleComplete(a)} style={{
                       width: '100%', padding: '12px', background: GOLD,
-                      color: NAVY, border: 'none', borderRadius: 12,
+                      color: NAVY, border: 'none', borderRadius: 50,
                       cursor: 'pointer', fontWeight: 700, fontSize: 15,
                       fontFamily: 'var(--font-heebo), sans-serif'
                     }}>⭐ אשר ותן {a.mission?.points} נקודות</button>

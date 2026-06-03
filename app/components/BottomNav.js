@@ -1,8 +1,7 @@
 'use client'
 import { usePathname } from 'next/navigation'
 
-const NAVY = '#0a1628'
-const GOLD = '#c9a84c'
+const CORAL = '#FF6B6B'
 
 const NAV_ITEMS = [
   { href: '/',           label: 'בית',        emoji: '🏠' },
@@ -18,7 +17,9 @@ export default function BottomNav() {
   return (
     <div style={{
       position: 'fixed', bottom: 0, left: 0, right: 0,
-      background: NAVY, borderTop: '1px solid rgba(255,255,255,0.08)',
+      background: 'white',
+      borderTop: '1px solid #F0EBE0',
+      boxShadow: '0 -2px 16px rgba(0,0,0,0.08)',
       display: 'flex', justifyContent: 'space-around',
       padding: '10px 0 16px', zIndex: 100,
       fontFamily: 'var(--font-heebo), sans-serif'
@@ -30,15 +31,16 @@ export default function BottomNav() {
           <a key={item.href} href={item.href} style={{
             display: 'flex', flexDirection: 'column', alignItems: 'center',
             textDecoration: 'none', gap: 2,
-            color: active ? GOLD : item.center ? GOLD : 'rgba(255,255,255,0.45)',
-            fontSize: 10, fontFamily: 'var(--font-heebo), sans-serif'
+            color: active ? CORAL : item.center ? CORAL : '#BBBBBB',
+            fontSize: 10, fontFamily: 'var(--font-heebo), sans-serif',
+            fontWeight: active ? 700 : 500
           }}>
             <span style={{
               ...(item.center ? {
-                background: GOLD, borderRadius: '50%',
+                background: CORAL, borderRadius: '50%',
                 width: 44, height: 44, fontSize: 20,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                marginTop: -18
+                marginTop: -18, boxShadow: '0 4px 12px rgba(255,107,107,0.4)'
               } : { fontSize: 20 })
             }}>{item.emoji}</span>
             {item.label}

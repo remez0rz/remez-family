@@ -3,12 +3,14 @@ import { useEffect, useState } from 'react'
 import { supabase, getCurrentProfile } from '../lib/supabase'
 import { useRouter } from 'next/navigation'
 import BottomNav from '../components/BottomNav'
+import ViewAsBanner from '../components/ViewAsBanner'
 
-const NAVY = '#0a1628'
-const GOLD = '#c9a84c'
-const CREAM = '#f7f4ee'
-const GREEN = '#1a6b3c'
-const PURPLE = '#5c3d8f'
+const CORAL = '#FF6B6B'
+const TEAL = '#4ECDC4'
+const GOLD = '#FFB830'
+const NAVY = '#2D2D2D'
+const PAGE_BG = 'linear-gradient(135deg, #FFF9F0 0%, #FFF0F9 100%)'
+const HEADER_BG = 'linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%)'
 const PAGE_SIZE = 10
 
 const REACTIONS = [
@@ -32,7 +34,7 @@ function Avatar({ profile, size = 36 }) {
   return (
     <div style={{
       width: size, height: size, borderRadius: '50%',
-      border: `2px solid ${GOLD}`, overflow: 'hidden', flexShrink: 0,
+      border: `2px solid ${CORAL}`, overflow: 'hidden', flexShrink: 0,
       background: '#e8d5a3', display: 'flex', alignItems: 'center',
       justifyContent: 'center', fontSize: size * 0.38, fontWeight: 700, color: NAVY
     }}>
@@ -48,7 +50,7 @@ function Avatar({ profile, size = 36 }) {
 function TimeAgo({ dateStr }) {
   const diff = Math.floor((Date.now() - new Date(dateStr)) / 86400000)
   const text = diff === 0 ? 'היום' : diff === 1 ? 'אתמול' : `לפני ${diff} ימים`
-  return <span style={{ fontSize: 11, color: '#a09080' }}>{text}</span>
+  return <span style={{ fontSize: 11, color: '#A09080' }}>{text}</span>
 }
 
 function ReactionBar({ postId, currentProfileId, initialReactions }) {
@@ -81,8 +83,8 @@ function ReactionBar({ postId, currentProfileId, initialReactions }) {
         const active = mine.includes(r.type)
         return (
           <button key={r.type} onClick={() => handle(r.type)} style={{
-            background: active ? '#faf0d0' : '#f7f4ee',
-            border: `1px solid ${active ? GOLD : '#e8e0d0'}`,
+            background: active ? '#FFF0D5' : '#F7F4EE',
+            border: `1px solid ${active ? GOLD : '#EDE8E0'}`,
             borderRadius: 20, padding: '5px 10px', cursor: 'pointer',
             display: 'flex', alignItems: 'center', gap: 4,
             fontFamily: 'var(--font-heebo), sans-serif',
@@ -154,8 +156,8 @@ function FeedCard({ post, profiles, currentProfile, reactionData }) {
 
   return (
     <div style={{
-      background: 'white', borderRadius: 20,
-      border: '1px solid #e8e0d0', marginBottom: 14, overflow: 'hidden'
+      background: 'white', borderRadius: 24,
+      border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.07)', marginBottom: 14, overflow: 'hidden'
     }}>
       <div style={{ padding: '14px 16px 10px', display: 'flex', alignItems: 'center', gap: 10 }}>
         <div style={{ display: 'flex' }}>
@@ -168,7 +170,7 @@ function FeedCard({ post, profiles, currentProfile, reactionData }) {
             : (
               <div style={{
                 width: 38, height: 38, borderRadius: '50%',
-                background: '#f0ebe0', border: `2px solid ${GOLD}`,
+                background: '#f0ebe0', border: `2px solid ${CORAL}`,
                 display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18
               }}>{isTazkir ? '📝' : '⭐'}</div>
             )
@@ -181,8 +183,8 @@ function FeedCard({ post, profiles, currentProfile, reactionData }) {
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
             <span style={{
               fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 20,
-              background: isTazkir ? '#ede7f6' : '#edf7f1',
-              color: isTazkir ? PURPLE : GREEN
+              background: isTazkir ? '#EDE7F6' : '#D5F5F0',
+              color: isTazkir ? '#9B7FD4' : TEAL
             }}>
               {isTazkir ? '📝 תחקיר' : '⭐ אתגר'}
             </span>
@@ -197,7 +199,7 @@ function FeedCard({ post, profiles, currentProfile, reactionData }) {
         <div style={{ padding: '10px 16px 0' }}>
           <div style={{
             fontSize: 13, color: '#5a4a3a', lineHeight: 1.6,
-            background: '#faf8f4', borderRadius: 10, padding: '10px 12px'
+            background: '#FAFAF5', borderRadius: 12, padding: '10px 12px'
           }}>{post.content}</div>
         </div>
       )}
@@ -259,7 +261,13 @@ export default function FeedPage() {
   const [page, setPage]                     = useState(0)
   const [typeFilter, setTypeFilter]         = useState('all')
   const [memberFilter, setMemberFilter]     = useState('all')
+  const [viewAsId, setViewAsId]             = useState(null)
   const router = useRouter()
+
+  useEffect(() => {
+    const saved = sessionStorage.getItem('viewAsProfileId')
+    if (saved) setViewAsId(saved)
+  }, [])
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -335,15 +343,17 @@ export default function FeedPage() {
     setLoadingMore(false)
   }
 
+  const viewAsProfile = viewAsId ? profiles.find(p => p.id === viewAsId) : null
+
   if (loading) return (
     <div style={{
       minHeight: '100vh', display: 'flex', alignItems: 'center',
-      justifyContent: 'center', background: CREAM,
+      justifyContent: 'center', background: PAGE_BG,
       fontFamily: 'var(--font-heebo), sans-serif'
     }}>
       <div style={{ textAlign: 'center' }}>
         <div style={{ fontSize: 32, marginBottom: 8 }}>📖</div>
-        <div style={{ color: '#8a7a60', fontSize: 14 }}>טוענים זיכרונות...</div>
+        <div style={{ color: CORAL, fontSize: 14 }}>טוענים זיכרונות...</div>
       </div>
     </div>
   )
@@ -352,15 +362,20 @@ export default function FeedPage() {
     <div style={{
       width: '100%', maxWidth: 480, margin: '0 auto',
       fontFamily: 'var(--font-heebo), sans-serif',
-      direction: 'rtl', background: CREAM,
+      direction: 'rtl', background: PAGE_BG,
       minHeight: '100vh', paddingBottom: '5.5rem',
       boxSizing: 'border-box', overflowX: 'hidden'
     }}>
 
+      <ViewAsBanner viewAsProfile={viewAsProfile} />
+
       <div style={{
-        background: NAVY, padding: '20px 16px 0',
-        borderRadius: '0 0 24px 24px', marginBottom: 16
+        background: HEADER_BG, padding: '20px 16px 0',
+        borderRadius: '0 0 24px 24px', marginBottom: 16,
+        position: 'relative', overflow: 'hidden'
       }}>
+        <div style={{ position: 'absolute', width: 120, height: 120, borderRadius: '50%', background: 'white', opacity: 0.1, top: -40, left: -30 }} />
+        <div style={{ position: 'absolute', width: 80, height: 80, borderRadius: '50%', background: 'white', opacity: 0.1, top: 10, left: 60 }} />
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
           <div>
             <div style={{ fontSize: 22, fontWeight: 900, color: 'white' }}>📖 זיכרונות</div>
@@ -375,8 +390,8 @@ export default function FeedPage() {
           {TYPE_FILTERS.map(f => (
             <button key={f.id} onClick={() => setTypeFilter(f.id)} style={{
               padding: '7px 14px', borderRadius: 20, border: 'none', cursor: 'pointer',
-              background: typeFilter === f.id ? GOLD : 'rgba(255,255,255,0.1)',
-              color: typeFilter === f.id ? NAVY : 'rgba(255,255,255,0.8)',
+              background: typeFilter === f.id ? CORAL : 'rgba(255,255,255,0.2)',
+              color: 'white',
               fontWeight: typeFilter === f.id ? 700 : 500,
               fontSize: 13, fontFamily: 'var(--font-heebo), sans-serif',
               flexShrink: 0
@@ -393,18 +408,18 @@ export default function FeedPage() {
           }}>
             <div style={{
               width: 38, height: 38, borderRadius: '50%',
-              border: `2.5px solid ${memberFilter === 'all' ? GOLD : 'rgba(255,255,255,0.2)'}`,
-              background: 'rgba(255,255,255,0.1)',
+              border: `2.5px solid ${memberFilter === 'all' ? CORAL : 'rgba(255,255,255,0.3)'}`,
+              background: 'rgba(255,255,255,0.2)',
               display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18
             }}>✨</div>
-            <span style={{ fontSize: 10, color: memberFilter === 'all' ? GOLD : 'rgba(255,255,255,0.5)', fontWeight: 600 }}>הכל</span>
+            <span style={{ fontSize: 10, color: memberFilter === 'all' ? CORAL : 'rgba(255,255,255,0.5)', fontWeight: 600 }}>הכל</span>
           </div>
           {profiles.map(p => (
             <div key={p.id} onClick={() => setMemberFilter(memberFilter === p.name ? 'all' : p.name)}
               style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, cursor: 'pointer', flexShrink: 0 }}>
               <div style={{
                 width: 38, height: 38, borderRadius: '50%',
-                border: `2.5px solid ${memberFilter === p.name ? GOLD : 'rgba(255,255,255,0.2)'}`,
+                border: `2.5px solid ${memberFilter === p.name ? CORAL : 'rgba(255,255,255,0.3)'}`,
                 overflow: 'hidden', background: '#e8d5a3',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 fontSize: 15, fontWeight: 700, color: NAVY
@@ -413,7 +428,7 @@ export default function FeedPage() {
                   ? <img src={p.avatar_url} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={e => e.target.style.display = 'none'} />
                   : p.name?.charAt(0)}
               </div>
-              <span style={{ fontSize: 10, color: memberFilter === p.name ? GOLD : 'rgba(255,255,255,0.5)', fontWeight: 600 }}>
+              <span style={{ fontSize: 10, color: memberFilter === p.name ? CORAL : 'rgba(255,255,255,0.5)', fontWeight: 600 }}>
                 {p.name}
               </span>
             </div>
@@ -434,7 +449,7 @@ export default function FeedPage() {
             {typeFilter === 'all' && memberFilter === 'all' && (
               <a href="/tazkir/new" style={{
                 display: 'inline-block', padding: '12px 24px',
-                background: NAVY, color: 'white', borderRadius: 14,
+                background: CORAL, color: 'white', borderRadius: 50,
                 textDecoration: 'none', fontWeight: 700, fontSize: 14
               }}>פתחו תחקיר →</a>
             )}
@@ -454,9 +469,10 @@ export default function FeedPage() {
             {hasMore && (
               <button onClick={loadMore} disabled={loadingMore} style={{
                 width: '100%', padding: '13px',
-                background: 'white', border: '1px solid #e8e0d0',
-                borderRadius: 14, cursor: 'pointer',
-                fontWeight: 700, fontSize: 14, color: NAVY,
+                background: 'white', border: 'none',
+                borderRadius: 24, cursor: 'pointer',
+                fontWeight: 700, fontSize: 14, color: CORAL,
+                boxShadow: '0 4px 20px rgba(0,0,0,0.07)',
                 fontFamily: 'var(--font-heebo), sans-serif',
                 marginBottom: 10
               }}>
@@ -465,7 +481,7 @@ export default function FeedPage() {
             )}
 
             {!hasMore && posts.length > 0 && (
-              <div style={{ textAlign: 'center', padding: '16px 0', fontSize: 12, color: '#b0a090' }}>
+              <div style={{ textAlign: 'center', padding: '16px 0', fontSize: 12, color: '#B0A090' }}>
                 זה הכל — {posts.length} זיכרונות במשפחה 🏡
               </div>
             )}
