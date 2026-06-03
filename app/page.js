@@ -175,29 +175,38 @@ function KidHome({ currentProfile, missions, dailyMissions, completedDailyIds, r
           <div style={{ marginBottom: 12 }}>
             <SectionTitle title="⭐ אתגרי היום" href="/missions" />
             {todayMissions.map((mission, i) => {
-              const visual   = CATEGORY_VISUAL[mission.category] || { emoji: '⭐' }
-              const gradient = MISSION_GRADIENTS[i % MISSION_GRADIENTS.length]
-              const starting = startingMission === mission.id
+              const visual    = CATEGORY_VISUAL[mission.category] || { emoji: '⭐' }
+              const gradient  = MISSION_GRADIENTS[i % MISSION_GRADIENTS.length]
+              const starting  = startingMission === mission.id
+              const hasImage  = !!mission.image_url
 
               return (
-                <div key={mission.id} style={{
-                  borderRadius: 24, marginBottom: 12, overflow: 'hidden',
-                  boxShadow: '0 4px 16px rgba(0,0,0,0.1)'
-                }}>
+                <div key={mission.id} style={{ borderRadius: 24, marginBottom: 12, overflow: 'hidden', boxShadow: '0 6px 24px rgba(0,0,0,0.1)' }}>
+                  {/* Visual header */}
                   <div style={{
-                    background: `linear-gradient(135deg, ${gradient[0]}, ${gradient[1]})`,
-                    padding: '16px 18px',
-                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    position: 'relative', height: 160,
+                    background: hasImage
+                      ? `url(${mission.image_url}) center/cover no-repeat`
+                      : `linear-gradient(135deg, ${gradient[0]}, ${gradient[1]})`,
                   }}>
-                    <div>
-                      <div style={{ fontSize: 28 }}>{visual.emoji}</div>
-                      <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.85)', marginTop: 3, fontWeight: 700 }}>
-                        {CATEGORY_LABELS[mission.category] || mission.category}
+                    {hasImage && (
+                      <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.05) 55%, transparent 100%)' }} />
+                    )}
+                    <div style={{ position: 'absolute', top: 12, left: 14, zIndex: 1 }}>
+                      <div style={{
+                        background: 'rgba(255,255,255,0.18)', borderRadius: 14,
+                        padding: '7px 13px', backdropFilter: 'blur(6px)',
+                        border: '1px solid rgba(255,255,255,0.28)', textAlign: 'center'
+                      }}>
+                        <div style={{ fontSize: 20, fontWeight: 900, color: 'white', lineHeight: 1 }}>+{mission.points}</div>
+                        <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.9)', fontWeight: 700 }}>נק׳ · {mission.estimated_minutes} דק׳</div>
                       </div>
                     </div>
-                    <div style={{ textAlign: 'center', background: 'rgba(255,255,255,0.2)', borderRadius: 16, padding: '8px 14px' }}>
-                      <div style={{ fontSize: 24, fontWeight: 900, color: 'white', lineHeight: 1 }}>+{mission.points}</div>
-                      <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.85)', marginTop: 2, fontWeight: 600 }}>נק׳ · {mission.estimated_minutes} דק׳</div>
+                    <div style={{ position: 'absolute', bottom: 12, right: 14, zIndex: 1, display: 'flex', alignItems: 'center', gap: 5 }}>
+                      <span style={{ fontSize: 20 }}>{visual.emoji}</span>
+                      <span style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.95)', textShadow: '0 1px 3px rgba(0,0,0,0.5)' }}>
+                        {CATEGORY_LABELS[mission.category] || mission.category}
+                      </span>
                     </div>
                   </div>
                   <div style={{ background: 'white', padding: '14px 18px' }}>
@@ -210,7 +219,6 @@ function KidHome({ currentProfile, missions, dailyMissions, completedDailyIds, r
                       fontWeight: 800, fontSize: 13,
                       fontFamily: 'var(--font-heebo), sans-serif',
                       boxShadow: starting ? 'none' : '0 4px 12px rgba(255,107,107,0.35)',
-                      transition: 'all 0.2s ease'
                     }}>
                       {starting ? 'שולח...' : 'אני רוצה לנסות ⭐'}
                     </button>

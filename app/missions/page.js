@@ -105,8 +105,25 @@ function MissionFormModal({ mission, onClose, onSaved }) {
     repeatable:        mission?.repeatable        ?? true,
     is_active:         mission?.is_active         ?? true,
     proof_type:        'none',
+    image_url:         mission?.image_url         || '',
   })
-  const [saving, setSaving] = useState(false)
+  const [saving, setSaving]       = useState(false)
+  const [uploading, setUploading] = useState(false)
+
+  const handleImageUpload = async (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+    setUploading(true)
+    const ext = file.name.split('.').pop()
+    const filename = `mission-covers/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
+    const { error } = await supabase.storage.from('family-media').upload(filename, file, { contentType: file.type })
+    if (!error) {
+      const { data } = supabase.storage.from('family-media').getPublicUrl(filename)
+      setForm(f => ({ ...f, image_url: data.publicUrl }))
+    }
+    setUploading(false)
+    e.target.value = ''
+  }
 
   const handleSave = async () => {
     if (!form.title.trim()) return
@@ -157,6 +174,42 @@ function MissionFormModal({ mission, onClose, onSaved }) {
         <select value={form.category} onChange={e => setForm(f => ({ ...f, category: e.target.value }))} style={inputStyle}>
           {CATEGORIES.map(c => <option key={c} value={c}>{CATEGORY_VISUAL[c]?.emoji} {CATEGORY_LABELS[c] || c}</option>)}
         </select>
+
+        {/* Image section */}
+        <label style={labelStyle}>תמונת כרטיס</label>
+        <input type="file" accept="image/*" onChange={handleImageUpload}
+          style={{ display: 'none' }} id="mission-img-upload" />
+        {form.image_url ? (
+          <div style={{ position: 'relative', marginBottom: 10 }}>
+            <img src={form.image_url} alt="mission cover"
+              style={{ width: '100%', height: 140, objectFit: 'cover', borderRadius: 12, display: 'block' }} />
+            <div style={{ display: 'flex', gap: 8, marginTop: 6 }}>
+              <label htmlFor="mission-img-upload" style={{
+                flex: 1, padding: '8px', background: '#f0ebe0', borderRadius: 10,
+                textAlign: 'center', cursor: 'pointer', fontSize: 12, fontWeight: 600, color: '#6b5e4e'
+              }}>🔄 החלף תמונה</label>
+              <button onClick={() => setForm(f => ({ ...f, image_url: '' }))} style={{
+                flex: 1, padding: '8px', background: '#FFE8E8', border: 'none', borderRadius: 10,
+                cursor: 'pointer', fontSize: 12, fontWeight: 600, color: CORAL,
+                fontFamily: 'var(--font-heebo), sans-serif'
+              }}>✕ הסר</button>
+            </div>
+          </div>
+        ) : (
+          <div style={{ marginBottom: 10 }}>
+            <label htmlFor="mission-img-upload" style={{
+              display: 'block', padding: '14px', background: '#f0ebe0',
+              borderRadius: 12, border: '1.5px dashed #c8bfb0',
+              textAlign: 'center', cursor: 'pointer',
+              fontSize: 13, fontWeight: 600, color: '#6b5e4e',
+              marginBottom: 6
+            }}>
+              {uploading ? '⏳ מעלה...' : '🖼️ העלה תמונה לכרטיס'}
+            </label>
+            <input value={form.image_url} onChange={e => setForm(f => ({ ...f, image_url: e.target.value }))}
+              placeholder="או הדבק קישור לתמונה..." style={{ ...inputStyle, marginBottom: 0 }} />
+          </div>
+        )}
 
         <label style={labelStyle}>סוג</label>
         <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
@@ -293,72 +346,72 @@ function ParentAssignModal({ mission, profiles, onClose, onAssigned }) {
 }
 
 function ChallengeCard({ mission, index, isParent, currentProfile, onStart, onAssign, onEdit, starting }) {
-  const visual   = CATEGORY_VISUAL[mission.category] || { emoji: '⭐' }
-  const gradient = MISSION_GRADIENTS[index % MISSION_GRADIENTS.length]
-  const diff     = DIFFICULTY[mission.difficulty] || { label: mission.difficulty, color: GOLD }
-  const isLearning = ['Learning','Reading','English','Hebrew'].includes(mission.category)
-  const ptColor  = isLearning ? PURPLE : GREEN
+  const visual    = CATEGORY_VISUAL[mission.category] || { emoji: '⭐' }
+  const gradient  = MISSION_GRADIENTS[index % MISSION_GRADIENTS.length]
+  const diff      = DIFFICULTY[mission.difficulty] || { label: mission.difficulty, color: GOLD }
+  const hasImage  = !!mission.image_url
 
   return (
-    <div style={{
-      borderRadius: 24, marginBottom: 14, overflow: 'hidden',
-      boxShadow: '0 4px 20px rgba(0,0,0,0.07)'
-    }}>
-      {/* Gradient header */}
+    <div style={{ borderRadius: 24, marginBottom: 14, overflow: 'hidden', boxShadow: '0 6px 24px rgba(0,0,0,0.1)' }}>
+
+      {/* Visual header */}
       <div style={{
-        background: `linear-gradient(135deg, ${gradient[0]}, ${gradient[1]})`,
-        padding: '18px 18px 16px',
-        display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between',
-        minHeight: 90, position: 'relative'
+        position: 'relative', height: 180,
+        background: hasImage
+          ? `url(${mission.image_url}) center/cover no-repeat`
+          : `linear-gradient(135deg, ${gradient[0]}, ${gradient[1]})`,
       }}>
-        <div style={{ position: 'relative', zIndex: 1 }}>
-          <div style={{ fontSize: 30, marginBottom: 4, filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))' }}>
-            {visual.emoji}
-          </div>
-          <div style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.7)', letterSpacing: '0.05em' }}>
-            {CATEGORY_LABELS[mission.category] || mission.category}
-          </div>
-        </div>
-        <div style={{ position: 'relative', zIndex: 1, textAlign: 'center' }}>
+        {hasImage && (
+          <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.05) 55%, transparent 100%)' }} />
+        )}
+
+        {/* Points badge — top left (physical, start in RTL) */}
+        <div style={{ position: 'absolute', top: 12, left: 14, zIndex: 1 }}>
           <div style={{
-            background: 'rgba(255,255,255,0.15)', borderRadius: 14,
-            padding: '8px 14px', backdropFilter: 'blur(4px)'
+            background: 'rgba(255,255,255,0.18)', borderRadius: 14,
+            padding: '7px 13px', backdropFilter: 'blur(6px)',
+            border: '1px solid rgba(255,255,255,0.28)', textAlign: 'center'
           }}>
-            <div style={{ fontSize: 26, fontWeight: 900, color: 'white', lineHeight: 1 }}>{mission.points}</div>
-            <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.8)', fontWeight: 700 }}>נק׳</div>
+            <div style={{ fontSize: 22, fontWeight: 900, color: 'white', lineHeight: 1 }}>{mission.points}</div>
+            <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.9)', fontWeight: 700 }}>נק׳</div>
           </div>
         </div>
+
+        {/* Category — bottom right */}
+        <div style={{ position: 'absolute', bottom: 12, right: 14, zIndex: 1, display: 'flex', alignItems: 'center', gap: 5 }}>
+          <span style={{ fontSize: 20, filter: 'drop-shadow(0 1px 3px rgba(0,0,0,0.4))' }}>{visual.emoji}</span>
+          <span style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.95)', textShadow: '0 1px 3px rgba(0,0,0,0.5)', letterSpacing: '0.04em' }}>
+            {CATEGORY_LABELS[mission.category] || mission.category}
+          </span>
+        </div>
+
+        {/* Edit — top right, parent only */}
+        {isParent && (
+          <button onClick={() => onEdit(mission)} style={{
+            position: 'absolute', top: 10, right: 12, zIndex: 1,
+            background: 'rgba(255,255,255,0.2)', border: '1px solid rgba(255,255,255,0.3)',
+            borderRadius: '50%', width: 30, height: 30, cursor: 'pointer', fontSize: 13,
+            display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(4px)'
+          }}>✏️</button>
+        )}
       </div>
 
       {/* Card body */}
       <div style={{ background: 'white', padding: '14px 16px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6 }}>
-          <div style={{ flex: 1, paddingLeft: 8 }}>
-            <div style={{ fontSize: 15, fontWeight: 800, color: NAVY, lineHeight: 1.3 }}>{mission.title}</div>
-            {mission.description && (
-              <div style={{ fontSize: 12, color: '#6b5e4e', marginTop: 4, lineHeight: 1.5 }}>{mission.description}</div>
-            )}
-          </div>
-          {isParent && (
-            <button onClick={() => onEdit(mission)} style={{
-              background: 'transparent', border: 'none', cursor: 'pointer',
-              fontSize: 12, color: '#a09080', padding: '2px 4px', flexShrink: 0
-            }}>✏️</button>
-          )}
-        </div>
+        <div style={{ fontSize: 15, fontWeight: 800, color: NAVY, lineHeight: 1.3, marginBottom: 4 }}>{mission.title}</div>
+        {mission.description && (
+          <div style={{ fontSize: 12, color: '#6b5e4e', marginBottom: 8, lineHeight: 1.5 }}>{mission.description}</div>
+        )}
 
-        {/* Meta row */}
         <div style={{ display: 'flex', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
           <span style={{ fontSize: 11, color: '#8a7a60' }}>⏱ {mission.estimated_minutes} דק׳</span>
           <span style={{ fontSize: 11, color: diff.color, fontWeight: 600 }}>{diff.label}</span>
-          {mission.repeatable && <span style={{ fontSize: 11, color: GREEN }}>🔁 חוזר</span>}
+          {mission.repeatable && <span style={{ fontSize: 11, color: TEAL }}>🔁 חוזר</span>}
         </div>
 
-        {/* CTA */}
         {isParent ? (
           <button onClick={() => onAssign(mission)} style={{
-            width: '100%', padding: '11px',
-            background: TEAL, color: 'white',
+            width: '100%', padding: '11px', background: TEAL, color: 'white',
             border: 'none', borderRadius: 50, cursor: 'pointer',
             fontWeight: 700, fontSize: 14, fontFamily: 'var(--font-heebo), sans-serif'
           }}>📤 שלח לילד</button>

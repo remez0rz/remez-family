@@ -519,41 +519,50 @@ export default function ActiveEarningPage() {
           </div>
         ) : (
           visibleAssignments.map((a, index) => {
-            const visual    = CATEGORY_VISUAL[a.mission?.category] || { emoji: '⭐' }
-            const gradient  = MISSION_GRADIENTS[index % MISSION_GRADIENTS.length]
+            const visual        = CATEGORY_VISUAL[a.mission?.category] || { emoji: '⭐' }
+            const gradient      = MISSION_GRADIENTS[index % MISSION_GRADIENTS.length]
             const memberProfile = profiles.find(p => p.id === a.assigned_to)
+            const hasImage      = !!a.mission?.image_url
 
             return (
-              <div key={a.id} style={{
-                borderRadius: 24, marginBottom: 14, overflow: 'hidden',
-                boxShadow: '0 4px 20px rgba(0,0,0,0.07)'
-              }}>
-                {/* Same gradient header as mission cards */}
+              <div key={a.id} style={{ borderRadius: 24, marginBottom: 14, overflow: 'hidden', boxShadow: '0 6px 24px rgba(0,0,0,0.1)' }}>
+
+                {/* Visual header */}
                 <div style={{
-                  background: `linear-gradient(135deg, ${gradient[0]}, ${gradient[1]})`,
-                  padding: '18px 18px 16px',
-                  display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between',
-                  minHeight: 90, position: 'relative'
+                  position: 'relative', height: 160,
+                  background: hasImage
+                    ? `url(${a.mission.image_url}) center/cover no-repeat`
+                    : `linear-gradient(135deg, ${gradient[0]}, ${gradient[1]})`,
                 }}>
-                  <div style={{ position: 'relative', zIndex: 1 }}>
-                    <div style={{ fontSize: 30, marginBottom: 4 }}>{visual.emoji}</div>
-                    <div style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.7)', letterSpacing: '0.05em' }}>
-                      {CATEGORY_LABELS[a.mission?.category] || a.mission?.category}
+                  {hasImage && (
+                    <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.05) 55%, transparent 100%)' }} />
+                  )}
+
+                  {/* Points badge */}
+                  <div style={{ position: 'absolute', top: 12, left: 14, zIndex: 1 }}>
+                    <div style={{
+                      background: 'rgba(255,255,255,0.18)', borderRadius: 14,
+                      padding: '7px 13px', backdropFilter: 'blur(6px)',
+                      border: '1px solid rgba(255,255,255,0.28)', textAlign: 'center'
+                    }}>
+                      <div style={{ fontSize: 22, fontWeight: 900, color: 'white', lineHeight: 1 }}>{a.mission?.points}</div>
+                      <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.9)', fontWeight: 700 }}>נק׳</div>
+                    </div>
+                  </div>
+
+                  {/* Category + due date */}
+                  <div style={{ position: 'absolute', bottom: 12, right: 14, zIndex: 1 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: a.due_date ? 4 : 0 }}>
+                      <span style={{ fontSize: 20 }}>{visual.emoji}</span>
+                      <span style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.95)', textShadow: '0 1px 3px rgba(0,0,0,0.5)' }}>
+                        {CATEGORY_LABELS[a.mission?.category] || a.mission?.category}
+                      </span>
                     </div>
                     {a.due_date && (
-                      <div style={{ fontSize: 11, color: '#f0c080', marginTop: 3, fontWeight: 600 }}>
+                      <div style={{ fontSize: 10, color: '#f0c080', fontWeight: 600, textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}>
                         ⏰ עד {new Date(a.due_date).toLocaleDateString('he-IL')}
                       </div>
                     )}
-                  </div>
-                  <div style={{ position: 'relative', zIndex: 1 }}>
-                    <div style={{
-                      background: 'rgba(255,255,255,0.15)', borderRadius: 14,
-                      padding: '8px 14px', backdropFilter: 'blur(4px)', textAlign: 'center'
-                    }}>
-                      <div style={{ fontSize: 26, fontWeight: 900, color: 'white', lineHeight: 1 }}>{a.mission?.points}</div>
-                      <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.8)', fontWeight: 700 }}>נק׳</div>
-                    </div>
                   </div>
                 </div>
 
