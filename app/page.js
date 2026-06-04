@@ -24,7 +24,9 @@ function GroceryList({ isParent, currentProfile }) {
 
   useEffect(() => {
     loadItems()
-    const ch = supabase.from('grocery_items').on('*', loadItems).subscribe()
+    const ch = supabase.channel('grocery_changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'grocery_items' }, loadItems)
+      .subscribe()
     return () => { supabase.removeChannel(ch) }
   }, [])
 
