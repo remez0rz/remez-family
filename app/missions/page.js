@@ -32,6 +32,7 @@ const CATEGORY_VISUAL = {
   Outdoor:  { emoji: '🌿' }, Health:   { emoji: '💪' },
   Family:   { emoji: '👨‍👩‍👧' }, Memory:  { emoji: '📸' },
   Daily:    { emoji: '🌅' },
+  Special:  { emoji: '🎁' },
 }
 
 const CATEGORY_LABELS = {
@@ -39,11 +40,12 @@ const CATEGORY_LABELS = {
   Creative: 'יצירה', Funny: 'מצחיקים', Outdoor: 'בחוץ',
   Reading: 'קריאה', English: 'אנגלית', Hebrew: 'עברית',
   Kindness: 'מעשים טובים', House: 'הבית שלנו', Memory: 'זיכרונות',
-  Health: 'בריאות', Weekend: 'סופ״ש', Daily: 'משימות יומיות',
+  Health: 'בריאות', Weekend: 'סופ״ש', Daily: 'משימות יומיות', Special: 'פרסים מיוחדים',
 }
 
 const FILTERS = [
   { id: 'all',      label: 'הכל',           categories: null },
+  { id: 'special',  label: '🎁 מיוחדים',    categories: ['Special'], parentOnly: true },
   { id: 'daily',    label: '🌅 יומי',        categories: ['Daily'] },
   { id: 'easy',     label: 'קל ומהיר',      maxPoints: 30 },
   { id: 'family',   label: 'משפחה',         categories: ['Family', 'Memory', 'Weekend'] },
@@ -535,6 +537,12 @@ export default function MissionsPage() {
   const next = getNextReward(effectiveProfile?.total_points || 0)
 
   const filtered = missions.filter(m => {
+    // Special (parent-gift) missions: only parents see them, and only in the special filter
+    if (m.category === 'Special') {
+      if (!isParent || isViewingAsKid) return false   // never shown to kids
+      if (activeFilter !== 'special') return false    // parents only see them in special filter
+      return true
+    }
     if (!isParent || isViewingAsKid) {
       if (activeMissionIds.has(m.id)) return false  // in progress
       if (m.category === 'Daily') {
@@ -667,7 +675,7 @@ export default function MissionsPage() {
           display: 'flex', gap: 8, overflowX: 'auto',
           paddingBottom: 16, scrollbarWidth: 'none'
         }}>
-          {FILTERS.map(f => (
+          {FILTERS.filter(f => !f.parentOnly || (isParent && !isViewingAsKid)).map(f => (
             <button key={f.id} onClick={() => setActiveFilter(f.id)} style={{
               padding: '7px 14px', borderRadius: 20, border: 'none',
               cursor: 'pointer', flexShrink: 0,

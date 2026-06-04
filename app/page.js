@@ -97,7 +97,7 @@ const CATEGORY_LABELS = {
   Creative: 'יצירה', Funny: 'מצחיקים', Outdoor: 'בחוץ',
   Reading: 'קריאה', English: 'אנגלית', Hebrew: 'עברית',
   Kindness: 'מעשים טובים', House: 'הבית שלנו', Memory: 'זיכרונות',
-  Health: 'בריאות', Weekend: 'סופ״ש', Daily: 'משימות יומיות',
+  Health: 'בריאות', Weekend: 'סופ״ש', Daily: 'משימות יומיות', Special: 'פרסים מיוחדים',
 }
 
 const CATEGORY_VISUAL = {
@@ -109,6 +109,7 @@ const CATEGORY_VISUAL = {
   Outdoor:  { emoji: '🌿' }, Health:   { emoji: '💪' },
   Family:   { emoji: '👨‍👩‍👧' }, Memory:  { emoji: '📸' },
   Daily:    { emoji: '🌅' },
+  Special:  { emoji: '🎁' },
 }
 
 function Avatar({ profile, size = 40 }) {
@@ -823,7 +824,7 @@ export default function HomePage() {
       { data: dailyReportData }
     ] = await Promise.all([
       supabase.from('profiles').select('*').eq('active', true).order('created_at'),
-      supabase.from('missions').select('*').eq('is_active', true).neq('category', 'Daily').order('points', { ascending: true }).limit(10),
+      supabase.from('missions').select('*').eq('is_active', true).neq('category', 'Daily').neq('category', 'Special').order('points', { ascending: true }).limit(10),
       supabase.from('missions').select('*').eq('is_active', true).eq('category', 'Daily').order('points', { ascending: true }),
       supabase.from('assignments')
         .select('*, mission:missions(*), member:profiles!assignments_assigned_to_fkey(*)')
