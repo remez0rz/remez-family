@@ -248,6 +248,16 @@ function KidHome({ currentProfile, missions, dailyMissions, completedTodayIds, r
 
       <div style={{ padding: '0 14px' }}>
 
+        {/* All done for today */}
+        {todayMissions.length === 0 && visibleDailyMissions.length === 0 && activeAssignments.length === 0 && (
+          <div style={{ background: 'white', borderRadius: 20, padding: '24px 20px', textAlign: 'center', boxShadow: '0 4px 16px rgba(0,0,0,0.07)', marginBottom: 14 }}>
+            <div style={{ fontSize: 48, marginBottom: 8 }}>🏆</div>
+            <div style={{ fontSize: 16, fontWeight: 800, color: NAVY, marginBottom: 6 }}>כל הכבוד!</div>
+            <div style={{ fontSize: 13, color: '#8a7a60', marginBottom: 16 }}>סיימת את כל האתגרים להיום</div>
+            <a href="/missions" style={{ display: 'inline-block', background: CORAL, color: 'white', borderRadius: 50, padding: '10px 24px', textDecoration: 'none', fontWeight: 700, fontSize: 13 }}>גלה עוד אתגרים →</a>
+          </div>
+        )}
+
         {/* Today's challenges */}
         {todayMissions.length > 0 && (
           <div style={{ marginBottom: 12 }}>
@@ -608,7 +618,7 @@ function ParentHome({ currentProfile, profiles, activeAssignments, recentFeed, r
                 <div style={{ fontSize: 11, color: '#8a7a60' }}>מתאפס כל בוקר</div>
               </div>
               {children.map(child => {
-                const childReport = dailyReport.filter(a => a.member?.name === child.name || a.assigned_to === child.id)
+                const childReport = dailyReport.filter(a => a.assigned_to === child.id)
                 return (
                   <div key={child.id} style={{
                     background: 'white', borderRadius: 16, padding: '12px 14px',

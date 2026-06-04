@@ -672,9 +672,17 @@ export default function MissionsPage() {
       <div style={{ padding: '0 12px', boxSizing: 'border-box' }}>
 
         {filtered.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '40px 0', color: '#a09080' }}>
-            <div style={{ fontSize: 40, marginBottom: 8 }}>🤔</div>
-            <div style={{ fontSize: 14 }}>אין אתגרים בפילטר הזה</div>
+          <div style={{ textAlign: 'center', padding: '48px 20px' }}>
+            <div style={{ fontSize: 48, marginBottom: 10 }}>🏆</div>
+            <div style={{ fontSize: 16, fontWeight: 800, color: NAVY, marginBottom: 6 }}>כל הכבוד!</div>
+            <div style={{ fontSize: 13, color: '#8a7a60', marginBottom: 16 }}>
+              {activeFilter === 'daily' ? 'סיימת את כל המשימות היומיות — חזור מחר!' : 'סיימת את כל האתגרים בקטגוריה הזאת'}
+            </div>
+            {activeFilter !== 'all' && (
+              <button onClick={() => setActiveFilter('all')} style={{ background: CORAL, color: 'white', border: 'none', borderRadius: 50, padding: '10px 24px', cursor: 'pointer', fontWeight: 700, fontSize: 13, fontFamily: 'var(--font-heebo), sans-serif' }}>
+                ראה כל האתגרים
+              </button>
+            )}
           </div>
         ) : activeFilter !== 'all' ? (
           // Filtered view — flat list
