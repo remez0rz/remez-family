@@ -145,7 +145,26 @@ function MediaGallery({ urls }) {
   )
 }
 
-function FeedCard({ post, profiles, currentProfile, reactionData }) {
+// Render text content, turning raw URLs into clickable links
+function ContentWithLinks({ text }) {
+  if (!text) return null
+  // Split on URLs (http/https) and render each segment
+  const URL_RE = /(https?:\/\/[^\s]+)/g
+  const parts  = text.split(URL_RE)
+  return (
+    <span>
+      {parts.map((part, i) =>
+        URL_RE.test(part)
+          ? <a key={i} href={part} target="_blank" rel="noopener noreferrer"
+              style={{ color: '#3B9FE8', fontWeight: 600, wordBreak: 'break-all' }}
+              onClick={e => e.stopPropagation()}>{part}</a>
+          : <span key={i}>{part}</span>
+      )}
+    </span>
+  )
+}
+
+function FeedCard({ post, profiles, currentProfile, reactionData, onNavigate }) {
   const isTazkir  = post.type === 'tahkir'
   const isMission = post.type === 'mission_completed'
   const hasMedia  = post.media_urls?.length > 0
@@ -159,7 +178,8 @@ function FeedCard({ post, profiles, currentProfile, reactionData }) {
       background: 'white', borderRadius: 24,
       border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.07)', marginBottom: 14, overflow: 'hidden'
     }}>
-      <div style={{ padding: '14px 16px 10px', display: 'flex', alignItems: 'center', gap: 10 }}>
+      <div onClick={() => isTazkir && onNavigate && onNavigate(post.linked_id || post.id)}
+        style={{ padding: '14px 16px 10px', display: 'flex', alignItems: 'center', gap: 10, cursor: isTazkir ? 'pointer' : 'default' }}>
         <div style={{ display: 'flex' }}>
           {participantProfiles.length > 0
             ? participantProfiles.slice(0, 3).map((p, i) => (
@@ -189,6 +209,7 @@ function FeedCard({ post, profiles, currentProfile, reactionData }) {
               {isTazkir ? '📝 תחקיר' : '⭐ אתגר'}
             </span>
             <TimeAgo dateStr={post.created_at} />
+            {isTazkir && <span style={{ fontSize: 9, color: '#c0b0a0' }}>לחץ לפרטים ›</span>}
           </div>
         </div>
       </div>
@@ -199,8 +220,11 @@ function FeedCard({ post, profiles, currentProfile, reactionData }) {
         <div style={{ padding: '10px 16px 0' }}>
           <div style={{
             fontSize: 13, color: '#5a4a3a', lineHeight: 1.6,
-            background: '#FAFAF5', borderRadius: 12, padding: '10px 12px'
-          }}>{post.content}</div>
+            background: '#FAFAF5', borderRadius: 12, padding: '10px 12px',
+            whiteSpace: 'pre-wrap', wordBreak: 'break-word'
+          }}>
+            <ContentWithLinks text={post.content} />
+          </div>
         </div>
       )}
 
@@ -224,9 +248,22 @@ function FeedCard({ post, profiles, currentProfile, reactionData }) {
         </div>
       )}
 
-      {post.rating && (
+      {post.rating > 0 && (
         <div style={{ padding: '4px 16px 0' }}>
           {'⭐'.repeat(post.rating)}
+        </div>
+      )}
+
+      {post.would_repeat === true && (
+        <div style={{ padding: '4px 16px 0' }}>
+          <span style={{ fontSize: 11, color: '#8a7a60', fontWeight: 600 }}>🔁 </span>
+          <span style={{ fontSize: 12, color: '#5a7a3a', fontWeight: 600 }}>בהחלט נחזור על זה!</span>
+        </div>
+      )}
+      {post.would_repeat === false && (
+        <div style={{ padding: '4px 16px 0' }}>
+          <span style={{ fontSize: 11, color: '#8a7a60', fontWeight: 600 }}>🔁 </span>
+          <span style={{ fontSize: 12, color: '#8a7a60' }}>חד פעמי — הייתה חוויה!</span>
         </div>
       )}
 
@@ -470,6 +507,7 @@ export default function FeedPage() {
                 profiles={profiles}
                 currentProfile={currentProfile}
                 reactionData={reactionData}
+                onNavigate={(id) => router.push(`/tazkir/${id}`)}
               />
             ))}
 
