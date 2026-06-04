@@ -279,6 +279,7 @@ function ParentAssignModal({ mission, profiles, onClose, onAssigned }) {
   const [assignedTo, setAssignedTo] = useState([])
   const [dueDate, setDueDate]       = useState('')
   const [assigning, setAssigning]   = useState(false)
+  const [notify, setNotify]         = useState(true)
   const children = profiles.filter(p => p.role === 'child')
 
   const handleAssign = async () => {
@@ -290,6 +291,12 @@ function ParentAssignModal({ mission, profiles, onClose, onAssigned }) {
         ...(dueDate ? { due_date: dueDate } : {})
       }))
     )
+    if (notify && assignedTo.length) {
+      const names = assignedTo.map(id => profiles.find(p => p.id === id)?.name).filter(Boolean).join(' ו')
+      fetch('/api/push/send', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ memberIds: assignedTo, title: '⭐ אתגר חדש!', body: `${mission.title} — בא לצבור נקודות!`, url: '/missions/active', tag: 'newmission' })
+      }).catch(() => {})
+    }
     setAssigning(false)
     onAssigned()
   }
@@ -321,6 +328,11 @@ function ParentAssignModal({ mission, profiles, onClose, onAssigned }) {
             </div>
           ))}
         </div>
+
+        <label style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14, cursor: 'pointer' }}>
+          <input type="checkbox" checked={notify} onChange={e => setNotify(e.target.checked)} />
+          <span style={{ fontSize: 13, color: NAVY, fontWeight: 600 }}>📲 שלח התראה לילד</span>
+        </label>
 
         <div style={{ fontSize: 12, color: '#8a7a60', fontWeight: 600, marginBottom: 6 }}>עד תאריך (לא חובה)</div>
         <input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} style={{

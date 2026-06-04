@@ -418,6 +418,15 @@ export default function ActiveEarningPage() {
       })
     }
 
+    // Push: notify family on level-up, notify parents on any completion
+    if (leveledUp) {
+      const { data: parents } = await supabase.from('profiles').select('id').eq('role', 'parent').eq('active', true)
+      const parentIds = (parents || []).map(p => p.id)
+      fetch('/api/push/send', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ memberIds: [...parentIds, memberId], title: '🚀 עלית רמה!', body: `${assignment.member.name} הגיע/ה לרמה ${newLevel}!`, url: '/profiles', tag: 'levelup' })
+      }).catch(() => {})
+    }
+
     const nextReward = getNextReward(newTotal)  // next reward by balance
     setAwarding(prev => { const s = new Set(prev); s.delete(assignment.id); return s })
     setDocTarget(null)

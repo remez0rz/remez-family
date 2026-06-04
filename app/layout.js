@@ -1,5 +1,6 @@
 import { Heebo } from "next/font/google";
 import "./globals.css";
+import PushRegister from "./components/PushRegister";
 
 const heebo = Heebo({
   variable: "--font-heebo",
@@ -44,7 +45,10 @@ export default function RootLayout({ children }) {
         <meta name="apple-mobile-web-app-title" content="משפחת רמז" />
         <meta name="mobile-web-app-capable" content="yes" />
       </head>
-      <body className="min-h-full flex flex-col bg-[#FFF9F0]">{children}</body>
+      <body className="min-h-full flex flex-col bg-[#FFF9F0]">
+        <PushRegister />
+        {children}
+      </body>
     </html>
   )
 }

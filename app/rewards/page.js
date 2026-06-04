@@ -279,7 +279,16 @@ function UnlockModal({ reward, profile, onClose, onClaimed }) {
       status: 'claimed', claimed_at: new Date().toISOString()
     })
     setClaiming(false)
-    if (!error) onClaimed()
+    if (!error) {
+      // Notify parents about claim
+      const { data: parents } = await supabase.from('profiles').select('id').eq('role', 'parent').eq('active', true)
+      if (parents?.length) {
+        fetch('/api/push/send', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ memberIds: parents.map(p => p.id), title: '✨ בקשת פרס חדשה', body: `${profile.name} רוצה: ${reward.emoji || ''} ${reward.title}`, url: '/rewards', tag: 'rewardclaim' })
+        }).catch(() => {})
+      }
+      onClaimed()
+    }
   }
 
   return (
@@ -507,6 +516,13 @@ export default function ExperiencesPage() {
         points: -reward.points_required,
         reason: `פתח חוויה: ${reward.title}`,
       })
+    }
+
+    // Push notification to kid
+    if (reward) {
+      fetch('/api/push/send', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ memberIds: [claim.member_id], title: '🎉 הפרס אושר!', body: `${reward.emoji || '✨'} ${reward.title} — אפשר לממש!`, url: '/rewards', tag: 'rewardapproved' })
+      }).catch(() => {})
     }
 
     loadData()
