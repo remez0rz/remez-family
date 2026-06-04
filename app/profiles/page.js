@@ -55,6 +55,7 @@ function PhotoUploadModal({ profile, onClose, onDone }) {
     if (!f) return
     setFile(f)
     setPreview(URL.createObjectURL(f))
+    e.target.value = ''  // allow re-selecting same file
   }
 
   const handleUpload = async () => {

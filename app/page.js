@@ -55,7 +55,7 @@ function QuickDailyDoc({ mission, uploading, onSubmit, onSkip, onClose }) {
               ? <video src={preview} controls style={{ width: '100%', borderRadius: 12, maxHeight: 160, display: 'block' }} />
               : <img src={preview} alt="p" style={{ width: '100%', borderRadius: 12, maxHeight: 160, objectFit: 'cover', display: 'block' }} />
             }
-            <button onClick={() => { setFile(null); setPreview(null) }} style={{ position: 'absolute', top: 8, left: 8, background: 'rgba(0,0,0,0.6)', border: 'none', borderRadius: '50%', width: 26, height: 26, color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12 }}>✕</button>
+            <button onClick={() => { setFile(null); setPreview(null); setIsVideo(false) }} style={{ position: 'absolute', top: 8, left: 8, background: 'rgba(0,0,0,0.6)', border: 'none', borderRadius: '50%', width: 26, height: 26, color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12 }}>✕</button>
           </div>
         ) : (
           <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
@@ -663,8 +663,9 @@ function ParentHome({ currentProfile, profiles, activeAssignments, recentFeed, r
                           <div style={{ fontSize: 13, fontWeight: 700, color: NAVY }}>{a.mission?.title}</div>
                           {a.proof_text && <div style={{ fontSize: 11, color: '#6b5e4e', marginTop: 2 }}>{a.proof_text}</div>}
                           {a.proof_image_url && (
-                            <img src={a.proof_image_url} alt="proof"
-                              style={{ width: '100%', maxHeight: 100, objectFit: 'cover', borderRadius: 8, marginTop: 6, display: 'block' }} />
+                            /\.(mp4|mov|webm|avi)(\?|$)/i.test(a.proof_image_url)
+                              ? <video src={a.proof_image_url} controls style={{ width: '100%', maxHeight: 120, borderRadius: 8, marginTop: 6, display: 'block' }} />
+                              : <img src={a.proof_image_url} alt="proof" style={{ width: '100%', maxHeight: 100, objectFit: 'cover', borderRadius: 8, marginTop: 6, display: 'block' }} />
                           )}
                         </div>
                       </div>
