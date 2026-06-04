@@ -75,7 +75,10 @@ export default function TazkirDetailPage() {
             <div style={{ fontSize: 20, fontWeight: 900, color: 'white', lineHeight: 1.3 }}>{tazkir.title}</div>
             {dateStr && <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.8)', marginTop: 4 }}>📅 {dateStr}</div>}
           </div>
-          <button onClick={() => router.back()} style={{ background: 'rgba(255,255,255,0.2)', border: 'none', borderRadius: 20, color: 'white', fontSize: 12, padding: '6px 13px', cursor: 'pointer', fontFamily: 'var(--font-heebo), sans-serif', fontWeight: 700, flexShrink: 0 }}>← חזרה</button>
+          <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+            <button onClick={() => router.push(`/tazkir/${id}/edit`)} style={{ background: 'white', color: CORAL, border: 'none', borderRadius: 20, fontSize: 12, padding: '6px 13px', cursor: 'pointer', fontFamily: 'var(--font-heebo), sans-serif', fontWeight: 700 }}>✏️ עריכה</button>
+            <button onClick={() => router.back()} style={{ background: 'rgba(255,255,255,0.2)', border: 'none', borderRadius: 20, color: 'white', fontSize: 12, padding: '6px 13px', cursor: 'pointer', fontFamily: 'var(--font-heebo), sans-serif', fontWeight: 700 }}>← חזרה</button>
+          </div>
         </div>
 
         {/* Participants */}
