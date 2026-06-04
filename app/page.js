@@ -5,8 +5,9 @@ import { useRouter } from 'next/navigation'
 import dynamic from 'next/dynamic'
 import BottomNav from './components/BottomNav'
 
-const GroceryList    = dynamic(() => import('./components/GroceryList'),    { ssr: false })
-const FamilyCalendar = dynamic(() => import('./components/FamilyCalendar'), { ssr: false })
+const GroceryList      = dynamic(() => import('./components/GroceryList'),      { ssr: false })
+const FamilyCalendar   = dynamic(() => import('./components/FamilyCalendar'),   { ssr: false })
+const WishlistGallery  = dynamic(() => import('./components/WishlistGallery'),  { ssr: false })
 
 const NAVY = '#2D2D2D'
 const GOLD = '#FFB830'
@@ -674,6 +675,9 @@ function ParentHome({ currentProfile, profiles, activeAssignments, recentFeed, r
             </div>
           )
         })()}
+
+        {/* 2026 Wishlist — full width swipeable gallery */}
+        <WishlistGallery />
 
         {/* Grocery list + Calendar */}
         <div className="app-two-col">
