@@ -772,6 +772,9 @@ export default function HomePage() {
     if (!profile) { router.push('/login'); return }
     setCurrentProfile(profile)
 
+    // Use the viewed kid's ID when parent is in view-as mode
+    const effectiveId = sessionStorage.getItem('viewAsProfileId') || profile.id
+
     const todayStart = new Date()
     todayStart.setHours(0, 0, 0, 0)
 
@@ -797,7 +800,7 @@ export default function HomePage() {
       supabase.from('feed_posts').select('*').order('created_at', { ascending: false }).limit(4),
       supabase.from('rewards').select('*').eq('is_active', true).order('points_required'),
       supabase.from('assignments').select('mission_id, completed_at')
-        .eq('assigned_to', profile.id).eq('status', 'completed'),
+        .eq('assigned_to', effectiveId).eq('status', 'completed'),
       supabase.from('reward_claims').select('*, reward:rewards(title,emoji,points_required), member:profiles!reward_claims_member_id_fkey(name,avatar_url)').eq('status', 'claimed'),
       supabase.from('assignments')
         .select('*, mission:missions(title,category), member:profiles!assignments_assigned_to_fkey(name,avatar_url)')

@@ -470,7 +470,7 @@ export default function ExperiencesPage() {
       supabase.from('reward_claims').select('*').eq('status', 'claimed'),
       supabase.from('reward_claims')
         .select('*, reward:rewards(title, emoji, description, points_required)')
-        .eq('member_id', profile.id)
+        .eq('member_id', sessionStorage.getItem('viewAsProfileId') || profile.id)
         .in('status', ['claimed', 'approved'])
         .order('claimed_at', { ascending: false })
     ])
@@ -741,7 +741,7 @@ export default function ExperiencesPage() {
         )}
 
         {/* Kid's own claims — pending approval and approved-ready-to-use */}
-        {!isParent && !isViewingAsKid && (
+        {(!isParent || isViewingAsKid) && (
           <KidClaimsSection claims={myClaims} onRedeem={handleMarkRedeemed} />
         )}
 

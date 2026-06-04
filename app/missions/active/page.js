@@ -433,7 +433,11 @@ export default function ActiveEarningPage() {
     }
   }
 
-  const closeCelebration = () => { setCelebration(null); router.push('/missions') }
+  const closeCelebration = () => {
+    setCelebration(null)
+    // Parent stays on active page to approve more; kid goes to pick new missions
+    router.push(isParent && !isViewingAsKid ? '/missions/active' : '/missions')
+  }
 
   const isParent = currentProfile?.role === 'parent'
   const viewAsProfile = viewAsId ? profiles.find(p => p.id === viewAsId) : null
