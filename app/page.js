@@ -262,6 +262,7 @@ function KidHome({ currentProfile, missions, dailyMissions, completedTodayIds, r
         {todayMissions.length > 0 && (
           <div style={{ marginBottom: 12 }}>
             <SectionTitle title="⭐ אתגרי היום" href="/missions" />
+            <div className="cards-grid">
             {todayMissions.map((mission, i) => {
               const visual    = CATEGORY_VISUAL[mission.category] || { emoji: '⭐' }
               const gradient  = MISSION_GRADIENTS[i % MISSION_GRADIENTS.length]
@@ -269,7 +270,7 @@ function KidHome({ currentProfile, missions, dailyMissions, completedTodayIds, r
               const hasImage  = !!mission.image_url
 
               return (
-                <div key={mission.id} style={{ borderRadius: 24, marginBottom: 12, overflow: 'hidden', boxShadow: '0 6px 24px rgba(0,0,0,0.1)' }}>
+                <div key={mission.id} style={{ borderRadius: 24, overflow: 'hidden', boxShadow: '0 6px 24px rgba(0,0,0,0.1)' }}>
                   {/* Visual header */}
                   <div style={{
                     position: 'relative', height: 160,
@@ -314,9 +315,10 @@ function KidHome({ currentProfile, missions, dailyMissions, completedTodayIds, r
                 </div>
               )
             })}
+            </div>
             <a href="/missions" style={{
               display: 'block', textAlign: 'center', fontSize: 13,
-              color: CORAL, textDecoration: 'none', fontWeight: 700, marginBottom: 12
+              color: CORAL, textDecoration: 'none', fontWeight: 700, marginBottom: 12, marginTop: 4
             }}>לכל אתגרי הנקודות ←</a>
           </div>
         )}
@@ -364,51 +366,55 @@ function KidHome({ currentProfile, missions, dailyMissions, completedTodayIds, r
           </Card>
         )}
 
-        {/* Daily missions */}
+        {/* Daily missions — full cards like mission page */}
         {dailyMissions.length > 0 && (
-          <div style={{ marginBottom: 14 }}>
+          <div style={{ marginBottom: 12 }}>
             <SectionTitle title="🌅 משימות יומיות" href="/missions" />
-            <div style={{ background: 'white', borderRadius: 20, overflow: 'hidden', boxShadow: '0 4px 16px rgba(0,0,0,0.07)' }}>
-              {dailyMissions.map((mission, i) => {
-                const done = completedTodayIds.has(mission.id)
-                const starting = startingMission === mission.id
-                return (
-                  <div key={mission.id} style={{
-                    display: 'flex', alignItems: 'center', gap: 12,
-                    padding: '14px 16px',
-                    borderBottom: i < dailyMissions.length - 1 ? '1px solid #f5f0e8' : 'none',
-                    background: done ? '#f0faf8' : 'white',
+            <div className="cards-grid">
+            {dailyMissions.map((mission, i) => {
+              const visual   = CATEGORY_VISUAL[mission.category] || { emoji: '🌅' }
+              const gradient = MISSION_GRADIENTS[i % MISSION_GRADIENTS.length]
+              const hasImage = !!mission.image_url
+              return (
+                <div key={mission.id} style={{ borderRadius: 24, marginBottom: 0, overflow: 'hidden', boxShadow: '0 6px 24px rgba(0,0,0,0.1)' }}>
+                  {/* Visual header — identical to ChallengeCard */}
+                  <div style={{
+                    position: 'relative', height: 180,
+                    background: hasImage
+                      ? `url(${mission.image_url}) center/cover no-repeat`
+                      : `linear-gradient(135deg, ${gradient[0]}, ${gradient[1]})`,
                   }}>
-                    <div style={{
-                      width: 40, height: 40, borderRadius: 12, flexShrink: 0,
-                      background: done ? '#4ECDC4' : 'linear-gradient(135deg, #FFB830, #FFD166)',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20
-                    }}>
-                      {done ? '✓' : '🏠'}
+                    {hasImage && <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.05) 55%, transparent 100%)' }} />}
+                    <div style={{ position: 'absolute', top: 12, left: 14, zIndex: 1 }}>
+                      <div style={{ background: 'rgba(255,255,255,0.18)', borderRadius: 14, padding: '7px 13px', backdropFilter: 'blur(6px)', border: '1px solid rgba(255,255,255,0.28)', textAlign: 'center' }}>
+                        <div style={{ fontSize: 22, fontWeight: 900, color: 'white', lineHeight: 1 }}>{mission.points}</div>
+                        <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.9)', fontWeight: 700 }}>נק׳</div>
+                      </div>
                     </div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 14, fontWeight: 800, color: NAVY, lineHeight: 1.3 }}>{mission.title}</div>
-                      <div style={{ fontSize: 11, color: '#8a7a60', marginTop: 2 }}>+{mission.points} נקודות</div>
+                    <div style={{ position: 'absolute', bottom: 12, right: 14, zIndex: 1, display: 'flex', alignItems: 'center', gap: 5 }}>
+                      <span style={{ fontSize: 20, filter: 'drop-shadow(0 1px 3px rgba(0,0,0,0.4))' }}>{visual.emoji}</span>
+                      <span style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.95)', textShadow: '0 1px 3px rgba(0,0,0,0.5)', letterSpacing: '0.04em' }}>
+                        {CATEGORY_LABELS[mission.category] || mission.category}
+                      </span>
                     </div>
-                    {done ? (
-                      <div style={{
-                        background: '#4ECDC4', color: 'white',
-                        fontSize: 11, fontWeight: 700, padding: '5px 10px', borderRadius: 20, flexShrink: 0
-                      }}>✓ היום</div>
-                    ) : (
-                      <button onClick={() => onQuickDaily(mission)} style={{
-                        background: CORAL, color: 'white',
-                        border: 'none', borderRadius: 20, padding: '7px 14px',
-                        fontWeight: 700, fontSize: 12, cursor: 'pointer',
-                        fontFamily: 'var(--font-heebo), sans-serif', flexShrink: 0,
-                        boxShadow: '0 3px 8px rgba(255,107,107,0.35)'
-                      }}>
-                        עשיתי ⭐
-                      </button>
-                    )}
                   </div>
-                )
-              })}
+                  {/* Card body */}
+                  <div style={{ background: 'white', padding: '14px 16px' }}>
+                    <div style={{ fontSize: 15, fontWeight: 800, color: NAVY, lineHeight: 1.3, marginBottom: 4 }}>{mission.title}</div>
+                    <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+                      <span style={{ fontSize: 11, color: '#8a7a60' }}>⏱ {mission.estimated_minutes} דק׳</span>
+                      <span style={{ fontSize: 11, color: '#4ECDC4', fontWeight: 600 }}>🔁 יומי</span>
+                    </div>
+                    <button onClick={() => onQuickDaily(mission)} style={{
+                      width: '100%', padding: '12px', background: CORAL, color: 'white',
+                      border: 'none', borderRadius: 50, cursor: 'pointer',
+                      fontWeight: 700, fontSize: 14, fontFamily: 'var(--font-heebo), sans-serif',
+                      boxShadow: '0 4px 12px rgba(255,107,107,0.35)'
+                    }}>עשיתי! ⭐</button>
+                  </div>
+                </div>
+              )
+            })}
             </div>
           </div>
         )}
