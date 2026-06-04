@@ -2,7 +2,11 @@
 import { useEffect, useState } from 'react'
 import { supabase, getCurrentProfile } from './lib/supabase'
 import { useRouter } from 'next/navigation'
+import dynamic from 'next/dynamic'
 import BottomNav from './components/BottomNav'
+
+const GroceryList    = dynamic(() => import('./components/GroceryList'),    { ssr: false })
+const FamilyCalendar = dynamic(() => import('./components/FamilyCalendar'), { ssr: false })
 
 const NAVY = '#2D2D2D'
 const GOLD = '#FFB830'
@@ -12,160 +16,6 @@ const PURPLE = '#9B7FD4'
 const CORAL = '#FF6B6B'
 const HEADER_BG = 'linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%)'
 
-// ── Grocery List ─────────────────────────────────────────────────────────────
-function GroceryList({ isParent, currentProfile }) {
-  const [items, setItems]       = useState([])
-  const [newItem, setNewItem]   = useState('')
-  const [adding, setAdding]     = useState(false)
-  const [imgFile, setImgFile]   = useState(null)
-  const [imgPrev, setImgPrev]   = useState(null)
-  const [uploading, setUploading] = useState(false)
-  const [expanded, setExpanded] = useState(false)
-
-  useEffect(() => {
-    loadItems()
-    const ch = supabase.channel('grocery_changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'grocery_items' }, loadItems)
-      .subscribe()
-    return () => { supabase.removeChannel(ch) }
-  }, [])
-
-  const loadItems = async () => {
-    const { data } = await supabase.from('grocery_items').select('*, added_by_profile:profiles!grocery_items_added_by_fkey(name)').eq('is_done', false).order('created_at', { ascending: true })
-    if (data) setItems(data)
-  }
-
-  const handleAdd = async () => {
-    if (!newItem.trim()) return
-    setUploading(true)
-    let imageUrl = null
-    if (imgFile) {
-      const ext = imgFile.name.split('.').pop()
-      const path = `grocery/${Date.now()}.${ext}`
-      const { error } = await supabase.storage.from('family-media').upload(path, imgFile, { contentType: imgFile.type })
-      if (!error) { const { data } = supabase.storage.from('family-media').getPublicUrl(path); imageUrl = data.publicUrl }
-    }
-    await supabase.from('grocery_items').insert({ name: newItem.trim(), image_url: imageUrl, added_by: currentProfile.id })
-    setNewItem(''); setImgFile(null); setImgPrev(null); setAdding(false); setUploading(false)
-    loadItems()
-  }
-
-  const markDone = async (id) => {
-    await supabase.from('grocery_items').update({ is_done: true }).eq('id', id)
-    loadItems()
-  }
-
-  const clearAll = async () => {
-    await supabase.from('grocery_items').update({ is_done: true }).eq('is_done', false)
-    loadItems()
-  }
-
-  return (
-    <div style={{ background: 'white', borderRadius: 20, padding: '16px', boxShadow: '0 4px 16px rgba(0,0,0,0.07)', marginBottom: 12 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-        <div style={{ fontSize: 15, fontWeight: 800, color: NAVY }}>🛒 קניות — {items.length} פריטים</div>
-        <div style={{ display: 'flex', gap: 8 }}>
-          {isParent && items.length > 0 && (
-            <button onClick={clearAll} style={{ background: '#FFE8E8', color: CORAL, border: 'none', borderRadius: 12, padding: '4px 10px', fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'var(--font-heebo), sans-serif' }}>✓ קניתי הכל</button>
-          )}
-          <button onClick={() => setAdding(v => !v)} style={{ background: adding ? '#FFE8E8' : '#F0EBE0', color: adding ? CORAL : '#6b5e4e', border: 'none', borderRadius: 12, padding: '4px 10px', fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'var(--font-heebo), sans-serif' }}>
-            {adding ? '✕' : '+ הוסף'}
-          </button>
-        </div>
-      </div>
-
-      {adding && (
-        <div style={{ background: '#faf8f4', borderRadius: 12, padding: '10px', marginBottom: 10 }}>
-          <input value={newItem} onChange={e => setNewItem(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleAdd()}
-            placeholder="מה צריך לקנות?" style={{ width: '100%', padding: '8px 10px', border: '1px solid #e0d8c8', borderRadius: 8, fontSize: 14, fontFamily: 'var(--font-heebo), sans-serif', marginBottom: 6, boxSizing: 'border-box', outline: 'none' }} />
-          <div style={{ display: 'flex', gap: 8 }}>
-            <input type="file" accept="image/*" onChange={e => { const f = e.target.files[0]; if (f) { setImgFile(f); setImgPrev(URL.createObjectURL(f)) }; e.target.value='' }} style={{ display: 'none' }} id="grocery-img" />
-            <label htmlFor="grocery-img" style={{ padding: '6px 12px', background: '#F0EBE0', borderRadius: 8, cursor: 'pointer', fontSize: 12, fontWeight: 600, color: '#6b5e4e', flexShrink: 0 }}>
-              {imgPrev ? '🖼️ תמונה ✓' : '📷 תמונה'}
-            </label>
-            <button onClick={handleAdd} disabled={uploading || !newItem.trim()} style={{ flex: 1, padding: '6px', background: newItem.trim() ? CORAL : '#e0d8c8', color: 'white', border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight: 700, fontSize: 13, fontFamily: 'var(--font-heebo), sans-serif' }}>
-              {uploading ? '...' : 'הוסף'}
-            </button>
-          </div>
-        </div>
-      )}
-
-      {items.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '16px 0', color: '#b0a090', fontSize: 13 }}>הרשימה ריקה 🎉</div>
-      ) : (
-        <div>
-          {(expanded ? items : items.slice(0, 5)).map(item => (
-            <div key={item.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderBottom: '1px solid #f5f0e8' }}>
-              {item.image_url && <img src={item.image_url} alt={item.name} style={{ width: 36, height: 36, borderRadius: 8, objectFit: 'cover', flexShrink: 0 }} />}
-              <div style={{ flex: 1, fontSize: 13, fontWeight: 600, color: NAVY }}>{item.name}</div>
-              <div style={{ fontSize: 10, color: '#a09080' }}>{item.added_by_profile?.name}</div>
-              {isParent && (
-                <button onClick={() => markDone(item.id)} style={{ background: 'none', border: '1.5px solid #e0d8c8', borderRadius: '50%', width: 26, height: 26, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, color: '#a09080', flexShrink: 0 }}>✓</button>
-              )}
-            </div>
-          ))}
-          {items.length > 5 && (
-            <button onClick={() => setExpanded(v => !v)} style={{ width: '100%', marginTop: 8, background: 'none', border: 'none', color: CORAL, fontWeight: 600, fontSize: 12, cursor: 'pointer', fontFamily: 'var(--font-heebo), sans-serif' }}>
-              {expanded ? 'פחות ↑' : `עוד ${items.length - 5} פריטים ↓`}
-            </button>
-          )}
-        </div>
-      )}
-    </div>
-  )
-}
-
-// ── Family Calendar ────────────────────────────────────────────────────────────
-function FamilyCalendar() {
-  const [events, setEvents] = useState([])
-
-  useEffect(() => {
-    const now = new Date().toISOString()
-    const later = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString()
-    supabase.from('calendar_events').select('*')
-      .gte('start_time', now).lte('start_time', later)
-      .order('start_time').limit(10)
-      .then(({ data }) => { if (data) setEvents(data) })
-  }, [])
-
-  const formatDay = (iso) => {
-    const d = new Date(iso)
-    const today = new Date(); today.setHours(0,0,0,0)
-    const tomorrow = new Date(today); tomorrow.setDate(today.getDate() + 1)
-    const event = new Date(d); event.setHours(0,0,0,0)
-    if (event.getTime() === today.getTime()) return 'היום'
-    if (event.getTime() === tomorrow.getTime()) return 'מחר'
-    return d.toLocaleDateString('he-IL', { weekday: 'short', day: 'numeric', month: 'numeric' })
-  }
-
-  const formatTime = (iso) => iso ? new Date(iso).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit', hour12: false }) : ''
-
-  const DAY_COLORS = { 'היום': '#FF6B6B', 'מחר': '#FFB830' }
-
-  if (!events.length) return null
-
-  return (
-    <div style={{ background: 'white', borderRadius: 20, padding: '16px', boxShadow: '0 4px 16px rgba(0,0,0,0.07)', marginBottom: 12 }}>
-      <div style={{ fontSize: 15, fontWeight: 800, color: NAVY, marginBottom: 10 }}>📅 יומן המשפחה</div>
-      {events.map(ev => {
-        const day = formatDay(ev.start_time)
-        const color = DAY_COLORS[day] || '#9B7FD4'
-        return (
-          <div key={ev.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderBottom: '1px solid #f5f0e8' }}>
-            <div style={{ background: color + '20', color, borderRadius: 10, padding: '4px 8px', fontSize: 11, fontWeight: 800, flexShrink: 0, minWidth: 44, textAlign: 'center' }}>
-              {day}
-            </div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: NAVY, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{ev.title}</div>
-              {ev.location && <div style={{ fontSize: 10, color: '#a09080', marginTop: 1 }}>📍 {ev.location}</div>}
-            </div>
-            <div style={{ fontSize: 11, color: '#a09080', flexShrink: 0 }}>{formatTime(ev.start_time)}</div>
-          </div>
-        )
-      })}
-    </div>
-  )
-}
 
 function QuickDailyDoc({ mission, uploading, onSubmit, onSkip, onClose }) {
   const [text, setText]   = useState('')
@@ -576,7 +426,7 @@ function KidHome({ currentProfile, missions, dailyMissions, completedTodayIds, r
 
         {/* Grocery + Calendar for kids too */}
         <div className="app-two-col">
-          <GroceryList isParent={false} currentProfile={currentProfile} />
+          <GroceryList isParent={false} />
           <FamilyCalendar />
         </div>
 
@@ -826,7 +676,7 @@ function ParentHome({ currentProfile, profiles, activeAssignments, recentFeed, r
 
         {/* Grocery list + Calendar */}
         <div className="app-two-col">
-          <GroceryList isParent={isParent} currentProfile={currentProfile} />
+          <GroceryList isParent={isParent} />
           <FamilyCalendar />
         </div>
 
