@@ -146,6 +146,8 @@ function TazkirForm() {
   const [attachFiles, setAttachFiles] = useState([])   // File[]
   const [linkUrl, setLinkUrl]         = useState('')
   const [imgUrl, setImgUrl]           = useState('')
+  const [resolvedImgUrl, setResolvedImgUrl] = useState('') // actual image URL (may differ from imgUrl if og:image extracted)
+  const [imgResolving, setImgResolving]     = useState(false)
   const [ogPreview, setOgPreview]     = useState(null)
   const [ogLoading, setOgLoading]     = useState(false)
   const [showExtras, setShowExtras]   = useState(false)
@@ -159,6 +161,7 @@ function TazkirForm() {
   const router       = useRouter()
   const searchParams = useSearchParams()
   const ogAbortRef      = useRef(null)
+  const imgAbortRef     = useRef(null)
   const mediaFilesRef   = useRef([])
 
   // Keep ref in sync (so unmount cleanup can access latest mediaFiles)
@@ -218,6 +221,30 @@ function TazkirForm() {
     setOgLoading(false)
   }
 
+  // Check if URL looks like a direct image file
+  const isDirectImage = (url) => /\.(jpe?g|png|gif|webp|avif|bmp|svg)(\?.*)?$/i.test(url)
+
+  // When user blurs imgUrl field: if it's not a direct image, try to extract og:image
+  const resolveImgUrl = async (url) => {
+    if (!url?.startsWith('http')) { setResolvedImgUrl(''); return }
+    if (isDirectImage(url)) { setResolvedImgUrl(url); return }
+
+    // Not a direct image — try OG preview to get the og:image
+    imgAbortRef.current?.abort()
+    imgAbortRef.current = new AbortController()
+    setImgResolving(true)
+    try {
+      const res = await fetch(`/api/og-preview?url=${encodeURIComponent(url)}`, { signal: imgAbortRef.current.signal })
+      if (res.ok) {
+        const data = await res.json()
+        setResolvedImgUrl(data.image || url) // use og:image if found, else keep original
+      } else {
+        setResolvedImgUrl(url)
+      }
+    } catch { setResolvedImgUrl(url) }
+    setImgResolving(false)
+  }
+
   const handleMediaSelect = (e) => {
     const files = Array.from(e.target.files)
     if (!files.length) return
@@ -272,10 +299,11 @@ function TazkirForm() {
     const allResults = await Promise.all([...uploadMedia, ...uploadAttach])
     const mediaUrls  = allResults.filter(Boolean)
 
-    // Web image URL goes first (cover) if no uploaded media
-    if (imgUrl.trim()) {
-      if (mediaUrls.length === 0) mediaUrls.unshift(imgUrl.trim())
-      else mediaUrls.push(imgUrl.trim())
+    // Web image: use resolved URL (may be og:image extracted from a page), fallback to raw input
+    const finalImgUrl = (resolvedImgUrl || imgUrl).trim()
+    if (finalImgUrl) {
+      if (mediaUrls.length === 0) mediaUrls.unshift(finalImgUrl)
+      else mediaUrls.push(finalImgUrl)
     }
 
     const participantNames = profiles.filter(p => participants.includes(p.id)).map(p => p.name)
@@ -403,21 +431,37 @@ function TazkirForm() {
 
           {/* Web image URL — secondary, compact */}
           <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid #f0ebe0' }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: '#a09080', marginBottom: 5 }}>🌐 תמונה מהאינטרנט (אופציונלי)</div>
+            <div style={{ fontSize: 11, fontWeight: 700, color: '#a09080', marginBottom: 5 }}>
+              🌐 תמונה מהאינטרנט
+              <span style={{ fontWeight: 400, marginRight: 4 }}>— הדבק קישור לתמונה, או קישור לאתר (נחלץ תמונה אוטומטית)</span>
+            </div>
             <div style={{ display: 'flex', gap: 7 }}>
-              <input value={imgUrl} onChange={e => setImgUrl(e.target.value)} type="url"
-                placeholder="הדבק כתובת תמונה..."
+              <input value={imgUrl}
+                onChange={e => { setImgUrl(e.target.value); setResolvedImgUrl('') }}
+                onBlur={e => resolveImgUrl(e.target.value)}
+                type="url"
+                placeholder="הדבק כתובת תמונה או קישור לאתר..."
                 style={{ ...inputStyle, fontSize: 12, flex: 1, padding: '8px 10px' }} />
               <a href={`https://www.google.com/search?q=${encodeURIComponent(form.title || 'תמונה')}&tbm=isch`}
                 target="_blank" rel="noopener noreferrer" style={{
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   width: 40, background: '#34A853', borderRadius: 10,
                   color: 'white', textDecoration: 'none', fontSize: 18, flexShrink: 0
-                }} title="גוגל תמונות">🖼️</a>
+                }} title="גוגל תמונות — לחץ ימני על תמונה ← 'העתק כתובת תמונה'">🖼️</a>
             </div>
-            {imgUrl.startsWith('http') && (
-              <img src={imgUrl} alt="" onError={e => e.target.style.display = 'none'}
-                style={{ width: '100%', maxHeight: 120, objectFit: 'cover', borderRadius: 10, marginTop: 6, display: 'block' }} />
+            {imgResolving && <div style={{ fontSize: 11, color: '#a09080', marginTop: 5 }}>🔍 מחפש תמונה...</div>}
+            {resolvedImgUrl && !imgResolving && (
+              <div style={{ position: 'relative', marginTop: 6 }}>
+                <img src={resolvedImgUrl} alt=""
+                  onError={e => { e.target.parentElement.style.display = 'none' }}
+                  style={{ width: '100%', maxHeight: 140, objectFit: 'cover', borderRadius: 10, display: 'block' }} />
+                {resolvedImgUrl !== imgUrl && (
+                  <div style={{ position: 'absolute', bottom: 6, right: 6, background: 'rgba(0,0,0,0.6)', color: 'white', fontSize: 10, padding: '2px 8px', borderRadius: 20 }}>
+                    ✓ תמונה חולצה אוטומטית
+                  </div>
+                )}
+                <button onClick={() => { setImgUrl(''); setResolvedImgUrl('') }} style={{ position: 'absolute', top: 5, left: 5, background: 'rgba(0,0,0,0.55)', border: 'none', borderRadius: '50%', width: 22, height: 22, color: 'white', cursor: 'pointer', fontSize: 11, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
+              </div>
             )}
           </div>
         </Card>

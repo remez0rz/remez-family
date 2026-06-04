@@ -100,38 +100,44 @@ function ReactionBar({ postId, currentProfileId, initialReactions }) {
 }
 
 function MediaGallery({ urls }) {
-  const [lightbox, setLightbox] = useState(null)
+  const [lightbox, setLightbox]     = useState(null)
+  const [failedUrls, setFailedUrls] = useState(new Set())
   if (!urls || urls.length === 0) return null
-  const isVideo = url => /\.(mp4|mov|webm|avi)(\?|$)/i.test(url)
+  const isVideo    = url => /\.(mp4|mov|webm|avi)(\?|$)/i.test(url)
+  const markFailed = url => setFailedUrls(prev => new Set([...prev, url]))
+  const validUrls  = urls.filter(u => !failedUrls.has(u))
+  if (validUrls.length === 0 && failedUrls.size > 0) return null // all broken — hide cleanly
 
   return (
     <>
-      <div onClick={() => !isVideo(urls[0]) && setLightbox(0)}
-        style={{ cursor: isVideo(urls[0]) ? 'default' : 'pointer', marginBottom: urls.length > 1 ? 4 : 0 }}>
-        {isVideo(urls[0])
-          ? <video src={urls[0]} controls style={{ width: '100%', maxHeight: 280, objectFit: 'cover', borderRadius: urls.length > 1 ? '12px 12px 0 0' : 12, display: 'block' }} />
-          : <img src={urls[0]} alt="cover" style={{ width: '100%', maxHeight: 280, objectFit: 'cover', borderRadius: urls.length > 1 ? '12px 12px 0 0' : 12, display: 'block' }} />
+      <div onClick={() => !isVideo(validUrls[0]) && setLightbox(0)}
+        style={{ cursor: isVideo(validUrls[0]) ? 'default' : 'pointer', marginBottom: validUrls.length > 1 ? 4 : 0 }}>
+        {isVideo(validUrls[0])
+          ? <video src={validUrls[0]} controls style={{ width: '100%', maxHeight: 280, objectFit: 'cover', borderRadius: validUrls.length > 1 ? '12px 12px 0 0' : 12, display: 'block' }} />
+          : <img src={validUrls[0]} alt="cover" onError={() => markFailed(validUrls[0])}
+              style={{ width: '100%', maxHeight: 280, objectFit: 'cover', borderRadius: validUrls.length > 1 ? '12px 12px 0 0' : 12, display: 'block' }} />
         }
       </div>
-      {urls.length > 1 && (
+      {validUrls.length > 1 && (
         <div style={{ display: 'flex', gap: 4 }}>
-          {urls.slice(1).map((url, i) => (
+          {validUrls.slice(1).map((url, i) => (
             <div key={i} onClick={() => !isVideo(url) && setLightbox(i + 1)}
               style={{ flex: 1, cursor: isVideo(url) ? 'default' : 'pointer' }}>
               {isVideo(url)
-                ? <video src={url} style={{ width: '100%', height: 80, objectFit: 'cover', borderRadius: i === 0 ? '0 0 0 12px' : i === urls.length - 2 ? '0 0 12px 0' : 0, display: 'block' }} />
-                : <img src={url} alt={`m${i}`} style={{ width: '100%', height: 80, objectFit: 'cover', borderRadius: i === 0 ? '0 0 0 12px' : i === urls.length - 2 ? '0 0 12px 0' : 0, display: 'block' }} />
+                ? <video src={url} style={{ width: '100%', height: 80, objectFit: 'cover', borderRadius: i === 0 ? '0 0 0 12px' : i === validUrls.length - 2 ? '0 0 12px 0' : 0, display: 'block' }} />
+                : <img src={url} alt={`m${i}`} onError={() => markFailed(url)}
+                    style={{ width: '100%', height: 80, objectFit: 'cover', borderRadius: i === 0 ? '0 0 0 12px' : i === validUrls.length - 2 ? '0 0 12px 0' : 0, display: 'block' }} />
               }
             </div>
           ))}
         </div>
       )}
-      {lightbox !== null && (
+      {lightbox !== null && validUrls[lightbox] && (
         <div onClick={() => setLightbox(null)} style={{
           position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.92)',
           zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16
         }}>
-          <img src={urls[lightbox]} alt="full" style={{ maxWidth: '100%', maxHeight: '90vh', borderRadius: 12, objectFit: 'contain' }} />
+          <img src={validUrls[lightbox]} alt="full" style={{ maxWidth: '100%', maxHeight: '90vh', borderRadius: 12, objectFit: 'contain' }} />
           <button onClick={() => setLightbox(null)} style={{
             position: 'absolute', top: 20, left: 20,
             background: 'rgba(255,255,255,0.15)', border: 'none',
