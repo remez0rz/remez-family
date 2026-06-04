@@ -3,11 +3,14 @@ import { useState, useEffect } from 'react'
 import { supabase, getCurrentProfile } from '../../lib/supabase'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Suspense } from 'react'
+import BottomNav from '../../components/BottomNav'
 
-const NAVY = '#0a1628'
-const GOLD = '#c9a84c'
-const CREAM = '#f7f4ee'
-const GREEN = '#1a6b3c'
+const NAVY  = '#2D2D2D'
+const CORAL = '#FF6B6B'
+const TEAL  = '#4ECDC4'
+const GOLD  = '#FFB830'
+const HEADER_BG = 'linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%)'
+const PAGE_BG   = 'linear-gradient(135deg, #FFF9F0 0%, #FFF0F9 100%)'
 
 function Avatar({ profile, size = 44, selected = false, onClick }) {
   const [imgError, setImgError] = useState(false)
@@ -15,13 +18,13 @@ function Avatar({ profile, size = 44, selected = false, onClick }) {
   return (
     <div onClick={onClick} style={{
       width: size, height: size, borderRadius: '50%',
-      border: `2.5px solid ${selected ? GOLD : '#e0d8c8'}`,
+      border: `2.5px solid ${selected ? CORAL : '#e0d8c8'}`,
       overflow: 'hidden', flexShrink: 0,
       cursor: onClick ? 'pointer' : 'default',
-      background: selected ? '#e8d5a3' : '#f0ebe0',
+      background: selected ? '#FFD5E8' : '#f0ebe0',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       fontSize: size * 0.38, fontWeight: 700, color: NAVY,
-      boxShadow: selected ? `0 0 0 3px ${GOLD}55` : 'none',
+      boxShadow: selected ? `0 0 0 3px ${CORAL}33` : 'none',
       transition: 'all 0.15s', position: 'relative'
     }}>
       {profile.avatar_url && !imgError
@@ -32,9 +35,9 @@ function Avatar({ profile, size = 44, selected = false, onClick }) {
       {selected && (
         <div style={{
           position: 'absolute', bottom: -1, right: -1,
-          background: GOLD, borderRadius: '50%', width: 16, height: 16,
+          background: CORAL, borderRadius: '50%', width: 16, height: 16,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: 9, color: NAVY, fontWeight: 900, border: '1.5px solid white'
+          fontSize: 9, color: 'white', fontWeight: 900, border: '1.5px solid white'
         }}>✓</div>
       )}
     </div>
@@ -46,8 +49,8 @@ function StarRating({ value, onChange }) {
     <div style={{ display: 'flex', gap: 8 }}>
       {[1,2,3,4,5].map(star => (
         <div key={star} onClick={() => onChange(star)} style={{
-          fontSize: 32, cursor: 'pointer',
-          opacity: star <= value ? 1 : 0.25,
+          fontSize: 30, cursor: 'pointer',
+          opacity: star <= value ? 1 : 0.2,
           transition: 'opacity 0.15s'
         }}>⭐</div>
       ))}
@@ -55,16 +58,13 @@ function StarRating({ value, onChange }) {
   )
 }
 
-function Field({ emoji, label, sublabel, children }) {
+function Section({ emoji, label, sublabel, children }) {
   return (
-    <div style={{
-      background: 'white', borderRadius: 16, padding: '14px 16px',
-      marginBottom: 10, border: '1px solid #e8e0d0'
-    }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-        <span style={{ fontSize: 20 }}>{emoji}</span>
+    <div style={{ background: 'white', borderRadius: 20, padding: '16px 16px', marginBottom: 10, boxShadow: '0 2px 10px rgba(0,0,0,0.06)' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+        <span style={{ fontSize: 22 }}>{emoji}</span>
         <div>
-          <div style={{ fontSize: 14, fontWeight: 700, color: NAVY }}>{label}</div>
+          <div style={{ fontSize: 14, fontWeight: 800, color: NAVY }}>{label}</div>
           {sublabel && <div style={{ fontSize: 11, color: '#8a7a60', marginTop: 1 }}>{sublabel}</div>}
         </div>
       </div>
@@ -75,79 +75,54 @@ function Field({ emoji, label, sublabel, children }) {
 
 const inputStyle = {
   width: '100%', padding: '10px 12px',
-  border: '1px solid #e0d8c8', borderRadius: 10,
+  border: '1.5px solid #ede8e0', borderRadius: 12,
   fontSize: 14, color: NAVY, background: '#faf8f4',
   fontFamily: 'var(--font-heebo), sans-serif',
   boxSizing: 'border-box', outline: 'none'
 }
 
 const textareaStyle = {
-  ...inputStyle, resize: 'vertical',
-  minHeight: 80, lineHeight: 1.6
+  ...inputStyle, resize: 'vertical', minHeight: 80, lineHeight: 1.6
 }
 
-function MediaPreview({ files, onRemove, onSetCover }) {
+function MediaPreview({ files, attachments, onRemoveMedia, onRemoveAttachment, onSetCover }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+      {/* Cover image */}
       {files.length > 0 && (
         <div style={{ position: 'relative' }}>
           {files[0].type.startsWith('video/') ? (
-            <video
-              src={files[0].preview}
-              controls
-              style={{ width: '100%', borderRadius: 12, maxHeight: 220, objectFit: 'cover', display: 'block' }}
-            />
+            <video src={files[0].preview} controls style={{ width: '100%', borderRadius: 14, maxHeight: 220, objectFit: 'cover', display: 'block' }} />
           ) : (
-            <img
-              src={files[0].preview}
-              alt="cover"
-              style={{ width: '100%', borderRadius: 12, maxHeight: 220, objectFit: 'cover', display: 'block' }}
-            />
+            <img src={files[0].preview} alt="cover" style={{ width: '100%', borderRadius: 14, maxHeight: 220, objectFit: 'cover', display: 'block' }} />
           )}
-          <div style={{
-            position: 'absolute', top: 8, right: 8,
-            background: GOLD, color: NAVY,
-            fontSize: 10, fontWeight: 700, padding: '3px 8px',
-            borderRadius: 20
-          }}>תמונת שער</div>
-          <button onClick={() => onRemove(0)} style={{
-            position: 'absolute', top: 8, left: 8,
-            background: 'rgba(10,22,40,0.7)', border: 'none',
-            borderRadius: '50%', width: 28, height: 28,
-            color: 'white', cursor: 'pointer', fontSize: 14,
-            display: 'flex', alignItems: 'center', justifyContent: 'center'
-          }}>✕</button>
+          <div style={{ position: 'absolute', top: 8, right: 8, background: CORAL, color: 'white', fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 20 }}>שער</div>
+          <button onClick={() => onRemoveMedia(0)} style={{ position: 'absolute', top: 8, left: 8, background: 'rgba(0,0,0,0.6)', border: 'none', borderRadius: '50%', width: 28, height: 28, color: 'white', cursor: 'pointer', fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
         </div>
       )}
+      {/* Additional media thumbnails */}
       {files.length > 1 && (
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           {files.slice(1).map((f, i) => (
-            <div key={i} style={{ position: 'relative', width: 72, height: 72, flexShrink: 0 }}>
-              {f.type.startsWith('video/') ? (
-                <video
-                  src={f.preview}
-                  style={{ width: 72, height: 72, borderRadius: 10, objectFit: 'cover', display: 'block' }}
-                />
-              ) : (
-                <img
-                  src={f.preview}
-                  alt={`media-${i}`}
-                  style={{ width: 72, height: 72, borderRadius: 10, objectFit: 'cover', display: 'block' }}
-                />
-              )}
-              <button onClick={() => onRemove(i + 1)} style={{
-                position: 'absolute', top: -4, left: -4,
-                background: NAVY, border: 'none', borderRadius: '50%',
-                width: 20, height: 20, color: 'white', cursor: 'pointer',
-                fontSize: 10, display: 'flex', alignItems: 'center', justifyContent: 'center'
-              }}>✕</button>
-              <button onClick={() => onSetCover(i + 1)} style={{
-                position: 'absolute', bottom: -4, right: -4,
-                background: GOLD, border: 'none', borderRadius: '50%',
-                width: 20, height: 20, color: NAVY, cursor: 'pointer',
-                fontSize: 10, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontWeight: 900
-              }}>★</button>
+            <div key={i} style={{ position: 'relative', width: 72, height: 72 }}>
+              {f.type.startsWith('video/')
+                ? <video src={f.preview} style={{ width: 72, height: 72, borderRadius: 10, objectFit: 'cover', display: 'block' }} />
+                : <img src={f.preview} alt="" style={{ width: 72, height: 72, borderRadius: 10, objectFit: 'cover', display: 'block' }} />
+              }
+              <button onClick={() => onRemoveMedia(i + 1)} style={{ position: 'absolute', top: -4, left: -4, background: NAVY, border: 'none', borderRadius: '50%', width: 20, height: 20, color: 'white', cursor: 'pointer', fontSize: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
+              <button onClick={() => onSetCover(i + 1)} style={{ position: 'absolute', bottom: -4, right: -4, background: GOLD, border: 'none', borderRadius: '50%', width: 20, height: 20, color: NAVY, cursor: 'pointer', fontSize: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900 }}>★</button>
+            </div>
+          ))}
+        </div>
+      )}
+      {/* File attachments */}
+      {attachments.length > 0 && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          {attachments.map((f, i) => (
+            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#f5f0e8', borderRadius: 10, padding: '8px 12px' }}>
+              <span style={{ fontSize: 18 }}>📎</span>
+              <div style={{ flex: 1, fontSize: 12, fontWeight: 600, color: NAVY, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.name}</div>
+              <button onClick={() => onRemoveAttachment(i)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#a09080', fontSize: 14 }}>✕</button>
             </div>
           ))}
         </div>
@@ -162,7 +137,11 @@ function TazkirForm() {
   const [loading, setLoading] = useState(false)
   const [saved, setSaved] = useState(false)
   const [mediaFiles, setMediaFiles] = useState([])
+  const [attachFiles, setAttachFiles] = useState([])
   const [uploading, setUploading] = useState(false)
+  const [linkUrl, setLinkUrl] = useState('')
+  const [imgUrl, setImgUrl] = useState('')
+  const [showLinkHelper, setShowLinkHelper] = useState(false)
   const [form, setForm] = useState({
     title: '',
     what_happened: '',
@@ -188,14 +167,19 @@ function TazkirForm() {
     if (!profile) { router.push('/login'); return }
     setCurrentProfile(profile)
 
-    const { data: profileData } = await supabase
-      .from('profiles').select('*').eq('active', true)
+    const { data: profileData } = await supabase.from('profiles').select('*').eq('active', true)
     if (profileData) setProfiles(profileData)
 
-    const missionId = searchParams.get('mission')
+    // Handle URL params (search, Web Share Target, direct link)
+    const sharedTitle = searchParams.get('title') || searchParams.get('text')
+    const sharedUrl   = searchParams.get('url')
+    const missionId   = searchParams.get('mission')
+
+    if (sharedTitle) setForm(f => ({ ...f, title: sharedTitle }))
+    if (sharedUrl)   setLinkUrl(sharedUrl)
+
     if (missionId) {
-      const { data: mission } = await supabase
-        .from('missions').select('title').eq('id', missionId).single()
+      const { data: mission } = await supabase.from('missions').select('title').eq('id', missionId).single()
       if (mission) setForm(f => ({ ...f, title: `מבצע: ${mission.title}` }))
     }
 
@@ -205,305 +189,287 @@ function TazkirForm() {
   }
 
   const toggleParticipant = (id) => {
-    setParticipants(prev =>
-      prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
-    )
+    setParticipants(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id])
   }
 
   const handleMediaSelect = (e) => {
     const selected = Array.from(e.target.files)
     if (!selected.length) return
-    const newFiles = selected.map(file => ({
-      file,
-      preview: URL.createObjectURL(file),
-      type: file.type,
-      name: file.name,
-    }))
+    const newFiles = selected.map(file => ({ file, preview: URL.createObjectURL(file), type: file.type, name: file.name }))
     setMediaFiles(prev => [...prev, ...newFiles])
     e.target.value = ''
   }
 
+  const handleAttachSelect = (e) => {
+    const selected = Array.from(e.target.files)
+    if (!selected.length) return
+    setAttachFiles(prev => [...prev, ...selected])
+    e.target.value = ''
+  }
+
   const removeMedia = (index) => {
-    setMediaFiles(prev => {
-      const updated = [...prev]
-      URL.revokeObjectURL(updated[index].preview)
-      updated.splice(index, 1)
-      return updated
-    })
+    setMediaFiles(prev => { const u = [...prev]; URL.revokeObjectURL(u[index].preview); u.splice(index,1); return u })
   }
-
+  const removeAttachment = (index) => setAttachFiles(prev => prev.filter((_, i) => i !== index))
   const setCover = (index) => {
-    setMediaFiles(prev => {
-      const updated = [...prev]
-      const [item] = updated.splice(index, 1)
-      return [item, ...updated]
-    })
+    setMediaFiles(prev => { const u = [...prev]; const [item] = u.splice(index,1); return [item, ...u] })
   }
 
-  const uploadAllMedia = async () => {
-    if (!mediaFiles.length) return []
+  const uploadAllFiles = async () => {
     setUploading(true)
-    const urls = []
+    const mediaUrls = []
+
+    // Upload media (images/videos)
     for (const media of mediaFiles) {
       const ext = media.name.split('.').pop()
-      const filename = `tahkirim/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
-      const { error } = await supabase.storage
-        .from('family-media')
-        .upload(filename, media.file, { contentType: media.type })
+      const path = `tahkirim/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
+      const { error } = await supabase.storage.from('family-media').upload(path, media.file, { contentType: media.type })
       if (!error) {
-        const { data } = supabase.storage.from('family-media').getPublicUrl(filename)
-        urls.push(data.publicUrl)
+        const { data } = supabase.storage.from('family-media').getPublicUrl(path)
+        mediaUrls.push(data.publicUrl)
       }
     }
+
+    // Upload file attachments
+    for (const file of attachFiles) {
+      const ext = file.name.split('.').pop()
+      const path = `tahkirim/files/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
+      const { error } = await supabase.storage.from('family-media').upload(path, file, { contentType: file.type })
+      if (!error) {
+        const { data } = supabase.storage.from('family-media').getPublicUrl(path)
+        mediaUrls.push(data.publicUrl)
+      }
+    }
+
+    // Add manually entered image URL
+    if (imgUrl.trim()) mediaUrls.unshift(imgUrl.trim())
+
     setUploading(false)
-    return urls
+    return mediaUrls
   }
 
   const handleSubmit = async () => {
     if (!form.title.trim()) return
     setLoading(true)
 
-    const mediaUrls = await uploadAllMedia()
+    const allMediaUrls = await uploadAllFiles()
+    const participantNames = profiles.filter(p => participants.includes(p.id)).map(p => p.name)
 
-    const participantNames = profiles
-      .filter(p => participants.includes(p.id))
-      .map(p => p.name)
+    // Add link to content if provided
+    const contentWithLink = [form.what_happened, linkUrl.trim() ? `🔗 ${linkUrl.trim()}` : ''].filter(Boolean).join('\n\n')
 
-    const { data: tazkir, error: tazkirError } = await supabase
-      .from('tahkirim')
-      .insert({
-        title: form.title,
-        what_happened: form.what_happened,
-        funny_moment: form.funny_moment,
-        best_moment: form.best_moment,
-        quote: form.quote,
-        rating: form.rating || null,
-        would_repeat: form.would_repeat,
-        participants: participantNames,
-        created_by: currentProfile.id,
-        media_urls: mediaUrls,
-      })
-      .select()
-      .single()
+    const { data: tazkir, error } = await supabase.from('tahkirim').insert({
+      title: form.title,
+      what_happened: contentWithLink || form.what_happened,
+      funny_moment: form.funny_moment,
+      best_moment: form.best_moment,
+      quote: form.quote,
+      rating: form.rating || null,
+      would_repeat: form.would_repeat,
+      participants: participantNames,
+      created_by: currentProfile.id,
+      media_urls: allMediaUrls,
+    }).select().single()
 
-    if (!tazkirError && tazkir) {
+    if (!error && tazkir) {
       await supabase.from('feed_posts').insert({
         type: 'tahkir',
         title: form.title,
-        content: form.funny_moment || form.what_happened || '',
+        content: form.what_happened || '',
+        best_moment: form.best_moment || null,
+        funny_moment: form.funny_moment || null,
+        quote: form.quote || null,
+        rating: form.rating || null,
         participants: participantNames,
         linked_type: 'tahkir',
         linked_id: tazkir.id,
         created_by: currentProfile.id,
-        media_urls: mediaUrls,
+        media_urls: allMediaUrls,
       })
     }
 
     setLoading(false)
-    if (!tazkirError) {
-      setSaved(true)
-      setTimeout(() => router.push('/feed'), 1800)
-    }
+    if (!error) { setSaved(true); setTimeout(() => router.push('/feed'), 1800) }
   }
 
   if (saved) return (
-    <div style={{
-      minHeight: '100vh', display: 'flex', alignItems: 'center',
-      justifyContent: 'center', background: NAVY,
-      fontFamily: 'var(--font-heebo), sans-serif', direction: 'rtl',
-      flexDirection: 'column', gap: 16, textAlign: 'center', padding: 24
-    }}>
-      <div style={{ fontSize: 56 }}>📝</div>
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: HEADER_BG, fontFamily: 'var(--font-heebo), sans-serif', direction: 'rtl', flexDirection: 'column', gap: 16, textAlign: 'center', padding: 24 }}>
+      <div style={{ fontSize: 64 }}>📝</div>
       <div style={{ fontSize: 24, fontWeight: 900, color: 'white' }}>התחקיר נשמר!</div>
-      <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.55)' }}>עובר לפיד המשפחה...</div>
+      <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.8)', fontWeight: 600 }}>עובר לפיד המשפחה...</div>
     </div>
   )
 
   return (
-    <div className="app-page" style={{
-      fontFamily: 'var(--font-heebo), sans-serif',
-      direction: 'rtl', background: CREAM,
-      minHeight: '100vh', paddingBottom: '2rem',
-      boxSizing: 'border-box'
-    }}>
+    <div className="app-page" style={{ fontFamily: 'var(--font-heebo), sans-serif', direction: 'rtl', background: PAGE_BG, minHeight: '100vh', paddingBottom: '5.5rem', boxSizing: 'border-box' }}>
 
-      <div style={{
-        background: NAVY, padding: '20px 16px 24px',
-        borderRadius: '0 0 24px 24px', marginBottom: 16
-      }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-          <div style={{ fontSize: 22, fontWeight: 900, color: 'white' }}>📝 תחקיר מבצע</div>
-          <a href="/" style={{ color: 'rgba(255,255,255,0.45)', textDecoration: 'none', fontSize: 13 }}>← בית</a>
-        </div>
-        <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.85)', fontWeight: 600 }}>
-          תעדו את מה שקרה — לפני שישכחו
+      {/* Header */}
+      <div style={{ background: HEADER_BG, padding: '20px 16px 24px', borderRadius: '0 0 24px 24px', marginBottom: 16, position: 'relative', overflow: 'hidden' }}>
+        <div style={{ position: 'absolute', top: -30, left: -30, width: 120, height: 120, borderRadius: '50%', background: 'rgba(255,255,255,0.1)' }} />
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'relative', zIndex: 1 }}>
+          <div>
+            <div style={{ fontSize: 22, fontWeight: 900, color: 'white' }}>📝 תחקיר חדש</div>
+            <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.88)', marginTop: 2, fontWeight: 600 }}>
+              {form.title.trim() ? form.title : 'תעדו את מה שקרה — לפני שישכחו'}
+            </div>
+          </div>
+          <button onClick={() => router.back()} style={{ background: 'rgba(255,255,255,0.2)', border: 'none', borderRadius: 20, color: 'white', fontSize: 12, padding: '6px 14px', cursor: 'pointer', fontFamily: 'var(--font-heebo), sans-serif', fontWeight: 700 }}>← חזרה</button>
         </div>
       </div>
 
-      <div style={{ padding: '0 12px', boxSizing: 'border-box' }}>
+      <div className="app-body" style={{ boxSizing: 'border-box' }}>
 
-        <Field emoji="🎯" label="שם המבצע" sublabel="איך נקרא למה שעשיתם?">
-          <input
-            value={form.title}
-            onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
-            placeholder="למשל: מבצע הכריות הגדול"
-            style={inputStyle}
-          />
-        </Field>
+        {/* Title */}
+        <Section emoji="🎯" label="שם המבצע" sublabel="איך נקרא למה שעשיתם?">
+          <input value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
+            placeholder="למשל: מבצע הכריות הגדול" style={inputStyle} />
+        </Section>
 
-        <Field emoji="👥" label="צוות המבצע" sublabel="מי היה שם?">
-          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+        {/* Participants */}
+        <Section emoji="👥" label="צוות המבצע" sublabel="מי היה שם?">
+          <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>
             {profiles.map(p => (
               <div key={p.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-                <Avatar
-                  profile={p} size={46}
-                  selected={participants.includes(p.id)}
-                  onClick={() => toggleParticipant(p.id)}
-                />
-                <span style={{ fontSize: 11, fontWeight: 600, color: participants.includes(p.id) ? NAVY : '#a09080' }}>
-                  {p.name}
-                </span>
+                <Avatar profile={p} size={48} selected={participants.includes(p.id)} onClick={() => toggleParticipant(p.id)} />
+                <span style={{ fontSize: 11, fontWeight: 600, color: participants.includes(p.id) ? CORAL : '#a09080' }}>{p.name}</span>
               </div>
             ))}
           </div>
-        </Field>
+        </Section>
 
-        <Field emoji="📸" label="ראיות מהשטח" sublabel="תמונות וסרטונים מהמבצע">
-          <input
-            type="file"
-            accept="image/*,video/*"
-            capture="environment"
-            onChange={handleMediaSelect}
-            style={{ display: 'none' }}
-            id="media-camera"
-          />
-          <input
-            type="file"
-            accept="image/*,video/*"
-            multiple
-            onChange={handleMediaSelect}
-            style={{ display: 'none' }}
-            id="media-gallery"
-          />
+        {/* Media — 4 separate buttons */}
+        <Section emoji="📸" label="ראיות מהשטח" sublabel="תמונות, סרטונים וקבצים">
+          {/* File inputs */}
+          <input type="file" accept="image/*" capture="environment" onChange={handleMediaSelect} style={{ display: 'none' }} id="cam-photo" />
+          <input type="file" accept="video/*" capture="environment" onChange={handleMediaSelect} style={{ display: 'none' }} id="cam-video" />
+          <input type="file" accept="image/*,video/*" multiple onChange={handleMediaSelect} style={{ display: 'none' }} id="media-gallery" />
+          <input type="file" accept="*/*" multiple onChange={handleAttachSelect} style={{ display: 'none' }} id="file-attach" />
 
-          {mediaFiles.length > 0 && (
+          {(mediaFiles.length > 0 || attachFiles.length > 0) && (
             <div style={{ marginBottom: 10 }}>
-              <MediaPreview
-                files={mediaFiles}
-                onRemove={removeMedia}
-                onSetCover={setCover}
-              />
+              <MediaPreview files={mediaFiles} attachments={attachFiles} onRemoveMedia={removeMedia} onRemoveAttachment={removeAttachment} onSetCover={setCover} />
             </div>
           )}
 
-          <div style={{ display: 'flex', gap: 10 }}>
-            <label htmlFor="media-camera" style={{
-              flex: 1, padding: '11px', background: '#f0ebe0',
-              borderRadius: 12, border: '1.5px dashed #c8bfb0',
-              textAlign: 'center', cursor: 'pointer',
-              fontSize: 13, fontWeight: 600, color: '#6b5e4e'
-            }}>
-              📷 מצלמה
-            </label>
-            <label htmlFor="media-gallery" style={{
-              flex: 1, padding: '11px', background: '#f0ebe0',
-              borderRadius: 12, border: '1.5px dashed #c8bfb0',
-              textAlign: 'center', cursor: 'pointer',
-              fontSize: 13, fontWeight: 600, color: '#6b5e4e'
-            }}>
-              🖼️ גלריה
-            </label>
-          </div>
-
-          {mediaFiles.length > 0 && (
-            <div style={{ fontSize: 11, color: '#8a7a60', marginTop: 6, textAlign: 'center' }}>
-              {mediaFiles.length} קבצים · הראשון הוא תמונת השער · לחץ ★ להחלפה
-            </div>
-          )}
-        </Field>
-
-        <Field emoji="📖" label="מה קרה?" sublabel="ספרו את הסיפור">
-          <textarea
-            value={form.what_happened}
-            onChange={e => setForm(f => ({ ...f, what_happened: e.target.value }))}
-            placeholder="תארו מה עשיתם, לאן הלכתם, מה קרה..."
-            style={textareaStyle}
-          />
-        </Field>
-
-        <Field emoji="🌟" label="רגע השיא" sublabel="הרגע הכי טוב">
-          <input
-            value={form.best_moment}
-            onChange={e => setForm(f => ({ ...f, best_moment: e.target.value }))}
-            placeholder="הרגע שכולם יזכרו..."
-            style={inputStyle}
-          />
-        </Field>
-
-        <Field emoji="😂" label="תקלה מצחיקה" sublabel="מה גרם לכולם לצחוק?">
-          <input
-            value={form.funny_moment}
-            onChange={e => setForm(f => ({ ...f, funny_moment: e.target.value }))}
-            placeholder="הרגע המביך / המצחיק / המפתיע..."
-            style={inputStyle}
-          />
-        </Field>
-
-        <Field emoji="💬" label="משפט שחייבים לזכור" sublabel="ציטוט מהמבצע">
-          <input
-            value={form.quote}
-            onChange={e => setForm(f => ({ ...f, quote: e.target.value }))}
-            placeholder='״משהו שאחד אמר שגרם לכולם...״'
-            style={inputStyle}
-          />
-        </Field>
-
-        <Field emoji="⭐" label="כמה כוכבים קיבל המבצע?">
-          <StarRating value={form.rating} onChange={v => setForm(f => ({ ...f, rating: v }))} />
-        </Field>
-
-        <Field emoji="🔁" label="האם נחזור על זה?">
-          <div style={{ display: 'flex', gap: 10 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
             {[
-              { value: true,  label: 'בהחלט! 🙌' },
-              { value: false, label: 'חד פעמי 😅' },
-            ].map(opt => (
-              <button key={String(opt.value)}
-                onClick={() => setForm(f => ({ ...f, would_repeat: opt.value }))}
-                style={{
-                  flex: 1, padding: '10px', borderRadius: 12,
-                  border: 'none', cursor: 'pointer',
-                  background: form.would_repeat === opt.value ? NAVY : '#f0ebe0',
-                  color: form.would_repeat === opt.value ? 'white' : '#6b5e4e',
-                  fontWeight: 700, fontSize: 14,
-                  fontFamily: 'var(--font-heebo), sans-serif',
-                  transition: 'all 0.15s'
-                }}>
-                {opt.label}
-              </button>
+              { id: 'cam-photo',  emoji: '📷', label: 'צלם תמונה' },
+              { id: 'cam-video',  emoji: '🎬', label: 'צלם סרטון' },
+              { id: 'media-gallery', emoji: '🖼️', label: 'גלריה' },
+              { id: 'file-attach',   emoji: '📎', label: 'קבצים' },
+            ].map(btn => (
+              <label key={btn.id} htmlFor={btn.id} style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                padding: '11px 8px', background: '#faf8f4',
+                borderRadius: 14, border: '1.5px dashed #d8d0c8',
+                textAlign: 'center', cursor: 'pointer',
+                fontSize: 13, fontWeight: 700, color: '#6b5e4e'
+              }}>{btn.emoji} {btn.label}</label>
             ))}
           </div>
-        </Field>
 
-        <button
-          onClick={handleSubmit}
-          disabled={loading || !form.title.trim()}
-          style={{
-            width: '100%', padding: '15px',
-            background: form.title.trim() ? GOLD : '#e0d8c8',
-            color: form.title.trim() ? NAVY : '#a09080',
-            border: 'none', borderRadius: 16,
-            cursor: form.title.trim() ? 'pointer' : 'default',
-            fontWeight: 900, fontSize: 17,
-            fontFamily: 'var(--font-heebo), sans-serif',
-            boxSizing: 'border-box', marginTop: 4
-          }}>
-          {loading
-            ? (uploading ? `מעלה ${mediaFiles.length} קבצים...` : 'שומר...')
-            : '📁 שמור לזיכרונות המשפחה'}
+          {/* Image from URL */}
+          <div style={{ marginTop: 10 }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: '#888', marginBottom: 4 }}>🌐 קישור לתמונה מהאינטרנט</div>
+            <input value={imgUrl} onChange={e => setImgUrl(e.target.value)}
+              placeholder="הדבק כתובת תמונה (https://...)"
+              type="url"
+              style={{ ...inputStyle, fontSize: 12 }} />
+            {imgUrl && imgUrl.startsWith('http') && (
+              <img src={imgUrl} alt="preview" onError={() => {}} style={{ width: '100%', maxHeight: 120, objectFit: 'cover', borderRadius: 10, marginTop: 6, display: 'block' }} />
+            )}
+          </div>
+
+          {(mediaFiles.length > 0 || attachFiles.length > 0) && (
+            <div style={{ fontSize: 11, color: '#8a7a60', marginTop: 6, textAlign: 'center' }}>
+              {mediaFiles.length} מדיה · {attachFiles.length} קבצים · הראשון הוא תמונת השער · ★ להחלפה
+            </div>
+          )}
+        </Section>
+
+        {/* Web link */}
+        <Section emoji="🔗" label="קישור לאינטרנט" sublabel="כתבה, אתר, הזמנה, מפה...">
+          <input value={linkUrl} onChange={e => setLinkUrl(e.target.value)}
+            placeholder="https://..." type="url"
+            style={inputStyle} />
+          {linkUrl && linkUrl.startsWith('http') && (
+            <a href={linkUrl} target="_blank" rel="noopener noreferrer" style={{
+              display: 'flex', alignItems: 'center', gap: 8, marginTop: 8,
+              padding: '8px 12px', background: '#f0f8ff', borderRadius: 10,
+              textDecoration: 'none', color: '#3B9FE8', fontSize: 12, fontWeight: 600
+            }}>🔗 {linkUrl.length > 40 ? linkUrl.slice(0,40) + '...' : linkUrl}</a>
+          )}
+          <button onClick={() => setShowLinkHelper(v => !v)} style={{
+            marginTop: 8, background: 'none', border: 'none', cursor: 'pointer',
+            color: '#9B7FD4', fontSize: 12, fontWeight: 600,
+            fontFamily: 'var(--font-heebo), sans-serif', padding: 0
+          }}>{showLinkHelper ? '↑ סגור' : '💡 איך לשתף מגוגל / יוטיוב / ויז?'}</button>
+          {showLinkHelper && (
+            <div style={{ background: '#f5f0ff', borderRadius: 12, padding: '10px 12px', marginTop: 6, fontSize: 12, color: '#6b5e4e', lineHeight: 1.7 }}>
+              1. פתחו את הדף/סרטון/מפה שרוצים לשמור<br/>
+              2. לחצו "שתף" ← "העתק קישור"<br/>
+              3. חזרו לכאן והדביקו את הקישור למעלה<br/>
+              <b>💡 טיפ:</b> אם האפליקציה מותקנת, תוכלו לבחור "שתף → משפחת רמז" ישירות!
+            </div>
+          )}
+        </Section>
+
+        {/* Story */}
+        <Section emoji="📖" label="מה קרה?" sublabel="ספרו את הסיפור">
+          <textarea value={form.what_happened} onChange={e => setForm(f => ({ ...f, what_happened: e.target.value }))}
+            placeholder="תארו מה עשיתם, לאן הלכתם, מה קרה..." style={textareaStyle} />
+        </Section>
+
+        <Section emoji="🌟" label="רגע השיא" sublabel="הרגע הכי טוב">
+          <input value={form.best_moment} onChange={e => setForm(f => ({ ...f, best_moment: e.target.value }))}
+            placeholder="הרגע שכולם יזכרו..." style={inputStyle} />
+        </Section>
+
+        <Section emoji="😂" label="תקלה מצחיקה" sublabel="מה גרם לכולם לצחוק?">
+          <input value={form.funny_moment} onChange={e => setForm(f => ({ ...f, funny_moment: e.target.value }))}
+            placeholder="הרגע המביך / המצחיק / המפתיע..." style={inputStyle} />
+        </Section>
+
+        <Section emoji="💬" label="משפט שחייבים לזכור" sublabel="ציטוט מהמבצע">
+          <input value={form.quote} onChange={e => setForm(f => ({ ...f, quote: e.target.value }))}
+            placeholder='״משהו שאחד אמר שגרם לכולם...״' style={inputStyle} />
+        </Section>
+
+        <Section emoji="⭐" label="כמה כוכבים קיבל המבצע?">
+          <StarRating value={form.rating} onChange={v => setForm(f => ({ ...f, rating: v }))} />
+        </Section>
+
+        <Section emoji="🔁" label="האם נחזור על זה?">
+          <div style={{ display: 'flex', gap: 10 }}>
+            {[{ value: true, label: 'בהחלט! 🙌' }, { value: false, label: 'חד פעמי 😅' }].map(opt => (
+              <button key={String(opt.value)} onClick={() => setForm(f => ({ ...f, would_repeat: opt.value }))} style={{
+                flex: 1, padding: '11px', borderRadius: 14, border: 'none', cursor: 'pointer',
+                background: form.would_repeat === opt.value ? CORAL : '#f0ebe0',
+                color: form.would_repeat === opt.value ? 'white' : '#6b5e4e',
+                fontWeight: 700, fontSize: 14, fontFamily: 'var(--font-heebo), sans-serif',
+                boxShadow: form.would_repeat === opt.value ? '0 4px 12px rgba(255,107,107,0.3)' : 'none',
+                transition: 'all 0.15s'
+              }}>{opt.label}</button>
+            ))}
+          </div>
+        </Section>
+
+        {/* Save */}
+        <button onClick={handleSubmit} disabled={loading || !form.title.trim()} style={{
+          width: '100%', padding: '15px',
+          background: form.title.trim() ? `linear-gradient(135deg, ${CORAL}, #FF8E53)` : '#e0d8c8',
+          color: 'white', border: 'none', borderRadius: 50,
+          cursor: form.title.trim() ? 'pointer' : 'default',
+          fontWeight: 900, fontSize: 16,
+          fontFamily: 'var(--font-heebo), sans-serif',
+          boxSizing: 'border-box', marginTop: 8,
+          boxShadow: form.title.trim() ? '0 4px 16px rgba(255,107,107,0.4)' : 'none'
+        }}>
+          {loading ? (uploading ? `⏳ מעלה קבצים...` : '💾 שומר...') : '📁 שמור לזיכרונות המשפחה'}
         </button>
 
       </div>
+      <BottomNav />
     </div>
   )
 }
@@ -511,10 +477,7 @@ function TazkirForm() {
 export default function NewTazkirPage() {
   return (
     <Suspense fallback={
-      <div style={{
-        minHeight: '100vh', display: 'flex',
-        alignItems: 'center', justifyContent: 'center', background: CREAM
-      }}>
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: PAGE_BG }}>
         <div style={{ fontSize: 32 }}>📝</div>
       </div>
     }>

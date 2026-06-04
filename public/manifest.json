@@ -5,7 +5,7 @@
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0a1628",
-  "theme_color": "#0a1628",
+  "theme_color": "#FF6B6B",
   "orientation": "portrait",
   "lang": "he",
   "dir": "rtl",
@@ -22,5 +22,14 @@
       "type": "image/png",
       "purpose": "any maskable"
     }
-  ]
+  ],
+  "share_target": {
+    "action": "/tazkir/new",
+    "method": "GET",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url"
+    }
+  }
 }

@@ -382,14 +382,14 @@ export default function FeedPage() {
               הסיפור של משפחת רמז
             </div>
           </div>
-          <a href="/tazkir/new" style={{
-            background: 'white', color: CORAL, borderRadius: 50,
-            padding: '9px 18px', textDecoration: 'none',
-            fontWeight: 800, fontSize: 14,
-            boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+          <button onClick={() => router.push('/tazkir/new')} style={{
+            background: 'white', color: CORAL, border: 'none',
+            borderRadius: 50, padding: '7px 16px', cursor: 'pointer',
+            fontWeight: 700, fontSize: 13,
+            boxShadow: '0 4px 12px rgba(255,107,107,0.35)',
             fontFamily: 'var(--font-heebo), sans-serif',
-            whiteSpace: 'nowrap'
-          }}>+ תחקיר</a>
+            position: 'relative', zIndex: 2
+          }}>+ תחקיר</button>
         </div>
 
         {/* Type filter */}
@@ -496,21 +496,7 @@ export default function FeedPage() {
         )}
       </div>
 
-      {/* Floating action button — always visible */}
-      <a href="/tazkir/new" style={{
-        position: 'fixed', bottom: 80, left: 20, zIndex: 50,
-        background: `linear-gradient(135deg, #4ECDC4, #2EBFB8)`,
-        color: 'white', borderRadius: 50,
-        padding: '12px 20px', textDecoration: 'none',
-        fontWeight: 800, fontSize: 14,
-        boxShadow: '0 4px 16px rgba(78,205,196,0.45)',
-        fontFamily: 'var(--font-heebo), sans-serif',
-        display: 'flex', alignItems: 'center', gap: 6
-      }}>
-        <span style={{ fontSize: 18 }}>📝</span> תחקיר חדש
-      </a>
-
-      <BottomNav />
+<BottomNav />
     </div>
   )
 }
