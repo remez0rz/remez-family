@@ -142,8 +142,8 @@ function TazkirForm() {
   const [linkUrl, setLinkUrl] = useState('')
   const [imgUrl, setImgUrl] = useState('')
   const [showLinkHelper, setShowLinkHelper] = useState(false)
-  const [suggestions, setSuggestions] = useState([])
-  const [showSuggestions, setShowSuggestions] = useState(false)
+  const [ogPreview, setOgPreview] = useState(null)
+  const [ogLoading, setOgLoading] = useState(false)
   const [form, setForm] = useState({
     title: '',
     what_happened: '',
@@ -172,16 +172,6 @@ function TazkirForm() {
     const { data: profileData } = await supabase.from('profiles').select('*').eq('active', true)
     if (profileData) setProfiles(profileData)
 
-    // Load autocomplete suggestions: mission titles + recent tazkir titles
-    const [{ data: missions }, { data: recentTahkir }] = await Promise.all([
-      supabase.from('missions').select('title').eq('is_active', true).order('points', { ascending: false }).limit(30),
-      supabase.from('tahkirim').select('title').order('created_at', { ascending: false }).limit(20)
-    ])
-    const allSuggestions = [
-      ...(recentTahkir || []).map(t => t.title),
-      ...(missions || []).map(m => m.title),
-    ].filter(Boolean)
-    setSuggestions([...new Set(allSuggestions)])  // deduplicate
 
     // Handle URL params (search, Web Share Target, direct link)
     const sharedTitle = searchParams.get('title') || searchParams.get('text')
@@ -200,6 +190,19 @@ function TazkirForm() {
     if (memberId) setParticipants([memberId])
     else setParticipants([profile.id])
   }
+
+  const fetchOGPreview = async (url) => {
+    if (!url || !url.startsWith('http')) { setOgPreview(null); return }
+    setOgLoading(true)
+    try {
+      const res = await fetch(`/api/og-preview?url=${encodeURIComponent(url)}`)
+      if (res.ok) { const data = await res.json(); setOgPreview(data) }
+      else setOgPreview(null)
+    } catch { setOgPreview(null) }
+    setOgLoading(false)
+  }
+
+  const isUrl = (s) => /^https?:\/\//i.test(s.trim())
 
   const toggleParticipant = (id) => {
     setParticipants(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id])
@@ -332,46 +335,11 @@ function TazkirForm() {
 
       <div className="app-body" style={{ boxSizing: 'border-box' }}>
 
-        {/* Title with autocomplete */}
+        {/* Title */}
         <Section emoji="🎯" label="שם המבצע" sublabel="איך נקרא למה שעשיתם?">
-          <div style={{ position: 'relative' }}>
-            <input
-              value={form.title}
-              onChange={e => { setForm(f => ({ ...f, title: e.target.value })); setShowSuggestions(true) }}
-              onFocus={() => setShowSuggestions(true)}
-              onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
-              placeholder="למשל: מבצע הכריות הגדול"
-              autoComplete="off"
-              style={inputStyle}
-            />
-            {showSuggestions && suggestions.length > 0 && (() => {
-              const filtered = suggestions.filter(s =>
-                s.toLowerCase().includes(form.title.toLowerCase()) && s !== form.title
-              ).slice(0, 6)
-              if (!filtered.length) return null
-              return (
-                <div style={{
-                  position: 'absolute', top: '100%', right: 0, left: 0, zIndex: 10,
-                  background: 'white', borderRadius: 12, boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
-                  border: '1px solid #ede8e0', overflow: 'hidden', marginTop: 4
-                }}>
-                  {filtered.map((s, i) => (
-                    <div key={i} onMouseDown={() => { setForm(f => ({ ...f, title: s })); setShowSuggestions(false) }}
-                      style={{
-                        padding: '10px 14px', fontSize: 13, color: NAVY, cursor: 'pointer',
-                        borderBottom: i < filtered.length - 1 ? '1px solid #f5f0e8' : 'none',
-                        background: 'white'
-                      }}
-                      onMouseEnter={e => e.target.style.background = '#faf8f4'}
-                      onMouseLeave={e => e.target.style.background = 'white'}
-                    >
-                      🔍 {s}
-                    </div>
-                  ))}
-                </div>
-              )
-            })()}
-          </div>
+          <input value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
+            placeholder="למשל: מבצע הכריות הגדול" name="tazkir-title"
+            style={inputStyle} />
         </Section>
 
         {/* Participants */}
@@ -417,15 +385,28 @@ function TazkirForm() {
             ))}
           </div>
 
-          {/* Image from URL */}
+          {/* Image from web */}
           <div style={{ marginTop: 10 }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: '#888', marginBottom: 4 }}>🌐 קישור לתמונה מהאינטרנט</div>
-            <input value={imgUrl} onChange={e => setImgUrl(e.target.value)}
-              placeholder="הדבק כתובת תמונה (https://...)"
-              type="url"
-              style={{ ...inputStyle, fontSize: 12 }} />
+            <div style={{ fontSize: 11, fontWeight: 700, color: '#888', marginBottom: 4 }}>🌐 תמונה מהאינטרנט</div>
+            <div style={{ display: 'flex', gap: 8, marginBottom: 6 }}>
+              <input value={imgUrl} onChange={e => setImgUrl(e.target.value)}
+                placeholder="חפש תמונה בגוגל ← הדבק כתובת תמונה..."
+                type="url"
+                style={{ ...inputStyle, fontSize: 12, flex: 1 }} />
+              <a href={`https://www.google.com/search?q=${encodeURIComponent(form.title || 'תמונה')}&tbm=isch`}
+                target="_blank" rel="noopener noreferrer" style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  padding: '0 10px', background: '#34A853', borderRadius: 12,
+                  color: 'white', textDecoration: 'none', fontSize: 16, flexShrink: 0,
+                  gap: 4
+                }} title="חפש תמונות בגוגל">🖼️</a>
+            </div>
+            <div style={{ fontSize: 10, color: '#a09080', marginBottom: 6 }}>
+              לחץ 🖼️ לחיפוש גוגל תמונות → לחץ לחיצה ארוכה על תמונה → העתק כתובת → הדבק כאן
+            </div>
             {imgUrl && imgUrl.startsWith('http') && (
-              <img src={imgUrl} alt="preview" onError={() => {}} style={{ width: '100%', maxHeight: 120, objectFit: 'cover', borderRadius: 10, marginTop: 6, display: 'block' }} />
+              <img src={imgUrl} alt="preview" onError={e => e.target.style.display='none'}
+                style={{ width: '100%', maxHeight: 140, objectFit: 'cover', borderRadius: 12, display: 'block' }} />
             )}
           </div>
 
@@ -436,31 +417,46 @@ function TazkirForm() {
           )}
         </Section>
 
-        {/* Web link */}
+        {/* Web link — with Google search + OG preview */}
         <Section emoji="🔗" label="קישור לאינטרנט" sublabel="כתבה, אתר, הזמנה, מפה...">
-          <input value={linkUrl} onChange={e => setLinkUrl(e.target.value)}
-            placeholder="https://..." type="url"
-            style={inputStyle} />
-          {linkUrl && linkUrl.startsWith('http') && (
-            <a href={linkUrl} target="_blank" rel="noopener noreferrer" style={{
-              display: 'flex', alignItems: 'center', gap: 8, marginTop: 8,
-              padding: '8px 12px', background: '#f0f8ff', borderRadius: 10,
-              textDecoration: 'none', color: '#3B9FE8', fontSize: 12, fontWeight: 600
-            }}>🔗 {linkUrl.length > 40 ? linkUrl.slice(0,40) + '...' : linkUrl}</a>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <input value={linkUrl}
+              onChange={e => { setLinkUrl(e.target.value); setOgPreview(null) }}
+              onBlur={e => fetchOGPreview(e.target.value)}
+              placeholder="חפש שם מקום, אתר, אירוע... או הדבק קישור"
+              style={{ ...inputStyle, flex: 1 }} />
+            <a href={`https://www.google.com/search?q=${encodeURIComponent(linkUrl || 'חיפוש')}`}
+              target="_blank" rel="noopener noreferrer" style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                padding: '0 12px', background: '#4285F4', borderRadius: 12,
+                color: 'white', textDecoration: 'none', fontSize: 18, flexShrink: 0
+              }} title="חפש בגוגל">🔍</a>
+          </div>
+
+          {/* OG preview card */}
+          {ogLoading && <div style={{ fontSize: 11, color: '#a09080', marginTop: 6, textAlign: 'center' }}>טוען תצוגה מקדימה...</div>}
+          {ogPreview && !ogLoading && (
+            <a href={ogPreview.url || linkUrl} target="_blank" rel="noopener noreferrer" style={{
+              display: 'flex', gap: 10, marginTop: 8, padding: '10px 12px',
+              background: '#f8f8f8', borderRadius: 12, border: '1px solid #e8e0d0',
+              textDecoration: 'none', overflow: 'hidden'
+            }}>
+              {ogPreview.image && <img src={ogPreview.image} alt="" style={{ width: 56, height: 56, borderRadius: 8, objectFit: 'cover', flexShrink: 0 }} onError={e => e.target.style.display='none'} />}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: NAVY, overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>{ogPreview.title}</div>
+                {ogPreview.description && <div style={{ fontSize: 11, color: '#8a7a60', marginTop: 2, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>{ogPreview.description}</div>}
+                <div style={{ fontSize: 10, color: '#3B9FE8', marginTop: 3 }}>{ogPreview.siteName || new URL(ogPreview.url || linkUrl).hostname}</div>
+              </div>
+            </a>
           )}
-          <button onClick={() => setShowLinkHelper(v => !v)} style={{
-            marginTop: 8, background: 'none', border: 'none', cursor: 'pointer',
-            color: '#9B7FD4', fontSize: 12, fontWeight: 600,
-            fontFamily: 'var(--font-heebo), sans-serif', padding: 0
-          }}>{showLinkHelper ? '↑ סגור' : '💡 איך לשתף מגוגל / יוטיוב / ויז?'}</button>
-          {showLinkHelper && (
-            <div style={{ background: '#f5f0ff', borderRadius: 12, padding: '10px 12px', marginTop: 6, fontSize: 12, color: '#6b5e4e', lineHeight: 1.7 }}>
-              1. פתחו את הדף/סרטון/מפה שרוצים לשמור<br/>
-              2. לחצו "שתף" ← "העתק קישור"<br/>
-              3. חזרו לכאן והדביקו את הקישור למעלה<br/>
-              <b>💡 טיפ:</b> אם האפליקציה מותקנת, תוכלו לבחור "שתף → משפחת רמז" ישירות!
-            </div>
+          {linkUrl && isUrl(linkUrl) && !ogPreview && !ogLoading && (
+            <a href={linkUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 6, fontSize: 12, color: '#3B9FE8', fontWeight: 600, textDecoration: 'none' }}>
+              🔗 {linkUrl.length > 50 ? linkUrl.slice(0,50)+'...' : linkUrl}
+            </a>
           )}
+          <div style={{ fontSize: 11, color: '#a09080', marginTop: 6 }}>
+            💡 טיפ: בכל אפליקציה ← "שתף" ← "משפחת רמז" ← הקישור מגיע ישירות לכאן
+          </div>
         </Section>
 
         {/* Story */}
