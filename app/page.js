@@ -676,7 +676,7 @@ function ParentHome({ currentProfile, profiles, activeAssignments, recentFeed, r
 
         {/* Grocery list + Calendar */}
         <div className="app-two-col">
-          <GroceryList isParent={isParent} />
+          <GroceryList isParent={true} />
           <FamilyCalendar />
         </div>
 
