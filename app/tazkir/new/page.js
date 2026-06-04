@@ -320,12 +320,11 @@ function TazkirForm() {
   )
 
   return (
-    <div style={{
-      width: '100%', maxWidth: 480, margin: '0 auto',
+    <div className="app-page" style={{
       fontFamily: 'var(--font-heebo), sans-serif',
       direction: 'rtl', background: CREAM,
       minHeight: '100vh', paddingBottom: '2rem',
-      boxSizing: 'border-box', overflowX: 'hidden'
+      boxSizing: 'border-box'
     }}>
 
       <div style={{

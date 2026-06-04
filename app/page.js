@@ -246,7 +246,7 @@ function KidHome({ currentProfile, missions, dailyMissions, completedTodayIds, r
         </div>
       </div>
 
-      <div style={{ padding: '0 14px' }}>
+      <div className="app-body">
 
         {/* All done for today */}
         {todayMissions.length === 0 && visibleDailyMissions.length === 0 && activeAssignments.length === 0 && (
@@ -528,7 +528,7 @@ function ParentHome({ currentProfile, profiles, activeAssignments, recentFeed, r
         )}
       </div>
 
-      <div style={{ padding: '0 14px' }}>
+      <div className="app-body">
 
         {/* Pending approvals banner */}
         {pending.length > 0 && (
@@ -965,12 +965,11 @@ export default function HomePage() {
   )
 
   return (
-    <div style={{
-      maxWidth: 480, margin: '0 auto',
+    <div className="app-page" style={{
       fontFamily: 'var(--font-heebo), sans-serif',
       direction: 'rtl', background: 'linear-gradient(135deg, #FFF9F0 0%, #FFF0F9 100%)',
       minHeight: '100vh', paddingBottom: '5.5rem',
-      boxSizing: 'border-box', overflowX: 'hidden'
+      boxSizing: 'border-box'
     }}>
       {/* View-as banner */}
       {isViewingAsKid && (

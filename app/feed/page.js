@@ -359,12 +359,11 @@ export default function FeedPage() {
   )
 
   return (
-    <div style={{
-      width: '100%', maxWidth: 480, margin: '0 auto',
+    <div className="app-page" style={{
       fontFamily: 'var(--font-heebo), sans-serif',
       direction: 'rtl', background: PAGE_BG,
       minHeight: '100vh', paddingBottom: '5.5rem',
-      boxSizing: 'border-box', overflowX: 'hidden'
+      boxSizing: 'border-box'
     }}>
 
       <ViewAsBanner viewAsProfile={viewAsProfile} />
@@ -436,7 +435,7 @@ export default function FeedPage() {
         </div>
       </div>
 
-      <div style={{ padding: '0 12px', boxSizing: 'border-box' }}>
+      <div className="app-body" style={{ boxSizing: 'border-box' }}>
         {posts.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '48px 20px' }}>
             <div style={{ fontSize: 48, marginBottom: 12 }}>📸</div>

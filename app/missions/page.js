@@ -559,12 +559,11 @@ export default function MissionsPage() {
   )
 
   return (
-    <div style={{
-      width: '100%', maxWidth: 480, margin: '0 auto',
+    <div className="app-page" style={{
       fontFamily: 'var(--font-heebo), sans-serif',
       direction: 'rtl', background: PAGE_BG,
       minHeight: '100vh', paddingBottom: '5.5rem',
-      boxSizing: 'border-box', overflowX: 'hidden'
+      boxSizing: 'border-box'
     }}>
 
       <ViewAsBanner viewAsProfile={viewAsProfile} />
@@ -669,7 +668,7 @@ export default function MissionsPage() {
         </div>
       </div>
 
-      <div style={{ padding: '0 12px', boxSizing: 'border-box' }}>
+      <div className="app-body" style={{ boxSizing: 'border-box' }}>
 
         {filtered.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '48px 20px' }}>
@@ -690,6 +689,7 @@ export default function MissionsPage() {
             <div style={{ fontSize: 12, color: '#8a7a60', fontWeight: 600, marginBottom: 10 }}>
               {filtered.length} אתגרים
             </div>
+            <div className="cards-grid">
             {filtered.map((mission, i) => (
               <ChallengeCard
                 key={mission.id} mission={mission} index={i}
@@ -698,6 +698,7 @@ export default function MissionsPage() {
                 onEdit={m => setEditTarget(m)} starting={starting}
               />
             ))}
+            </div>
           </>
         ) : (
           // Default view — sectioned
@@ -707,6 +708,7 @@ export default function MissionsPage() {
               <div style={{ marginBottom: 4 }}>
                 <div style={{ fontSize: 15, fontWeight: 800, color: NAVY, marginBottom: 4 }}>🌅 משימות יומיות</div>
                 <div style={{ fontSize: 12, color: '#8a7a60', marginBottom: 12 }}>עבודות הבית היומיות — תעשה ותרוויח!</div>
+                <div className="cards-grid">
                 {dailyCategoryMissions.map((mission, i) => (
                   <ChallengeCard
                     key={mission.id} mission={mission} index={i}
@@ -715,6 +717,7 @@ export default function MissionsPage() {
                     onEdit={m => setEditTarget(m)} starting={starting}
                   />
                 ))}
+                </div>
               </div>
             )}
 
@@ -723,6 +726,7 @@ export default function MissionsPage() {
             <div style={{ marginBottom: 4 }}>
               <div style={{ fontSize: 15, fontWeight: 800, color: NAVY, marginBottom: 4 }}>⭐ אתגרי היום</div>
               <div style={{ fontSize: 12, color: '#8a7a60', marginBottom: 12 }}>האתגרים הקלים שכדאי לעשות היום</div>
+              <div className="cards-grid">
               {topMissions.map((mission, i) => (
                 <ChallengeCard
                   key={mission.id} mission={mission} index={i}
@@ -731,6 +735,7 @@ export default function MissionsPage() {
                   onEdit={m => setEditTarget(m)} starting={starting}
                 />
               ))}
+              </div>
             </div>
             )}
 
@@ -739,6 +744,7 @@ export default function MissionsPage() {
               <div style={{ marginBottom: 4 }}>
                 <div style={{ fontSize: 15, fontWeight: 800, color: NAVY, marginBottom: 4 }}>👨‍👩‍👧 כיף משפחתי</div>
                 <div style={{ fontSize: 12, color: '#8a7a60', marginBottom: 12 }}>אתגרים שעושים טוב למשפחה</div>
+                <div className="cards-grid">
                 {familyMissions.map((mission, i) => (
                   <ChallengeCard
                     key={mission.id} mission={mission} index={i + 5}
@@ -747,6 +753,7 @@ export default function MissionsPage() {
                     onEdit={m => setEditTarget(m)} starting={starting}
                   />
                 ))}
+                </div>
               </div>
             )}
 
@@ -755,6 +762,7 @@ export default function MissionsPage() {
               <div style={{ marginBottom: 4 }}>
                 <div style={{ fontSize: 15, fontWeight: 800, color: NAVY, marginBottom: 4 }}>🧠 לומדים וצוברים</div>
                 <div style={{ fontSize: 12, color: '#8a7a60', marginBottom: 12 }}>דברים קטנים שמגלים, אומרים או מלמדים</div>
+                <div className="cards-grid">
                 {learningMissions.map((mission, i) => (
                   <ChallengeCard
                     key={mission.id} mission={mission} index={i + 10}
@@ -763,6 +771,7 @@ export default function MissionsPage() {
                     onEdit={m => setEditTarget(m)} starting={starting}
                   />
                 ))}
+                </div>
               </div>
             )}
 
@@ -771,6 +780,7 @@ export default function MissionsPage() {
               <div style={{ marginBottom: 4 }}>
                 <div style={{ fontSize: 15, fontWeight: 800, color: NAVY, marginBottom: 4 }}>✨ עוד אתגרים</div>
                 <div style={{ fontSize: 12, color: '#8a7a60', marginBottom: 12 }}>עוד דרכים לצבור נקודות</div>
+                <div className="cards-grid">
                 {otherMissions.map((mission, i) => (
                   <ChallengeCard
                     key={mission.id} mission={mission} index={i + 20}
@@ -779,6 +789,7 @@ export default function MissionsPage() {
                     onEdit={m => setEditTarget(m)} starting={starting}
                   />
                 ))}
+                </div>
               </div>
             )}
           </>

@@ -186,12 +186,11 @@ export default function ProfilePage({ params }) {
   const levelProgress = (profile.total_points % 500) / 500 * 100
 
   return (
-    <div style={{
-      width: '100%', maxWidth: 480, margin: '0 auto',
+    <div className="app-page" style={{
       fontFamily: 'var(--font-heebo), sans-serif',
       direction: 'rtl', background: CREAM,
       minHeight: '100vh', paddingBottom: '5.5rem',
-      boxSizing: 'border-box', overflowX: 'hidden'
+      boxSizing: 'border-box'
     }}>
 
       {showEdit && (
@@ -264,7 +263,7 @@ export default function ProfilePage({ params }) {
         )}
       </div>
 
-      <div style={{ padding: '0 12px', boxSizing: 'border-box' }}>
+      <div className="app-body" style={{ boxSizing: 'border-box' }}>
 
         {/* Stats row */}
         {profile.role === 'child' && (

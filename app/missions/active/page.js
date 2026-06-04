@@ -460,12 +460,11 @@ export default function ActiveEarningPage() {
   )
 
   return (
-    <div style={{
-      width: '100%', maxWidth: 480, margin: '0 auto',
+    <div className="app-page" style={{
       fontFamily: 'var(--font-heebo), sans-serif',
       direction: 'rtl', background: PAGE_BG,
       minHeight: '100vh', paddingBottom: '5.5rem',
-      boxSizing: 'border-box', overflowX: 'hidden'
+      boxSizing: 'border-box'
     }}>
 
       <ViewAsBanner viewAsProfile={viewAsProfile} />
@@ -502,7 +501,7 @@ export default function ActiveEarningPage() {
         </div>
       </div>
 
-      <div style={{ padding: '0 12px', boxSizing: 'border-box' }}>
+      <div className="app-body" style={{ boxSizing: 'border-box' }}>
         {visibleAssignments.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '48px 20px' }}>
             <div style={{ fontSize: 48, marginBottom: 12 }}>⭐</div>
@@ -515,7 +514,8 @@ export default function ActiveEarningPage() {
             }}>צוברים נקודות →</a>
           </div>
         ) : (
-          visibleAssignments.map((a, index) => {
+          <div className="cards-grid">
+          {visibleAssignments.map((a, index) => {
             const visual        = CATEGORY_VISUAL[a.mission?.category] || { emoji: '⭐' }
             const gradient      = MISSION_GRADIENTS[index % MISSION_GRADIENTS.length]
             const memberProfile = profiles.find(p => p.id === a.assigned_to)
@@ -596,7 +596,8 @@ export default function ActiveEarningPage() {
                 </div>
               </div>
             )
-          })
+          })}
+          </div>
         )}
       </div>
 

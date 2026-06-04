@@ -17,15 +17,15 @@ export default function BottomNav({ activeMissionCount = 0 }) {
   const pathname = usePathname()
 
   return (
-    <div style={{
+    <div className="app-nav" style={{
       position: 'fixed', bottom: 0, left: 0, right: 0,
       background: 'white',
       borderTop: '1px solid #F0EBE0',
       boxShadow: '0 -2px 16px rgba(0,0,0,0.08)',
-      display: 'flex', justifyContent: 'space-around',
-      padding: '10px 0 env(safe-area-inset-bottom, 16px)', zIndex: 100,
+      zIndex: 100,
       fontFamily: 'var(--font-heebo), sans-serif'
     }}>
+    <div className="app-nav-inner" style={{ display: 'flex', justifyContent: 'space-around' }}>
       {NAV_ITEMS.map(item => {
         const active = pathname === item.href ||
           (item.href !== '/' && pathname.startsWith(item.href) && !item.center)
@@ -66,6 +66,7 @@ export default function BottomNav({ activeMissionCount = 0 }) {
           </a>
         )
       })}
+    </div>
     </div>
   )
 }

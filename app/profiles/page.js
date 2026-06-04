@@ -202,12 +202,11 @@ export default function ProfilesPage() {
   )
 
   return (
-    <div style={{
-      width: '100%', maxWidth: 480, margin: '0 auto',
+    <div className="app-page" style={{
       fontFamily: 'var(--font-heebo), sans-serif',
       direction: 'rtl', background: PAGE_BG,
       minHeight: '100vh', paddingBottom: '5.5rem',
-      boxSizing: 'border-box', overflowX: 'hidden'
+      boxSizing: 'border-box'
     }}>
 
       <ViewAsBanner viewAsProfile={viewAsProfile} />
@@ -246,7 +245,7 @@ export default function ProfilesPage() {
         </div>
       </div>
 
-      <div style={{ padding: '0 12px', boxSizing: 'border-box' }}>
+      <div className="app-body" style={{ boxSizing: 'border-box' }}>
 
         {/* Children */}
         {children.length > 0 && (
@@ -254,6 +253,7 @@ export default function ProfilesPage() {
             <div style={{ fontSize: 12, fontWeight: 700, color: '#888888', marginBottom: 10, letterSpacing: '0.05em' }}>
               ילדים
             </div>
+            <div className="cards-grid">
             {children.map((child, i) => {
               const next = getNextReward(child.total_points)
               const color = childColors[i] || CORAL
@@ -358,6 +358,7 @@ export default function ProfilesPage() {
                 </div>
               )
             })}
+            </div>
           </>
         )}
 

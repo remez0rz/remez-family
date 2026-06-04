@@ -558,12 +558,11 @@ export default function ExperiencesPage() {
   )
 
   return (
-    <div style={{
-      width: '100%', maxWidth: 480, margin: '0 auto',
+    <div className="app-page" style={{
       fontFamily: 'var(--font-heebo), sans-serif',
       direction: 'rtl', background: PAGE_BG,
       minHeight: '100vh', paddingBottom: '5.5rem',
-      boxSizing: 'border-box', overflowX: 'hidden'
+      boxSizing: 'border-box'
     }}>
 
       <ViewAsBanner viewAsProfile={viewAsProfile} />
@@ -654,7 +653,7 @@ export default function ExperiencesPage() {
         </div>
       </div>
 
-      <div style={{ padding: '0 14px', boxSizing: 'border-box' }}>
+      <div className="app-body" style={{ boxSizing: 'border-box' }}>
 
         {isParent && !isViewingAsKid && (
           <PendingClaimsSection
@@ -761,6 +760,7 @@ export default function ExperiencesPage() {
                     </div>
                   )}
                 </div>
+                <div className="cards-grid">
                 {tierRewards.map((reward, i) => (
                   <ExperienceCard
                     key={reward.id} reward={reward} index={i}
@@ -769,6 +769,7 @@ export default function ExperiencesPage() {
                     onEdit={r => setEditTarget(r)}
                   />
                 ))}
+                </div>
               </div>
             )
           })
@@ -782,6 +783,7 @@ export default function ExperiencesPage() {
                 <div style={{ fontSize: 12, color: '#AAAAAA', fontWeight: 600, marginBottom: 14 }}>
                   {filtered.length} פרסים · {filtered.filter(r => currentPoints >= r.points_required).length} פתוחים עכשיו
                 </div>
+                <div className="cards-grid">
                 {filtered.map((reward, i) => (
                   <ExperienceCard
                     key={reward.id} reward={reward} index={i}
@@ -790,6 +792,7 @@ export default function ExperiencesPage() {
                     onEdit={r => setEditTarget(r)}
                   />
                 ))}
+                </div>
               </>
             )
           })()
