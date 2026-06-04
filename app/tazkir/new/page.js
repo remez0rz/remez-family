@@ -142,6 +142,8 @@ function TazkirForm() {
   const [linkUrl, setLinkUrl] = useState('')
   const [imgUrl, setImgUrl] = useState('')
   const [showLinkHelper, setShowLinkHelper] = useState(false)
+  const [suggestions, setSuggestions] = useState([])
+  const [showSuggestions, setShowSuggestions] = useState(false)
   const [form, setForm] = useState({
     title: '',
     what_happened: '',
@@ -169,6 +171,17 @@ function TazkirForm() {
 
     const { data: profileData } = await supabase.from('profiles').select('*').eq('active', true)
     if (profileData) setProfiles(profileData)
+
+    // Load autocomplete suggestions: mission titles + recent tazkir titles
+    const [{ data: missions }, { data: recentTahkir }] = await Promise.all([
+      supabase.from('missions').select('title').eq('is_active', true).order('points', { ascending: false }).limit(30),
+      supabase.from('tahkirim').select('title').order('created_at', { ascending: false }).limit(20)
+    ])
+    const allSuggestions = [
+      ...(recentTahkir || []).map(t => t.title),
+      ...(missions || []).map(m => m.title),
+    ].filter(Boolean)
+    setSuggestions([...new Set(allSuggestions)])  // deduplicate
 
     // Handle URL params (search, Web Share Target, direct link)
     const sharedTitle = searchParams.get('title') || searchParams.get('text')
@@ -319,10 +332,46 @@ function TazkirForm() {
 
       <div className="app-body" style={{ boxSizing: 'border-box' }}>
 
-        {/* Title */}
+        {/* Title with autocomplete */}
         <Section emoji="🎯" label="שם המבצע" sublabel="איך נקרא למה שעשיתם?">
-          <input value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
-            placeholder="למשל: מבצע הכריות הגדול" style={inputStyle} />
+          <div style={{ position: 'relative' }}>
+            <input
+              value={form.title}
+              onChange={e => { setForm(f => ({ ...f, title: e.target.value })); setShowSuggestions(true) }}
+              onFocus={() => setShowSuggestions(true)}
+              onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
+              placeholder="למשל: מבצע הכריות הגדול"
+              autoComplete="off"
+              style={inputStyle}
+            />
+            {showSuggestions && suggestions.length > 0 && (() => {
+              const filtered = suggestions.filter(s =>
+                s.toLowerCase().includes(form.title.toLowerCase()) && s !== form.title
+              ).slice(0, 6)
+              if (!filtered.length) return null
+              return (
+                <div style={{
+                  position: 'absolute', top: '100%', right: 0, left: 0, zIndex: 10,
+                  background: 'white', borderRadius: 12, boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
+                  border: '1px solid #ede8e0', overflow: 'hidden', marginTop: 4
+                }}>
+                  {filtered.map((s, i) => (
+                    <div key={i} onMouseDown={() => { setForm(f => ({ ...f, title: s })); setShowSuggestions(false) }}
+                      style={{
+                        padding: '10px 14px', fontSize: 13, color: NAVY, cursor: 'pointer',
+                        borderBottom: i < filtered.length - 1 ? '1px solid #f5f0e8' : 'none',
+                        background: 'white'
+                      }}
+                      onMouseEnter={e => e.target.style.background = '#faf8f4'}
+                      onMouseLeave={e => e.target.style.background = 'white'}
+                    >
+                      🔍 {s}
+                    </div>
+                  ))}
+                </div>
+              )
+            })()}
+          </div>
         </Section>
 
         {/* Participants */}
@@ -417,22 +466,30 @@ function TazkirForm() {
         {/* Story */}
         <Section emoji="📖" label="מה קרה?" sublabel="ספרו את הסיפור">
           <textarea value={form.what_happened} onChange={e => setForm(f => ({ ...f, what_happened: e.target.value }))}
-            placeholder="תארו מה עשיתם, לאן הלכתם, מה קרה..." style={textareaStyle} />
+            placeholder="תארו מה עשיתם, לאן הלכתם, מה קרה..."
+            name="what_happened" autoComplete="on"
+            style={textareaStyle} />
         </Section>
 
         <Section emoji="🌟" label="רגע השיא" sublabel="הרגע הכי טוב">
           <input value={form.best_moment} onChange={e => setForm(f => ({ ...f, best_moment: e.target.value }))}
-            placeholder="הרגע שכולם יזכרו..." style={inputStyle} />
+            placeholder="הרגע שכולם יזכרו..."
+            name="best_moment" autoComplete="on"
+            style={inputStyle} />
         </Section>
 
         <Section emoji="😂" label="תקלה מצחיקה" sublabel="מה גרם לכולם לצחוק?">
           <input value={form.funny_moment} onChange={e => setForm(f => ({ ...f, funny_moment: e.target.value }))}
-            placeholder="הרגע המביך / המצחיק / המפתיע..." style={inputStyle} />
+            placeholder="הרגע המביך / המצחיק / המפתיע..."
+            name="funny_moment" autoComplete="on"
+            style={inputStyle} />
         </Section>
 
         <Section emoji="💬" label="משפט שחייבים לזכור" sublabel="ציטוט מהמבצע">
           <input value={form.quote} onChange={e => setForm(f => ({ ...f, quote: e.target.value }))}
-            placeholder='״משהו שאחד אמר שגרם לכולם...״' style={inputStyle} />
+            placeholder='״משהו שאחד אמר שגרם לכולם...״'
+            name="quote" autoComplete="on"
+            style={inputStyle} />
         </Section>
 
         <Section emoji="⭐" label="כמה כוכבים קיבל המבצע?">
