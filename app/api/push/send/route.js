@@ -2,11 +2,7 @@ import webpush from 'web-push'
 import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
 
-webpush.setVapidDetails(
-  process.env.VAPID_EMAIL,
-  process.env.NEXT_PUBLIC_VAPID_KEY,
-  process.env.VAPID_PRIVATE_KEY
-)
+export const dynamic = 'force-dynamic'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -14,6 +10,12 @@ const supabase = createClient(
 )
 
 export async function POST(req) {
+  // Initialize inside handler so env vars are available at runtime, not build time
+  webpush.setVapidDetails(
+    process.env.VAPID_EMAIL || 'mailto:remezhouse@gmail.com',
+    process.env.NEXT_PUBLIC_VAPID_KEY,
+    process.env.VAPID_PRIVATE_KEY
+  )
   try {
     const { memberIds, title, body, url = '/', tag = 'remez' } = await req.json()
     if (!memberIds?.length || !title) return NextResponse.json({ error: 'Missing params' }, { status: 400 })
