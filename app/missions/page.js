@@ -438,8 +438,9 @@ export default function MissionsPage() {
   const [profiles, setProfiles]             = useState([])
   const [currentProfile, setCurrentProfile] = useState(null)
   const [rewards, setRewards]               = useState([])
-  const [activeMissionIds, setActiveMissionIds] = useState(new Set())
+  const [activeMissionIds, setActiveMissionIds]   = useState(new Set())
   const [completedTodayIds, setCompletedTodayIds] = useState(new Set())
+  const [allCompletedIds, setAllCompletedIds]     = useState(new Set())
   const [loading, setLoading]               = useState(true)
   const [activeFilter, setActiveFilter]     = useState('all')
   const [showForm, setShowForm]             = useState(false)
@@ -475,15 +476,18 @@ export default function MissionsPage() {
       supabase.from('profiles').select('*').eq('active', true),
       supabase.from('rewards').select('*').eq('is_active', true).order('points_required'),
       supabase.from('assignments').select('mission_id').eq('assigned_to', targetId).eq('status', 'active'),
-      supabase.from('assignments').select('mission_id').eq('assigned_to', targetId).eq('status', 'completed')
-        .gte('completed_at', todayStart.toISOString())
+      supabase.from('assignments').select('mission_id, completed_at').eq('assigned_to', targetId).eq('status', 'completed')
     ])
 
     if (missionData) setMissions(missionData)
     if (profileData) setProfiles(profileData)
     if (rewardData) setRewards(rewardData)
     if (activeData) setActiveMissionIds(new Set(activeData.map(a => a.mission_id)))
-    if (completedData) setCompletedTodayIds(new Set(completedData.map(a => a.mission_id)))
+    if (completedData) {
+      setAllCompletedIds(new Set(completedData.map(a => a.mission_id)))
+      const todayStart2 = new Date(); todayStart2.setHours(0,0,0,0)
+      setCompletedTodayIds(new Set(completedData.filter(a => a.completed_at && new Date(a.completed_at) >= todayStart2).map(a => a.mission_id)))
+    }
     setLoading(false)
   }
 
@@ -519,13 +523,16 @@ export default function MissionsPage() {
   const next = getNextReward(effectiveProfile?.total_points || 0)
 
   const filtered = missions.filter(m => {
-    // Hide missions already active or completed today for kids
     if (!isParent || isViewingAsKid) {
-      if (activeMissionIds.has(m.id)) return false
-      if (m.category === 'Daily' && completedTodayIds.has(m.id)) return false
+      if (activeMissionIds.has(m.id)) return false  // in progress
+      if (m.category === 'Daily') {
+        if (completedTodayIds.has(m.id)) return false  // done today
+      } else {
+        if (allCompletedIds.has(m.id)) return false  // done, needs parent re-assign
+      }
     }
     const f = FILTERS.find(f => f.id === activeFilter)
-    if (!f || f.id === 'all') return m.category !== 'Daily'  // exclude Daily from 'all'
+    if (!f || f.id === 'all') return m.category !== 'Daily'
     if (f.maxPoints) return m.points <= f.maxPoints && m.category !== 'Daily'
     if (f.categories) return f.categories.includes(m.category)
     return true

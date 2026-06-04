@@ -2,7 +2,7 @@ import { supabase } from './supabase'
 
 const CATEGORY_MAP = {
   'learning':  ['Learning', 'Reading', 'English', 'Hebrew'],
-  'helping':   ['Helping', 'House'],
+  'helping':   ['Helping', 'House', 'Daily'],
   'kindness':  ['Kindness'],
   'creative':  ['Creative', 'Funny'],
   'outdoor':   ['Outdoor'],
@@ -29,7 +29,7 @@ export async function checkAndAwardBadges(memberId) {
   // Get member stats
   const { data: profile } = await supabase
     .from('profiles')
-    .select('total_points')
+    .select('total_experience, total_points')
     .eq('id', memberId)
     .single()
 
@@ -44,7 +44,8 @@ export async function checkAndAwardBadges(memberId) {
     .select('id')
     .eq('created_by', memberId)
 
-  const totalPoints     = profile?.total_points || 0
+  // Use total_experience (lifetime XP) for point-based badges — not deductable balance
+  const totalPoints     = profile?.total_experience || profile?.total_points || 0
   const totalMissions   = completedAssignments?.length || 0
   const totalTahkirim   = tahkirim?.length || 0
 

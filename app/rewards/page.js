@@ -377,12 +377,67 @@ function PendingClaimsSection({ claims, profiles, rewards, onApprove, onRedeem }
   )
 }
 
+function KidClaimsSection({ claims, onRedeem }) {
+  if (!claims.length) return null
+  const pending  = claims.filter(c => c.status === 'claimed')
+  const approved = claims.filter(c => c.status === 'approved')
+  if (!pending.length && !approved.length) return null
+
+  return (
+    <div style={{ marginBottom: 18 }}>
+      <div style={{ fontSize: 15, fontWeight: 800, color: NAVY, marginBottom: 12 }}>🎁 הבקשות שלי</div>
+
+      {approved.map(c => (
+        <div key={c.id} style={{
+          background: 'linear-gradient(135deg, #f0faf8, #e8f5f0)',
+          borderRadius: 20, padding: '16px 18px', marginBottom: 10,
+          border: '2px solid #4ECDC4', boxShadow: '0 4px 16px rgba(78,205,196,0.15)'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div style={{ fontSize: 36 }}>{c.reward?.emoji || '✨'}</div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 15, fontWeight: 800, color: NAVY }}>{c.reward?.title}</div>
+              <div style={{ fontSize: 11, color: '#4ECDC4', fontWeight: 700, marginTop: 2 }}>✅ אושר על ידי ההורים!</div>
+            </div>
+          </div>
+          <button onClick={() => onRedeem(c.id)} style={{
+            width: '100%', marginTop: 12, padding: '12px',
+            background: `linear-gradient(135deg, ${CORAL}, #FF8E53)`,
+            color: 'white', border: 'none', borderRadius: 50, cursor: 'pointer',
+            fontWeight: 800, fontSize: 14, fontFamily: 'var(--font-heebo), sans-serif',
+            boxShadow: '0 4px 12px rgba(255,107,107,0.35)'
+          }}>🎉 ממשתי! תודה</button>
+        </div>
+      ))}
+
+      {pending.map(c => (
+        <div key={c.id} style={{
+          background: 'white', borderRadius: 20, padding: '14px 18px', marginBottom: 10,
+          border: '1.5px solid #EDE8E0', boxShadow: '0 2px 10px rgba(0,0,0,0.06)',
+          display: 'flex', alignItems: 'center', gap: 12
+        }}>
+          <div style={{ fontSize: 28 }}>{c.reward?.emoji || '✨'}</div>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 14, fontWeight: 700, color: NAVY }}>{c.reward?.title}</div>
+            <div style={{ fontSize: 11, color: '#AAAAAA', marginTop: 2 }}>⏳ מחכה לאישור ההורים...</div>
+          </div>
+          <div style={{ background: '#FFF0D5', borderRadius: 12, padding: '6px 10px', textAlign: 'center' }}>
+            <div style={{ fontSize: 14, fontWeight: 900, color: '#CC8800' }}>{c.reward?.points_required}</div>
+            <div style={{ fontSize: 9, color: '#CC8800', fontWeight: 600 }}>נק׳</div>
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 export default function ExperiencesPage() {
   const [rewards, setRewards]               = useState([])
   const [profiles, setProfiles]             = useState([])
   const [currentProfile, setCurrentProfile] = useState(null)
   const [selectedMember, setSelectedMember] = useState(null)
   const [pendingClaims, setPendingClaims]   = useState([])
+  const [myClaims, setMyClaims]             = useState([])
   const [loading, setLoading]               = useState(true)
   const [claimTarget, setClaimTarget]       = useState(null)
   const [editTarget, setEditTarget]         = useState(null)
@@ -409,10 +464,15 @@ export default function ExperiencesPage() {
     if (!profile) { router.push('/login'); return }
     setCurrentProfile(profile)
 
-    const [{ data: rewardData }, { data: profileData }, { data: claimData }] = await Promise.all([
+    const [{ data: rewardData }, { data: profileData }, { data: claimData }, { data: myClaimData }] = await Promise.all([
       supabase.from('rewards').select('*').eq('is_active', true).order('points_required'),
       supabase.from('profiles').select('*').eq('active', true).order('created_at'),
-      supabase.from('reward_claims').select('*').eq('status', 'claimed')
+      supabase.from('reward_claims').select('*').eq('status', 'claimed'),
+      supabase.from('reward_claims')
+        .select('*, reward:rewards(title, emoji, description, points_required)')
+        .eq('member_id', profile.id)
+        .in('status', ['claimed', 'approved'])
+        .order('claimed_at', { ascending: false })
     ])
 
     if (rewardData) setRewards(rewardData)
@@ -425,6 +485,7 @@ export default function ExperiencesPage() {
       }
     }
     if (claimData) setPendingClaims(claimData)
+    if (myClaimData) setMyClaims(myClaimData)
     setLoading(false)
   }
 
@@ -460,6 +521,13 @@ export default function ExperiencesPage() {
     setClaimTarget(null)
     setClaimed(true)
     setTimeout(() => { setClaimed(false); loadData() }, 2500)
+  }
+
+  const handleMarkRedeemed = async (claimId) => {
+    await supabase.from('reward_claims').update({
+      status: 'redeemed', redeemed_at: new Date().toISOString()
+    }).eq('id', claimId)
+    setMyClaims(prev => prev.filter(c => c.id !== claimId))
   }
 
   const handleSaved = () => {
@@ -670,6 +738,11 @@ export default function ExperiencesPage() {
               </div>
             </div>
           </div>
+        )}
+
+        {/* Kid's own claims — pending approval and approved-ready-to-use */}
+        {!isParent && !isViewingAsKid && (
+          <KidClaimsSection claims={myClaims} onRedeem={handleMarkRedeemed} />
         )}
 
         {activeTier === 'all' ? (

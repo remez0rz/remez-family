@@ -155,7 +155,7 @@ function SectionTitle({ title, href }) {
 }
 
 // Kid homepage
-function KidHome({ currentProfile, missions, dailyMissions, completedDailyIds, rewards, activeAssignments, recentFeed, reactionData, handleReaction, handleStartMission, startingMission, onQuickDaily }) {
+function KidHome({ currentProfile, missions, dailyMissions, completedTodayIds, rewards, activeAssignments, recentFeed, reactionData, handleReaction, handleStartMission, startingMission, onQuickDaily }) {
   const level = currentProfile.level || 1
   const getNextReward = (pts) => rewards.find(r => r.points_required > pts && (r.level_required || 1) <= level)
   const next = getNextReward(currentProfile.total_points)
@@ -360,7 +360,7 @@ function KidHome({ currentProfile, missions, dailyMissions, completedDailyIds, r
             <SectionTitle title="🌅 משימות יומיות" href="/missions" />
             <div style={{ background: 'white', borderRadius: 20, overflow: 'hidden', boxShadow: '0 4px 16px rgba(0,0,0,0.07)' }}>
               {dailyMissions.map((mission, i) => {
-                const done = completedDailyIds.has(mission.id)
+                const done = completedTodayIds.has(mission.id)
                 const starting = startingMission === mission.id
                 return (
                   <div key={mission.id} style={{
@@ -729,7 +729,8 @@ export default function HomePage() {
   const [profiles, setProfiles]             = useState([])
   const [missions, setMissions]             = useState([])
   const [dailyMissions, setDailyMissions]   = useState([])
-  const [completedDailyIds, setCompletedDailyIds] = useState(new Set())
+  const [completedTodayIds, setCompletedTodayIds] = useState(new Set())
+  const [allCompletedIds, setAllCompletedIds]     = useState(new Set())
   const [activeAssignments, setActiveAssignments] = useState([])
   const [recentFeed, setRecentFeed]         = useState([])
   const [rewards, setRewards]               = useState([])
@@ -795,9 +796,8 @@ export default function HomePage() {
         .limit(5),
       supabase.from('feed_posts').select('*').order('created_at', { ascending: false }).limit(4),
       supabase.from('rewards').select('*').eq('is_active', true).order('points_required'),
-      supabase.from('assignments').select('mission_id')
-        .eq('assigned_to', profile.id).eq('status', 'completed')
-        .gte('completed_at', todayStart.toISOString()),
+      supabase.from('assignments').select('mission_id, completed_at')
+        .eq('assigned_to', profile.id).eq('status', 'completed'),
       supabase.from('reward_claims').select('*, reward:rewards(title,emoji,points_required), member:profiles!reward_claims_member_id_fkey(name,avatar_url)').eq('status', 'claimed'),
       supabase.from('assignments')
         .select('*, mission:missions(title,category), member:profiles!assignments_assigned_to_fkey(name,avatar_url)')
@@ -813,7 +813,12 @@ export default function HomePage() {
     if (assignments) setActiveAssignments(assignments)
     if (feed) setRecentFeed(feed)
     if (rewardList) setRewards(rewardList)
-    if (todayCompleted) setCompletedDailyIds(new Set(todayCompleted.map(a => a.mission_id)))
+    if (todayCompleted) {
+      setAllCompletedIds(new Set(todayCompleted.map(a => a.mission_id)))
+      setCompletedTodayIds(new Set(
+        todayCompleted.filter(a => a.completed_at && new Date(a.completed_at) >= todayStart).map(a => a.mission_id)
+      ))
+    }
     if (claimData) setPendingClaims(claimData)
     if (dailyReportData) setDailyReport(dailyReportData.filter(a => a.mission?.category === 'Daily'))
 
@@ -908,7 +913,8 @@ export default function HomePage() {
       await supabase.from('profiles').update({ total_points: newTotal, total_experience: newXP, level: newLevel }).eq('id', memberId)
     }
 
-    setCompletedDailyIds(prev => new Set([...prev, mission.id]))
+    setCompletedTodayIds(prev => new Set([...prev, mission.id]))
+    setAllCompletedIds(prev => new Set([...prev, mission.id]))
     setQuickDocMission(null)
     setQuickDocUploading(false)
     setQuickSuccess(`+${mission.points} נקודות! 🎉`)
@@ -931,9 +937,10 @@ export default function HomePage() {
 
   // Filter today's missions — exclude already active ones
   const activeMissionIds = new Set(myAssignments.map(a => a.mission_id))
-  const todayMissions = missions.filter(m => !activeMissionIds.has(m.id) && !completedDailyIds.has(m.id)).slice(0, 3)
-  // For daily missions, also exclude ones currently active
-  const visibleDailyMissions = dailyMissions.filter(m => !activeMissionIds.has(m.id) && !completedDailyIds.has(m.id))
+  // Regular missions: hidden all day once completed (parent must re-assign)
+  const todayMissions = missions.filter(m => !activeMissionIds.has(m.id) && !allCompletedIds.has(m.id)).slice(0, 3)
+  // Daily missions: hidden today if completed, reset tomorrow
+  const visibleDailyMissions = dailyMissions.filter(m => !activeMissionIds.has(m.id) && !completedTodayIds.has(m.id))
 
   if (loading) return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #FFF9F0 0%, #FFF0F9 100%)', fontFamily: 'var(--font-heebo), sans-serif' }}>
@@ -1020,7 +1027,7 @@ export default function HomePage() {
           currentProfile={effectiveProfile}
           missions={todayMissions}
           dailyMissions={visibleDailyMissions}
-          completedDailyIds={completedDailyIds}
+          completedTodayIds={completedTodayIds}
           rewards={rewards}
           activeAssignments={myAssignments}
           recentFeed={recentFeed}
