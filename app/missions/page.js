@@ -462,6 +462,8 @@ export default function MissionsPage() {
   const [assignTarget, setAssignTarget]     = useState(null)
   const [starting, setStarting]             = useState(null)
   const [assignedDone, setAssignedDone]     = useState(false)
+  const [searchQuery, setSearchQuery]       = useState('')
+  const [sortOrder, setSortOrder]           = useState('default')
   const [viewAsId, setViewAsId] = useState(null)
   const router = useRouter()
 
@@ -536,21 +538,26 @@ export default function MissionsPage() {
   const getNextReward = (points) => rewards.find(r => r.points_required > points)
   const next = getNextReward(effectiveProfile?.total_points || 0)
 
+  const q = searchQuery.trim().toLowerCase()
+
   const filtered = missions.filter(m => {
     // Special (parent-gift) missions: only parents see them, and only in the special filter
     if (m.category === 'Special') {
-      if (!isParent || isViewingAsKid) return false   // never shown to kids
-      if (activeFilter !== 'special') return false    // parents only see them in special filter
+      if (!isParent || isViewingAsKid) return false
+      if (!q && activeFilter !== 'special') return false
+      if (q) return (m.title || '').toLowerCase().includes(q) || (m.description || '').toLowerCase().includes(q)
       return true
     }
     if (!isParent || isViewingAsKid) {
-      if (activeMissionIds.has(m.id)) return false  // in progress
+      if (activeMissionIds.has(m.id)) return false
       if (m.category === 'Daily') {
-        if (completedTodayIds.has(m.id)) return false  // done today
+        if (completedTodayIds.has(m.id)) return false
       } else {
-        if (allCompletedIds.has(m.id)) return false  // done, needs parent re-assign
+        if (allCompletedIds.has(m.id)) return false
       }
     }
+    // Search overrides category filter
+    if (q) return (m.title || '').toLowerCase().includes(q) || (m.description || '').toLowerCase().includes(q)
     const f = FILTERS.find(f => f.id === activeFilter)
     if (!f || f.id === 'all') return m.category !== 'Daily'
     if (f.maxPoints) return m.points <= f.maxPoints && m.category !== 'Daily'
@@ -558,12 +565,35 @@ export default function MissionsPage() {
     return true
   })
 
-  // Section grouping for kid view
-  const dailyCategoryMissions = filtered.filter(m => m.category === 'Daily')
-  const familyMissions        = filtered.filter(m => ['Family','Memory','Weekend'].includes(m.category))
-  const learningMissions      = filtered.filter(m => ['Learning','Reading','English','Hebrew'].includes(m.category))
-  const otherMissions         = filtered.filter(m => !['Daily','Family','Memory','Weekend','Learning','Reading','English','Hebrew'].includes(m.category))
-  const topMissions           = filtered.filter(m => m.category !== 'Daily').slice(0, 5)
+  // Apply sort
+  const sortedFiltered = [...filtered].sort((a, b) => {
+    if (sortOrder === 'points_desc') return b.points - a.points
+    if (sortOrder === 'points_asc')  return a.points - b.points
+    if (sortOrder === 'newest')      return new Date(b.created_at || 0) - new Date(a.created_at || 0)
+    if (sortOrder === 'alpha')       return (a.title || '').localeCompare(b.title || '', 'he')
+    return 0 // default — keep DB order
+  })
+
+  // "New" missions — added in last 14 days (shown in default view, no search)
+  const twoWeeksAgo = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000)
+  const newMissions = !q && activeFilter === 'all'
+    ? missions.filter(m => {
+        if (m.category === 'Special' && (!isParent || isViewingAsKid)) return false
+        if (m.category === 'Daily') return false
+        if (!isParent || isViewingAsKid) {
+          if (activeMissionIds.has(m.id) || allCompletedIds.has(m.id)) return false
+        }
+        return m.created_at && new Date(m.created_at) > twoWeeksAgo
+      })
+    : []
+
+  // Section grouping for kid/default view (uses sorted results, excludes new missions already shown)
+  const newIds                = new Set(newMissions.map(m => m.id))
+  const dailyCategoryMissions = sortedFiltered.filter(m => m.category === 'Daily')
+  const familyMissions        = sortedFiltered.filter(m => ['Family','Memory','Weekend'].includes(m.category) && !newIds.has(m.id))
+  const learningMissions      = sortedFiltered.filter(m => ['Learning','Reading','English','Hebrew'].includes(m.category) && !newIds.has(m.id))
+  const otherMissions         = sortedFiltered.filter(m => !['Daily','Family','Memory','Weekend','Learning','Reading','English','Hebrew'].includes(m.category) && !newIds.has(m.id))
+  const topMissions           = sortedFiltered.filter(m => m.category !== 'Daily' && !newIds.has(m.id)).slice(0, 5)
 
   if (loading) return (
     <div style={{
@@ -670,47 +700,87 @@ export default function MissionsPage() {
         )}
 
 
-        {/* Filter chips */}
-        <div style={{
-          display: 'flex', gap: 8, overflowX: 'auto',
-          paddingBottom: 16, scrollbarWidth: 'none'
-        }}>
-          {FILTERS.filter(f => !f.parentOnly || (isParent && !isViewingAsKid)).map(f => (
-            <button key={f.id} onClick={() => setActiveFilter(f.id)} style={{
-              padding: '7px 14px', borderRadius: 20, border: 'none',
-              cursor: 'pointer', flexShrink: 0,
-              background: activeFilter === f.id ? CORAL : 'rgba(255,255,255,0.1)',
-              color: activeFilter === f.id ? 'white' : 'rgba(255,255,255,0.8)',
-              fontWeight: activeFilter === f.id ? 700 : 500,
-              fontSize: 13, fontFamily: 'var(--font-heebo), sans-serif'
-            }}>{f.label}</button>
-          ))}
+        {/* Search bar */}
+        <div style={{ position: 'relative', marginBottom: 10 }}>
+          <span style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', fontSize: 15, pointerEvents: 'none' }}>🔍</span>
+          <input
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            placeholder="חפש אתגר לפי שם..."
+            style={{
+              width: '100%', padding: '10px 38px 10px 36px',
+              background: 'rgba(255,255,255,0.18)', border: '1px solid rgba(255,255,255,0.25)',
+              borderRadius: 50, color: 'white', fontSize: 14, outline: 'none',
+              fontFamily: 'var(--font-heebo), sans-serif', boxSizing: 'border-box',
+            }}
+          />
+          {searchQuery && (
+            <button onClick={() => setSearchQuery('')} style={{
+              position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)',
+              background: 'rgba(255,255,255,0.25)', border: 'none', borderRadius: '50%',
+              width: 22, height: 22, color: 'white', cursor: 'pointer',
+              fontSize: 11, display: 'flex', alignItems: 'center', justifyContent: 'center'
+            }}>✕</button>
+          )}
+        </div>
+
+        {/* Filter chips + sort */}
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center', paddingBottom: 14 }}>
+          <div style={{ display: 'flex', gap: 8, overflowX: 'auto', flex: 1, scrollbarWidth: 'none' }}>
+            {FILTERS.filter(f => !f.parentOnly || (isParent && !isViewingAsKid)).map(f => (
+              <button key={f.id} onClick={() => { setActiveFilter(f.id); setSearchQuery('') }} style={{
+                padding: '7px 14px', borderRadius: 20, border: 'none',
+                cursor: 'pointer', flexShrink: 0,
+                background: activeFilter === f.id && !searchQuery ? CORAL : 'rgba(255,255,255,0.1)',
+                color: activeFilter === f.id && !searchQuery ? 'white' : 'rgba(255,255,255,0.8)',
+                fontWeight: activeFilter === f.id && !searchQuery ? 700 : 500,
+                fontSize: 13, fontFamily: 'var(--font-heebo), sans-serif'
+              }}>{f.label}</button>
+            ))}
+          </div>
+          {/* Sort selector */}
+          <select value={sortOrder} onChange={e => setSortOrder(e.target.value)} style={{
+            flexShrink: 0, padding: '7px 8px', borderRadius: 20,
+            background: sortOrder !== 'default' ? CORAL : 'rgba(255,255,255,0.1)',
+            border: 'none', color: 'white', fontSize: 12, fontWeight: 600,
+            fontFamily: 'var(--font-heebo), sans-serif', cursor: 'pointer', outline: 'none'
+          }}>
+            <option value="default" style={{ color: NAVY }}>⬆ מיון</option>
+            <option value="newest"     style={{ color: NAVY }}>✨ חדש קודם</option>
+            <option value="points_asc" style={{ color: NAVY }}>⬆ נקודות: מעט</option>
+            <option value="points_desc" style={{ color: NAVY }}>⬇ נקודות: הרבה</option>
+            <option value="alpha"      style={{ color: NAVY }}>א-ב סדר אלפביתי</option>
+          </select>
         </div>
       </div>
 
       <div className="app-body" style={{ boxSizing: 'border-box' }}>
 
-        {filtered.length === 0 ? (
+        {sortedFiltered.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '48px 20px' }}>
-            <div style={{ fontSize: 48, marginBottom: 10 }}>🏆</div>
-            <div style={{ fontSize: 16, fontWeight: 800, color: NAVY, marginBottom: 6 }}>כל הכבוד!</div>
-            <div style={{ fontSize: 13, color: '#8a7a60', marginBottom: 16 }}>
-              {activeFilter === 'daily' ? 'סיימת את כל המשימות היומיות — חזור מחר!' : 'סיימת את כל האתגרים בקטגוריה הזאת'}
+            <div style={{ fontSize: 48, marginBottom: 10 }}>{q ? '🔍' : '🏆'}</div>
+            <div style={{ fontSize: 16, fontWeight: 800, color: NAVY, marginBottom: 6 }}>
+              {q ? `אין תוצאות עבור "${searchQuery}"` : 'כל הכבוד!'}
             </div>
-            {activeFilter !== 'all' && (
-              <button onClick={() => setActiveFilter('all')} style={{ background: CORAL, color: 'white', border: 'none', borderRadius: 50, padding: '10px 24px', cursor: 'pointer', fontWeight: 700, fontSize: 13, fontFamily: 'var(--font-heebo), sans-serif' }}>
+            <div style={{ fontSize: 13, color: '#8a7a60', marginBottom: 16 }}>
+              {q ? 'נסה מילה אחרת' : activeFilter === 'daily' ? 'סיימת את כל המשימות היומיות — חזור מחר!' : 'סיימת את כל האתגרים בקטגוריה הזאת'}
+            </div>
+            {(q || activeFilter !== 'all') && (
+              <button onClick={() => { setActiveFilter('all'); setSearchQuery('') }} style={{ background: CORAL, color: 'white', border: 'none', borderRadius: 50, padding: '10px 24px', cursor: 'pointer', fontWeight: 700, fontSize: 13, fontFamily: 'var(--font-heebo), sans-serif' }}>
                 ראה כל האתגרים
               </button>
             )}
           </div>
-        ) : activeFilter !== 'all' ? (
-          // Filtered view — flat list
+
+        ) : q || activeFilter !== 'all' || sortOrder !== 'default' ? (
+          // Search / filtered / sorted view — flat list
           <>
-            <div style={{ fontSize: 12, color: '#8a7a60', fontWeight: 600, marginBottom: 10 }}>
-              {filtered.length} אתגרים
+            <div style={{ fontSize: 12, color: '#8a7a60', fontWeight: 600, marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 }}>
+              {q && <span style={{ background: '#FFF0D5', borderRadius: 20, padding: '2px 10px', color: '#8a5a00', fontWeight: 700 }}>🔍 "{searchQuery}"</span>}
+              <span>{sortedFiltered.length} אתגרים</span>
             </div>
             <div className="cards-grid">
-            {filtered.map((mission, i) => (
+            {sortedFiltered.map((mission, i) => (
               <ChallengeCard
                 key={mission.id} mission={mission} index={i}
                 isParent={isParent && !isViewingAsKid} currentProfile={effectiveProfile}
@@ -723,6 +793,27 @@ export default function MissionsPage() {
         ) : (
           // Default view — sectioned
           <>
+            {/* ✨ חדש — missions added in last 14 days */}
+            {newMissions.length > 0 && (
+              <div style={{ marginBottom: 4 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                  <div style={{ fontSize: 15, fontWeight: 800, color: NAVY }}>✨ חדש!</div>
+                  <div style={{ background: CORAL, color: 'white', fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 20 }}>נוסף לאחרונה</div>
+                </div>
+                <div style={{ fontSize: 12, color: '#8a7a60', marginBottom: 12 }}>אתגרים חדשים שנוספו לאחרונה</div>
+                <div className="cards-grid">
+                {newMissions.map((mission, i) => (
+                  <ChallengeCard
+                    key={mission.id} mission={mission} index={i}
+                    isParent={isParent && !isViewingAsKid} currentProfile={effectiveProfile}
+                    onStart={handleStart} onAssign={m => setAssignTarget(m)}
+                    onEdit={m => setEditTarget(m)} starting={starting}
+                  />
+                ))}
+                </div>
+              </div>
+            )}
+
             {/* משימות יומיות */}
             {dailyCategoryMissions.length > 0 && (
               <div style={{ marginBottom: 4 }}>
@@ -815,6 +906,21 @@ export default function MissionsPage() {
           </>
         )}
       </div>
+
+      {/* Sticky "+ אתגר" for parents */}
+      {isParent && !isViewingAsKid && (
+        <div style={{ position: 'fixed', bottom: 72, left: 16, zIndex: 40 }}>
+          <button onClick={() => setShowForm(true)} style={{
+            background: `linear-gradient(135deg, ${CORAL}, #FF8E53)`,
+            color: 'white', border: 'none', borderRadius: 50,
+            padding: '12px 20px', cursor: 'pointer',
+            fontWeight: 900, fontSize: 14,
+            fontFamily: 'var(--font-heebo), sans-serif',
+            boxShadow: '0 4px 16px rgba(255,107,107,0.5)',
+            display: 'flex', alignItems: 'center', gap: 6
+          }}>➕ אתגר חדש</button>
+        </div>
+      )}
 
       <BottomNav />
     </div>
