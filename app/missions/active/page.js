@@ -344,6 +344,8 @@ export default function ActiveEarningPage() {
   const [docTarget, setDocTarget]           = useState(null)
   const [celebration, setCelebration]       = useState(null)
   const [awarding, setAwarding]             = useState(new Set())
+  const [completedRecent, setCompletedRecent] = useState([])
+  const [revoking, setRevoking]             = useState(new Set())
   const [viewAsId, setViewAsId]             = useState(null)
   const router = useRouter()
 
@@ -364,18 +366,26 @@ export default function ActiveEarningPage() {
     if (!profile) { router.push('/login'); return }
     setCurrentProfile(profile)
 
-    const [{ data: assignmentData }, { data: rewardData }, { data: profileData }] = await Promise.all([
+    const [{ data: assignmentData }, { data: rewardData }, { data: profileData }, { data: completedData }] = await Promise.all([
       supabase.from('assignments')
         .select(`*, mission:missions(*), member:profiles!assignments_assigned_to_fkey(*)`)
         .eq('status', 'active')
         .order('created_at', { ascending: false }),
       supabase.from('rewards').select('*').eq('is_active', true).order('points_required'),
-      supabase.from('profiles').select('*').eq('active', true)
+      supabase.from('profiles').select('*').eq('active', true),
+      profile.role === 'parent'
+        ? supabase.from('assignments')
+            .select(`*, mission:missions(*), member:profiles!assignments_assigned_to_fkey(*)`)
+            .eq('status', 'completed')
+            .order('completed_at', { ascending: false })
+            .limit(30)
+        : Promise.resolve({ data: [] })
     ])
 
     if (assignmentData) setAssignments(assignmentData)
     if (rewardData) setRewards(rewardData)
     if (profileData) setProfiles(profileData)
+    if (completedData) setCompletedRecent(completedData)
     setLoading(false)
   }
 
@@ -448,6 +458,44 @@ export default function ActiveEarningPage() {
     } else {
       awardPoints(assignment)
     }
+  }
+
+  const revokeAssignment = async (assignment) => {
+    if (revoking.has(assignment.id)) return
+    setRevoking(prev => new Set([...prev, assignment.id]))
+
+    const points   = assignment.mission?.points || 0
+    const memberId = assignment.assigned_to
+
+    // 1. Reset assignment back to active
+    await supabase.from('assignments').update({
+      status:        'active',
+      completed_at:  null,
+      approved_by:   null,
+      approved_at:   null,
+      proof_text:    null,
+      proof_image_url: null,
+    }).eq('id', assignment.id)
+
+    // 2. Subtract points from profile (floor at 0)
+    const { data: member } = await supabase.from('profiles').select('total_points, total_experience').eq('id', memberId).single()
+    if (member) {
+      await supabase.from('profiles').update({
+        total_points:     Math.max(0, (member.total_points     || 0) - points),
+        total_experience: Math.max(0, (member.total_experience || 0) - points),
+      }).eq('id', memberId)
+    }
+
+    // 3. Delete the linked feed post
+    await supabase.from('feed_posts')
+      .delete()
+      .eq('linked_id', assignment.id)
+      .eq('type', 'mission_completed')
+
+    // 4. Update local state
+    setCompletedRecent(prev => prev.filter(a => a.id !== assignment.id))
+    setAssignments(prev => [...prev, { ...assignment, status: 'active', completed_at: null }])
+    setRevoking(prev => { const n = new Set(prev); n.delete(assignment.id); return n })
   }
 
   const closeCelebration = () => {
@@ -617,6 +665,73 @@ export default function ActiveEarningPage() {
           </div>
         )}
       </div>
+
+      {/* ── Parent-only: completed missions with revoke option ── */}
+      {isParent && !isViewingAsKid && completedRecent.length > 0 && (
+        <div className="app-body" style={{ boxSizing: 'border-box', paddingTop: 0 }}>
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12,
+            padding: '10px 14px', background: 'rgba(255,107,107,0.07)',
+            borderRadius: 16, border: '1px solid rgba(255,107,107,0.15)'
+          }}>
+            <span style={{ fontSize: 18 }}>✅</span>
+            <div>
+              <div style={{ fontSize: 14, fontWeight: 800, color: NAVY }}>הושלמו לאחרונה</div>
+              <div style={{ fontSize: 11, color: '#a09080' }}>ניתן לבטל אם הייתה טעות</div>
+            </div>
+          </div>
+
+          {completedRecent.map(a => {
+            const memberProfile = profiles.find(p => p.id === a.assigned_to)
+            const when = a.completed_at
+              ? new Date(a.completed_at).toLocaleDateString('he-IL', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
+              : ''
+            return (
+              <div key={a.id} style={{
+                background: 'white', borderRadius: 16, padding: '12px 14px',
+                marginBottom: 8, boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+                display: 'flex', alignItems: 'center', gap: 12
+              }}>
+                <div style={{ fontSize: 22, flexShrink: 0 }}>
+                  {a.mission?.image_url
+                    ? <img src={a.mission.image_url} alt="" style={{ width: 40, height: 40, borderRadius: 10, objectFit: 'cover', display: 'block' }} />
+                    : '✅'}
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: NAVY, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {a.mission?.title}
+                  </div>
+                  <div style={{ fontSize: 11, color: '#a09080', marginTop: 2 }}>
+                    {memberProfile?.name} · {when} · +{a.mission?.points} נק׳
+                  </div>
+                  {a.proof_text && (
+                    <div style={{ fontSize: 11, color: '#7a6a5a', marginTop: 3, fontStyle: 'italic', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      "{a.proof_text}"
+                    </div>
+                  )}
+                </div>
+                <button
+                  onClick={() => {
+                    if (window.confirm(`לבטל "${a.mission?.title}" ולהחזיר ${a.mission?.points} נקודות?`)) {
+                      revokeAssignment(a)
+                    }
+                  }}
+                  disabled={revoking.has(a.id)}
+                  style={{
+                    background: revoking.has(a.id) ? '#e8e0d0' : '#FFF0F0',
+                    color: revoking.has(a.id) ? '#a09080' : '#cc4444',
+                    border: `1px solid ${revoking.has(a.id) ? '#e0d8c8' : '#FFCCCC'}`,
+                    borderRadius: 20, padding: '6px 12px', cursor: revoking.has(a.id) ? 'default' : 'pointer',
+                    fontSize: 12, fontWeight: 700, flexShrink: 0,
+                    fontFamily: 'var(--font-heebo), sans-serif'
+                  }}>
+                  {revoking.has(a.id) ? '...' : '↩️ בטל'}
+                </button>
+              </div>
+            )
+          })}
+        </div>
+      )}
 
       <BottomNav />
     </div>
