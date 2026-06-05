@@ -46,7 +46,8 @@ function QuickDailyDoc({ mission, uploading, onSubmit, onSkip, onClose }) {
           <div style={{ display: 'inline-block', marginTop: 6, background: `linear-gradient(135deg, #FFB830, #FFD166)`, borderRadius: 20, padding: '4px 12px', fontSize: 13, fontWeight: 800, color: '#2D2D2D' }}>+{mission.points} נקודות</div>
         </div>
 
-        <input type="file" accept="image/*,video/*" capture="environment" onChange={handleSelect} style={{ display: 'none' }} id="qd-cam" />
+        <input type="file" accept="image/*" capture="environment" onChange={handleSelect} style={{ display: 'none' }} id="qd-cam-photo" />
+        <input type="file" accept="video/*" capture="environment" onChange={handleSelect} style={{ display: 'none' }} id="qd-cam-video" />
         <input type="file" accept="image/*,video/*" onChange={handleSelect} style={{ display: 'none' }} id="qd-gal" />
 
         {preview ? (
@@ -58,9 +59,10 @@ function QuickDailyDoc({ mission, uploading, onSubmit, onSkip, onClose }) {
             <button onClick={() => { setFile(null); setPreview(null); setIsVideo(false) }} style={{ position: 'absolute', top: 8, left: 8, background: 'rgba(0,0,0,0.6)', border: 'none', borderRadius: '50%', width: 26, height: 26, color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12 }}>✕</button>
           </div>
         ) : (
-          <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
-            <label htmlFor="qd-cam" style={{ flex: 1, padding: '10px 6px', background: 'rgba(255,255,255,0.08)', borderRadius: 12, border: '1.5px dashed rgba(255,255,255,0.2)', textAlign: 'center', cursor: 'pointer', fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.8)' }}>📷<br/>מצלמה</label>
-            <label htmlFor="qd-gal" style={{ flex: 1, padding: '10px 6px', background: 'rgba(255,255,255,0.08)', borderRadius: 12, border: '1.5px dashed rgba(255,255,255,0.2)', textAlign: 'center', cursor: 'pointer', fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.8)' }}>🎬<br/>גלריה</label>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 10 }}>
+            <label htmlFor="qd-cam-photo" style={{ padding: '10px 4px', background: 'rgba(255,255,255,0.08)', borderRadius: 12, border: '1.5px dashed rgba(255,255,255,0.2)', textAlign: 'center', cursor: 'pointer', fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.8)' }}>📷<br/>תמונה</label>
+            <label htmlFor="qd-cam-video" style={{ padding: '10px 4px', background: 'rgba(255,255,255,0.08)', borderRadius: 12, border: '1.5px dashed rgba(255,255,255,0.2)', textAlign: 'center', cursor: 'pointer', fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.8)' }}>🎬<br/>סרטון</label>
+            <label htmlFor="qd-gal" style={{ padding: '10px 4px', background: 'rgba(255,255,255,0.08)', borderRadius: 12, border: '1.5px dashed rgba(255,255,255,0.2)', textAlign: 'center', cursor: 'pointer', fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.8)' }}>🖼️<br/>גלריה</label>
           </div>
         )}
 

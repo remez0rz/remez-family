@@ -146,9 +146,11 @@ function DocumentationForm({ assignment, onSubmit, onSkip }) {
           <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', fontWeight: 600 }}>{assignment.mission.title}</div>
         </div>
 
-        <input type="file" accept="image/*,video/*" capture="environment"
-          onChange={handleMediaSelect} style={{ display: 'none' }} id="doc-camera" />
-        <input type="file" accept="image/*,video/*"
+        <input type="file" accept="image/*" capture="environment"
+          onChange={handleMediaSelect} style={{ display: 'none' }} id="doc-cam-photo" />
+        <input type="file" accept="video/*" capture="environment"
+          onChange={handleMediaSelect} style={{ display: 'none' }} id="doc-cam-video" />
+        <input type="file" accept="image/*,video/*" multiple
           onChange={handleMediaSelect} style={{ display: 'none' }} id="doc-gallery" />
 
         {preview ? (
@@ -170,19 +172,25 @@ function DocumentationForm({ assignment, onSubmit, onSkip }) {
             }}>✕</button>
           </div>
         ) : (
-          <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
-            <label htmlFor="doc-camera" style={{
-              flex: 1, padding: '12px 8px', background: 'rgba(255,255,255,0.08)',
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 12 }}>
+            <label htmlFor="doc-cam-photo" style={{
+              padding: '12px 6px', background: 'rgba(255,255,255,0.08)',
               borderRadius: 12, border: '1.5px dashed rgba(255,255,255,0.2)',
               textAlign: 'center', cursor: 'pointer',
               fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.85)'
-            }}>📷<br /><span style={{ fontSize: 11 }}>מצלמה</span></label>
+            }}>📷<br /><span style={{ fontSize: 11 }}>תמונה</span></label>
+            <label htmlFor="doc-cam-video" style={{
+              padding: '12px 6px', background: 'rgba(255,255,255,0.08)',
+              borderRadius: 12, border: '1.5px dashed rgba(255,255,255,0.2)',
+              textAlign: 'center', cursor: 'pointer',
+              fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.85)'
+            }}>🎬<br /><span style={{ fontSize: 11 }}>סרטון</span></label>
             <label htmlFor="doc-gallery" style={{
-              flex: 1, padding: '12px 8px', background: 'rgba(255,255,255,0.08)',
+              padding: '12px 6px', background: 'rgba(255,255,255,0.08)',
               borderRadius: 12, border: '1.5px dashed rgba(255,255,255,0.2)',
               textAlign: 'center', cursor: 'pointer',
               fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.85)'
-            }}>🎬<br /><span style={{ fontSize: 11 }}>גלריה / וידאו</span></label>
+            }}>🖼️<br /><span style={{ fontSize: 11 }}>גלריה</span></label>
           </div>
         )}
 

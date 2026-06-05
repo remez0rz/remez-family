@@ -288,6 +288,21 @@ function FeedCard({ post, profiles, currentProfile, reactionData, onNavigate }) 
           currentProfileId={currentProfile?.id}
           initialReactions={reactionData[post.id] || {}}
         />
+        {/* Edit button — shown for the post creator only */}
+        {currentProfile?.id === post.created_by && (
+          <div style={{ marginTop: 8, display: 'flex', justifyContent: 'flex-end' }}>
+            <button
+              onClick={() => isMission
+                ? onNavigate && onNavigate(`/missions/doc/${post.id}/edit`)
+                : onNavigate && onNavigate(`/tazkir/${post.linked_id || post.id}/edit`)
+              }
+              style={{
+                background: 'none', border: '1px solid #e0d8c8', borderRadius: 20,
+                padding: '4px 12px', fontSize: 11, color: '#a09080', cursor: 'pointer',
+                fontFamily: 'var(--font-heebo), sans-serif', fontWeight: 600
+              }}>✏️ ערוך</button>
+          </div>
+        )}
       </div>
     </div>
   )
@@ -513,7 +528,7 @@ export default function FeedPage() {
                 profiles={profiles}
                 currentProfile={currentProfile}
                 reactionData={reactionData}
-                onNavigate={(id) => router.push(`/tazkir/${id}`)}
+                onNavigate={(path) => router.push(path.startsWith('/') ? path : `/tazkir/${path}`)}
               />
             ))}
 
