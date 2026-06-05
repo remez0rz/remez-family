@@ -80,6 +80,158 @@ function QuickDailyDoc({ mission, uploading, onSubmit, onSkip, onClose }) {
   )
 }
 
+// ── Quick Mission Modal (parent home shortcut) ────────────────────────────────
+const QUICK_CATEGORIES = [
+  { id: 'Family',   emoji: '👨‍👩‍👧', label: 'משפחה' },
+  { id: 'Helping',  emoji: '🤝',     label: 'עזרה' },
+  { id: 'Learning', emoji: '🧠',     label: 'לימוד' },
+  { id: 'Outdoor',  emoji: '🌿',     label: 'בחוץ' },
+  { id: 'Creative', emoji: '🎨',     label: 'יצירה' },
+  { id: 'Daily',    emoji: '🌅',     label: 'יומי' },
+]
+
+function QuickMissionModal({ profiles, onClose, onCreated }) {
+  const children  = profiles.filter(p => p.role === 'child')
+  const [title, setTitle]         = useState('')
+  const [points, setPoints]       = useState(30)
+  const [category, setCategory]   = useState('Family')
+  const [assignTo, setAssignTo]   = useState([])
+  const [repeatable, setRepeatable] = useState(false)
+  const [saving, setSaving]       = useState(false)
+
+  const toggleChild = (id) => setAssignTo(prev =>
+    prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
+  )
+
+  const handleSave = async () => {
+    if (!title.trim() || saving) return
+    setSaving(true)
+
+    // 1. Create the mission
+    const { data: mission } = await supabase.from('missions').insert({
+      title: title.trim(), points, category,
+      repeatable, is_active: true,
+      type: 'fun', difficulty: 'easy', estimated_minutes: 20,
+    }).select().single()
+
+    // 2. Assign immediately if kids selected
+    if (mission && assignTo.length) {
+      await supabase.from('assignments').insert(
+        assignTo.map(id => ({ mission_id: mission.id, assigned_to: id, status: 'active' }))
+      )
+      // Push notify assigned kids
+      const names = assignTo.map(id => profiles.find(p => p.id === id)?.name).filter(Boolean).join(' ו')
+      fetch('/api/push/send', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ memberIds: assignTo, title: '⭐ אתגר חדש!', body: `${title.trim()} — בא לצבור נקודות!`, url: '/missions/active', tag: 'newmission' })
+      }).catch(() => {})
+    }
+
+    setSaving(false)
+    onCreated()
+  }
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(10,22,40,0.88)', zIndex: 1000, display: 'flex', alignItems: 'flex-end', justifyContent: 'center', fontFamily: 'var(--font-heebo), sans-serif', direction: 'rtl' }}>
+      <div style={{ background: 'white', borderRadius: '24px 24px 0 0', padding: '24px 20px 40px', width: '100%', maxWidth: 480, maxHeight: '90vh', overflowY: 'auto' }}>
+
+        {/* Handle */}
+        <div style={{ width: 40, height: 4, background: '#e0d8c8', borderRadius: 4, margin: '0 auto 20px' }} />
+
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+          <div style={{ fontSize: 18, fontWeight: 900, color: NAVY }}>⚡ משימה מהירה</div>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer', color: '#a09080' }}>✕</button>
+        </div>
+
+        {/* Title */}
+        <input value={title} onChange={e => setTitle(e.target.value)}
+          placeholder="שם המשימה — למשל: סדר את החדר"
+          autoFocus
+          style={{ width: '100%', padding: '13px 14px', border: '1.5px solid #ede8e0', borderRadius: 14, fontSize: 15, color: NAVY, background: '#faf8f4', fontFamily: 'var(--font-heebo), sans-serif', boxSizing: 'border-box', outline: 'none', marginBottom: 14, fontWeight: 600 }} />
+
+        {/* Points */}
+        <div style={{ marginBottom: 14 }}>
+          <div style={{ fontSize: 12, fontWeight: 700, color: '#6b5e4e', marginBottom: 8 }}>נקודות</div>
+          <div style={{ display: 'flex', gap: 8 }}>
+            {[10, 20, 30, 50, 100].map(p => (
+              <button key={p} onClick={() => setPoints(p)} style={{
+                flex: 1, padding: '9px 4px', borderRadius: 12, border: 'none', cursor: 'pointer',
+                background: points === p ? CORAL : '#f0ebe0',
+                color: points === p ? 'white' : NAVY,
+                fontWeight: 700, fontSize: 13, fontFamily: 'var(--font-heebo), sans-serif'
+              }}>{p}</button>
+            ))}
+            <input type="number" value={points} onChange={e => setPoints(parseInt(e.target.value) || 0)}
+              style={{ width: 52, padding: '9px 6px', borderRadius: 12, border: '1.5px solid #ede8e0', fontSize: 13, color: NAVY, background: '#faf8f4', fontFamily: 'var(--font-heebo), sans-serif', textAlign: 'center', outline: 'none' }} />
+          </div>
+        </div>
+
+        {/* Category */}
+        <div style={{ marginBottom: 14 }}>
+          <div style={{ fontSize: 12, fontWeight: 700, color: '#6b5e4e', marginBottom: 8 }}>קטגוריה</div>
+          <div style={{ display: 'flex', gap: 7, flexWrap: 'wrap' }}>
+            {QUICK_CATEGORIES.map(c => (
+              <button key={c.id} onClick={() => setCategory(c.id)} style={{
+                padding: '7px 12px', borderRadius: 20, border: 'none', cursor: 'pointer',
+                background: category === c.id ? NAVY : '#f0ebe0',
+                color: category === c.id ? 'white' : NAVY,
+                fontWeight: 700, fontSize: 12, fontFamily: 'var(--font-heebo), sans-serif'
+              }}>{c.emoji} {c.label}</button>
+            ))}
+          </div>
+        </div>
+
+        {/* Assign to */}
+        {children.length > 0 && (
+          <div style={{ marginBottom: 14 }}>
+            <div style={{ fontSize: 12, fontWeight: 700, color: '#6b5e4e', marginBottom: 8 }}>שלח מיד ל... (לא חובה)</div>
+            <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>
+              {children.map(child => (
+                <div key={child.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+                  <div onClick={() => toggleChild(child.id)} style={{
+                    width: 50, height: 50, borderRadius: '50%',
+                    border: `2.5px solid ${assignTo.includes(child.id) ? CORAL : '#e0d8c8'}`,
+                    overflow: 'hidden', cursor: 'pointer', background: '#f0ebe0',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: 18, fontWeight: 700, color: NAVY,
+                    boxShadow: assignTo.includes(child.id) ? `0 0 0 3px ${CORAL}33` : 'none',
+                    transition: 'all 0.15s'
+                  }}>
+                    {child.avatar_url
+                      ? <img src={child.avatar_url} alt={child.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={e => e.target.style.display = 'none'} />
+                      : child.name?.charAt(0)}
+                  </div>
+                  <span style={{ fontSize: 11, fontWeight: 600, color: assignTo.includes(child.id) ? CORAL : '#a09080' }}>{child.name}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Repeatable toggle */}
+        <label style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20, cursor: 'pointer', padding: '10px 12px', background: '#faf8f4', borderRadius: 12 }}>
+          <input type="checkbox" checked={repeatable} onChange={e => setRepeatable(e.target.checked)}
+            style={{ width: 18, height: 18, accentColor: CORAL, cursor: 'pointer' }} />
+          <div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: NAVY }}>משימה חוזרת</div>
+            <div style={{ fontSize: 11, color: '#a09080' }}>הילד יוכל לבצע שוב ושוב</div>
+          </div>
+        </label>
+
+        <button onClick={handleSave} disabled={!title.trim() || saving} style={{
+          width: '100%', padding: '14px',
+          background: title.trim() ? `linear-gradient(135deg, ${CORAL}, #FF8E53)` : '#e0d8c8',
+          color: 'white', border: 'none', borderRadius: 50,
+          cursor: title.trim() ? 'pointer' : 'default',
+          fontWeight: 900, fontSize: 15, fontFamily: 'var(--font-heebo), sans-serif',
+          boxShadow: title.trim() ? '0 4px 16px rgba(255,107,107,0.4)' : 'none'
+        }}>
+          {saving ? '⏳ שומר...' : assignTo.length ? `⚡ צור ושלח ל${assignTo.length > 1 ? assignTo.length + ' ילדים' : profiles.find(p => p.id === assignTo[0])?.name || 'ילד'}` : '➕ צור משימה'}
+        </button>
+      </div>
+    </div>
+  )
+}
+
 const REACTIONS = [
   { type: 'proud',  emoji: '❤️' },
   { type: 'fire',   emoji: '🔥' },
@@ -487,6 +639,8 @@ function KidHome({ currentProfile, missions, dailyMissions, completedTodayIds, r
 
 // Parent homepage
 function ParentHome({ currentProfile, profiles, activeAssignments, recentFeed, rewards, reactionData, handleReaction, handleSignOut, handleViewAs, pendingClaims, dailyReport }) {
+  const [showQuickMission, setShowQuickMission] = useState(false)
+  const [quickMissionDone, setQuickMissionDone] = useState(false)
   const children    = profiles.filter(p => p.role === 'child').sort((a, b) => b.total_points - a.total_points)
   const childColors = [GOLD, PURPLE, GREEN]
   const getNextReward = (points) => rewards.find(r => r.points_required > points)
@@ -501,6 +655,25 @@ function ParentHome({ currentProfile, profiles, activeAssignments, recentFeed, r
 
   return (
     <>
+      {showQuickMission && (
+        <QuickMissionModal
+          profiles={profiles}
+          onClose={() => setShowQuickMission(false)}
+          onCreated={() => {
+            setShowQuickMission(false)
+            setQuickMissionDone(true)
+            setTimeout(() => setQuickMissionDone(false), 2500)
+          }}
+        />
+      )}
+
+      {quickMissionDone && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 900, background: 'rgba(10,22,40,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 12, fontFamily: 'var(--font-heebo), sans-serif', direction: 'rtl' }}>
+          <div style={{ fontSize: 52 }}>⚡</div>
+          <div style={{ fontSize: 20, fontWeight: 900, color: 'white' }}>המשימה נוצרה!</div>
+        </div>
+      )}
+
       {/* Header */}
       <div style={{
         background: HEADER_BG, padding: '24px 18px 28px',
@@ -513,16 +686,19 @@ function ParentHome({ currentProfile, profiles, activeAssignments, recentFeed, r
             <div style={{ fontSize: 24, fontWeight: 900, color: 'white' }}>משפחת רמז 🏡</div>
             <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.8)', marginTop: 3, fontWeight: 600 }}>מה עושים היום?</div>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <button onClick={() => setShowQuickMission(true)} style={{
+              background: 'white', color: CORAL, border: 'none',
+              borderRadius: 50, padding: '8px 14px', cursor: 'pointer',
+              fontWeight: 900, fontSize: 13,
+              fontFamily: 'var(--font-heebo), sans-serif',
+              boxShadow: '0 3px 10px rgba(255,107,107,0.35)',
+              display: 'flex', alignItems: 'center', gap: 5,
+              whiteSpace: 'nowrap'
+            }}>⚡ משימה מהירה</button>
             <a href="/profiles" style={{ textDecoration: 'none' }}>
-              <Avatar profile={currentProfile} size={44} />
+              <Avatar profile={currentProfile} size={40} />
             </a>
-            <button onClick={handleSignOut} style={{
-              background: 'rgba(255,255,255,0.2)', border: 'none',
-              borderRadius: 20, color: 'white', fontSize: 12,
-              padding: '6px 14px', cursor: 'pointer', fontFamily: 'var(--font-heebo), sans-serif',
-              fontWeight: 700
-            }}>יציאה</button>
           </div>
         </div>
 

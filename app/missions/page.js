@@ -93,9 +93,10 @@ function Avatar({ profile, size = 44, selected = false, onClick }) {
   )
 }
 
-function MissionFormModal({ mission, onClose, onSaved }) {
+function MissionFormModal({ mission, profiles = [], onClose, onSaved }) {
   const isNew = !mission?.id
   const CATEGORIES = Object.keys(CATEGORY_LABELS)
+  const children = profiles.filter(p => p.role === 'child')
   const [form, setForm] = useState({
     title:             mission?.title             || '',
     description:       mission?.description       || '',
@@ -104,11 +105,12 @@ function MissionFormModal({ mission, onClose, onSaved }) {
     points:            mission?.points            || 30,
     difficulty:        mission?.difficulty        || 'easy',
     estimated_minutes: mission?.estimated_minutes || 20,
-    repeatable:        mission?.repeatable        ?? true,
+    repeatable:        mission?.repeatable        ?? false,   // default OFF
     is_active:         mission?.is_active         ?? true,
     proof_type:        'none',
     image_url:         mission?.image_url         || '',
   })
+  const [assignTo, setAssignTo]   = useState([])
   const [saving, setSaving]       = useState(false)
   const [uploading, setUploading] = useState(false)
 
@@ -131,7 +133,15 @@ function MissionFormModal({ mission, onClose, onSaved }) {
     if (!form.title.trim()) return
     setSaving(true)
     if (isNew) {
-      await supabase.from('missions').insert(form)
+      const { data: created } = await supabase.from('missions').insert(form).select().single()
+      if (created && assignTo.length) {
+        await supabase.from('assignments').insert(
+          assignTo.map(id => ({ mission_id: created.id, assigned_to: id, status: 'active' }))
+        )
+        fetch('/api/push/send', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ memberIds: assignTo, title: '⭐ אתגר חדש!', body: `${form.title.trim()} — בא לצבור נקודות!`, url: '/missions/active', tag: 'newmission' })
+        }).catch(() => {})
+      }
     } else {
       await supabase.from('missions').update(form).eq('id', mission.id)
     }
@@ -260,6 +270,29 @@ function MissionFormModal({ mission, onClose, onSaved }) {
             אתגר פעיל
           </label>
         </div>
+
+        {isNew && children.length > 0 && (
+          <div style={{ marginBottom: 16 }}>
+            <div style={{ fontSize: 12, fontWeight: 700, color: '#6b5e4e', marginBottom: 8 }}>שלח מיד ל... (לא חובה)</div>
+            <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>
+              {children.map(child => (
+                <div key={child.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+                  <div onClick={() => setAssignTo(prev => prev.includes(child.id) ? prev.filter(x => x !== child.id) : [...prev, child.id])} style={{
+                    width: 46, height: 46, borderRadius: '50%', overflow: 'hidden', cursor: 'pointer',
+                    border: `2.5px solid ${assignTo.includes(child.id) ? CORAL : '#e0d8c8'}`,
+                    background: '#f0ebe0', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: 16, fontWeight: 700, color: NAVY,
+                    boxShadow: assignTo.includes(child.id) ? `0 0 0 3px ${CORAL}33` : 'none',
+                    transition: 'all 0.15s'
+                  }}>
+                    {child.avatar_url ? <img src={child.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={e => e.target.style.display='none'} /> : child.name?.charAt(0)}
+                  </div>
+                  <span style={{ fontSize: 11, fontWeight: 600, color: assignTo.includes(child.id) ? CORAL : '#a09080' }}>{child.name}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         <button onClick={handleSave} disabled={saving || !form.title.trim()} style={{
           width: '100%', padding: '14px',
@@ -621,6 +654,7 @@ export default function MissionsPage() {
       {(showForm || editTarget) && (
         <MissionFormModal
           mission={editTarget || null}
+          profiles={profiles}
           onClose={() => { setShowForm(false); setEditTarget(null) }}
           onSaved={handleSaved}
         />
