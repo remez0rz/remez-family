@@ -277,6 +277,14 @@ const PROMPTS = {
     'A whole family jumping up and celebrating a goal together in the living room, arms in the air, pure joy, soccer ball and TV glowing in background',
   '📺 צפיתי בתקציר המשחקים עם אבא':
     'A father and child sitting close together watching soccer match highlights on TV in the evening, both smiling and pointing at the screen, cozy warm light',
+
+  // ── FAMILY QUICK MISSIONS ────────────────────────────────────────────────
+  'להכניס את אור למקלחת':
+    'A cheerful young child happily stepping into a bright bathroom shower with bubbles and a rubber duck, splashing water, joyful bath time',
+  'התנגה יפה וקראה הרבה':
+    'A happy child curled up reading a stack of books with a big proud smile, cozy reading nook with cushions and warm lamp light',
+  'הכנתי שיעורי בית ':
+    'A focused child proudly finishing homework at a tidy desk with pencils and notebooks, satisfied smile, bright study corner',
 }
 
 // ── Helpers ─────────────────────────────────────────────────────────────────

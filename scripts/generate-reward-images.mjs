@@ -117,6 +117,14 @@ const PROMPTS = {
     `${FAMILY} at an amusement park, kids on a ride with arms up, huge smiles, colorful park`,
   'פרס משפחתי משותף':
     `${KIDS} holding a big trophy together, teamwork pose, confetti falling, huge celebration`,
+
+  // Mondial / World Cup rewards
+  'נשארים ערים למשחק מאוחר':
+    `${KIDS} in pajamas excitedly staying up late on the couch to watch a soccer match on TV, night time, glowing screen, soccer ball nearby`,
+  'ערב פיצה ומשחק מונדיאל':
+    `${FAMILY} enjoying a pizza and soccer night, open pizza boxes, watching a match on TV, cheering together, cozy evening`,
+  'בוחר/ת את המשחק שצופים בו':
+    `${BOY10} proudly holding a TV remote choosing a soccer match for the family to watch, soccer ball under his arm, family gathered on the couch`,
 }
 
 function loadProgress() {
