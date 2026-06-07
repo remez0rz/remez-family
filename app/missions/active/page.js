@@ -630,13 +630,13 @@ export default function ActiveEarningPage() {
 
                 {/* Card body */}
                 <div style={{ background: 'white', padding: '14px 16px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-                    {isParent && memberProfile && <Avatar profile={memberProfile} size={32} />}
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 15, fontWeight: 800, color: NAVY, lineHeight: 1.3 }}>{a.mission?.title}</div>
-                      {isParent && <div style={{ fontSize: 12, color: '#a09080', marginTop: 2 }}>{memberProfile?.name}</div>}
+                  <div style={{ fontSize: 15, fontWeight: 800, color: NAVY, lineHeight: 1.3, marginBottom: isParent ? 8 : 12 }}>{a.mission?.title}</div>
+                  {isParent && memberProfile && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 12 }}>
+                      <Avatar profile={memberProfile} size={22} />
+                      <span style={{ fontSize: 12, color: '#a09080', fontWeight: 600 }}>{memberProfile.name}</span>
                     </div>
-                  </div>
+                  )}
 
                   {(!isParent || isViewingAsKid) && (
                     <button onClick={() => handleComplete(a)} style={{
