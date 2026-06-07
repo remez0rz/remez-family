@@ -4,6 +4,7 @@ import { supabase, getCurrentProfile } from './lib/supabase'
 import { useRouter } from 'next/navigation'
 import dynamic from 'next/dynamic'
 import BottomNav from './components/BottomNav'
+import { flagFor, isWorldCupActive } from './lib/worldcup'
 
 const GroceryList      = dynamic(() => import('./components/GroceryList'),      { ssr: false })
 const FamilyCalendar   = dynamic(() => import('./components/FamilyCalendar'),   { ssr: false })
@@ -269,19 +270,25 @@ const CATEGORY_VISUAL = {
 
 function Avatar({ profile, size = 40 }) {
   const [imgError, setImgError] = useState(false)
+  const flag = isWorldCupActive() ? flagFor(profile?.world_cup_team) : ''
   return (
     <div style={{
       width: size, height: size, borderRadius: '50%',
-      border: `3px solid rgba(255,255,255,0.8)`, overflow: 'hidden', flexShrink: 0,
+      border: `3px solid rgba(255,255,255,0.8)`, flexShrink: 0,
       background: '#FFD5E8', display: 'flex', alignItems: 'center',
       justifyContent: 'center', fontSize: size * 0.38, fontWeight: 800, color: CORAL,
-      boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
+      boxShadow: '0 2px 8px rgba(0,0,0,0.15)', position: 'relative'
     }}>
-      {profile?.avatar_url && !imgError
-        ? <img src={profile.avatar_url} alt={profile?.name}
-            onError={() => setImgError(true)}
-            style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-        : profile?.name?.charAt(0)}
+      <div style={{ width: '100%', height: '100%', borderRadius: '50%', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        {profile?.avatar_url && !imgError
+          ? <img src={profile.avatar_url} alt={profile?.name}
+              onError={() => setImgError(true)}
+              style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          : profile?.name?.charAt(0)}
+      </div>
+      {flag && (
+        <div style={{ position: 'absolute', bottom: -2, right: -2, fontSize: size * 0.4, lineHeight: 1, filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.35))' }}>{flag}</div>
+      )}
     </div>
   )
 }
@@ -302,6 +309,26 @@ function Card({ children, style = {} }) {
       boxShadow: '0 4px 20px rgba(0,0,0,0.07)', marginBottom: 14, ...style
     }}>
       {children}
+    </div>
+  )
+}
+
+function MondialBanner() {
+  const router = useRouter()
+  if (!isWorldCupActive()) return null
+  return (
+    <div onClick={() => router.push('/mondial')} style={{
+      background: 'linear-gradient(135deg, #1a6b3c 0%, #0d4023 100%)',
+      borderRadius: 20, padding: '16px 18px', marginBottom: 14, cursor: 'pointer',
+      display: 'flex', alignItems: 'center', gap: 12,
+      boxShadow: '0 4px 16px rgba(26,107,60,0.35)'
+    }}>
+      <div style={{ fontSize: 34 }}>⚽</div>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontSize: 15, fontWeight: 900, color: 'white' }}>מונדיאל 2026</div>
+        <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.85)', fontWeight: 600, marginTop: 1 }}>בחרו נבחרת, אספו נקודות, אל תפספסו משחק!</div>
+      </div>
+      <div style={{ background: 'rgba(255,255,255,0.2)', borderRadius: 20, padding: '6px 12px', fontSize: 12, fontWeight: 800, color: 'white' }}>פתח ←</div>
     </div>
   )
 }
@@ -408,6 +435,8 @@ function KidHome({ currentProfile, missions, dailyMissions, completedTodayIds, r
       </div>
 
       <div className="app-body">
+
+        <MondialBanner />
 
         {/* All done for today */}
         {todayMissions.length === 0 && visibleDailyMissions.length === 0 && activeAssignments.length === 0 && (
@@ -726,6 +755,8 @@ function ParentHome({ currentProfile, profiles, activeAssignments, recentFeed, r
       </div>
 
       <div className="app-body">
+
+        <MondialBanner />
 
         {/* Pending approvals banner */}
         {pending.length > 0 && (

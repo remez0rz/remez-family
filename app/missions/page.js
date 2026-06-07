@@ -33,6 +33,7 @@ const CATEGORY_VISUAL = {
   Family:   { emoji: '👨‍👩‍👧' }, Memory:  { emoji: '📸' },
   Daily:    { emoji: '🌅' },
   Special:  { emoji: '🎁' },
+  Mondial:  { emoji: '⚽' },
 }
 
 const CATEGORY_LABELS = {
@@ -41,10 +42,12 @@ const CATEGORY_LABELS = {
   Reading: 'קריאה', English: 'אנגלית', Hebrew: 'עברית',
   Kindness: 'מעשים טובים', House: 'הבית שלנו', Memory: 'זיכרונות',
   Health: 'בריאות', Weekend: 'סופ״ש', Daily: 'משימות יומיות', Special: 'פרסים מיוחדים',
+  Mondial: 'מונדיאל ⚽',
 }
 
 const FILTERS = [
   { id: 'all',      label: 'הכל',           categories: null },
+  { id: 'mondial',  label: '⚽ מונדיאל',     categories: ['Mondial'] },
   { id: 'special',  label: '🎁 מיוחדים',    categories: ['Special'], parentOnly: true },
   { id: 'daily',    label: '🌅 יומי',        categories: ['Daily'] },
   { id: 'easy',     label: 'קל ומהיר',      maxPoints: 30 },
