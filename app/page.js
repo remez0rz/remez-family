@@ -511,38 +511,32 @@ function KidHome({ currentProfile, missions, dailyMissions, completedTodayIds, r
                     {hasImage && (
                       <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.05) 55%, transparent 100%)' }} />
                     )}
-                    <div style={{ position: 'absolute', top: 12, left: 14, zIndex: 1 }}>
-                      <div style={{
-                        background: 'rgba(255,255,255,0.18)', borderRadius: 14,
-                        padding: '7px 13px', backdropFilter: 'blur(6px)',
-                        border: '1px solid rgba(255,255,255,0.28)', textAlign: 'center'
-                      }}>
-                        <div style={{ fontSize: 20, fontWeight: 900, color: 'white', lineHeight: 1 }}>+{mission.points}</div>
-                        <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.9)', fontWeight: 700 }}>נק׳ · {mission.estimated_minutes} דק׳</div>
-                      </div>
+                    <div style={{ position: 'absolute', top: 10, left: 10, zIndex: 1, background: 'rgba(0,0,0,0.42)', borderRadius: 20, padding: '4px 11px', backdropFilter: 'blur(6px)', display: 'flex', alignItems: 'baseline', gap: 4 }}>
+                      <span style={{ fontSize: 15, fontWeight: 900, color: 'white', lineHeight: 1 }}>+{mission.points}</span>
+                      <span style={{ fontSize: 9, color: 'rgba(255,255,255,0.85)', fontWeight: 700 }}>נק׳</span>
                     </div>
-                    <div style={{ position: 'absolute', bottom: 12, right: 14, zIndex: 1, display: 'flex', alignItems: 'center', gap: 5 }}>
-                      <span style={{ fontSize: 20 }}>{visual.emoji}</span>
-                      <span style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.95)', textShadow: '0 1px 3px rgba(0,0,0,0.5)' }}>
+                    <div style={{ position: 'absolute', bottom: 10, right: 12, zIndex: 1, display: 'flex', alignItems: 'center', gap: 4 }}>
+                      <span style={{ fontSize: 17 }}>{visual.emoji}</span>
+                      <span style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.95)', textShadow: '0 1px 3px rgba(0,0,0,0.6)' }}>
                         {CATEGORY_LABELS[mission.category] || mission.category}
                       </span>
                     </div>
-                  </div>
-                  <div style={{ background: 'white', padding: '14px 18px' }}>
-                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, marginBottom: 10 }}>
-                      <div style={{ flex: 1, fontSize: 14, fontWeight: 800, color: NAVY }}>{mission.title}</div>
-                      <SpeakButton text={[mission.title, mission.description]} />
+                    <div style={{ position: 'absolute', bottom: 8, left: 8, zIndex: 2 }}>
+                      <SpeakButton onBg size={40} text={[mission.title, mission.description]} />
                     </div>
+                  </div>
+                  <div style={{ background: 'white', padding: '14px 16px' }}>
+                    <div style={{ fontSize: 14, fontWeight: 800, color: NAVY, lineHeight: 1.3, marginBottom: 10 }}>{mission.title}</div>
                     <button onClick={() => handleStartMission(mission)} disabled={starting} style={{
                       width: '100%', padding: '11px',
                       background: starting ? '#F0EBE0' : CORAL,
                       color: starting ? '#a09080' : 'white',
                       border: 'none', borderRadius: 50, cursor: starting ? 'default' : 'pointer',
-                      fontWeight: 800, fontSize: 13,
+                      fontWeight: 800, fontSize: 14, whiteSpace: 'nowrap',
                       fontFamily: 'var(--font-heebo), sans-serif',
                       boxShadow: starting ? 'none' : '0 4px 12px rgba(255,107,107,0.35)',
                     }}>
-                      {starting ? 'שולח...' : 'אני רוצה לנסות ⭐'}
+                      {starting ? 'שולח...' : 'יאללה! ⭐'}
                     </button>
                   </div>
                 </div>
@@ -619,32 +613,26 @@ function KidHome({ currentProfile, missions, dailyMissions, completedTodayIds, r
                       : `linear-gradient(135deg, ${gradient[0]}, ${gradient[1]})`,
                   }}>
                     {hasImage && <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.05) 55%, transparent 100%)' }} />}
-                    <div style={{ position: 'absolute', top: 12, left: 14, zIndex: 1 }}>
-                      <div style={{ background: 'rgba(255,255,255,0.18)', borderRadius: 14, padding: '7px 13px', backdropFilter: 'blur(6px)', border: '1px solid rgba(255,255,255,0.28)', textAlign: 'center' }}>
-                        <div style={{ fontSize: 22, fontWeight: 900, color: 'white', lineHeight: 1 }}>{mission.points}</div>
-                        <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.9)', fontWeight: 700 }}>נק׳</div>
-                      </div>
+                    <div style={{ position: 'absolute', top: 10, left: 10, zIndex: 1, background: 'rgba(0,0,0,0.42)', borderRadius: 20, padding: '4px 11px', backdropFilter: 'blur(6px)', display: 'flex', alignItems: 'baseline', gap: 4 }}>
+                      <span style={{ fontSize: 15, fontWeight: 900, color: 'white', lineHeight: 1 }}>{mission.points}</span>
+                      <span style={{ fontSize: 9, color: 'rgba(255,255,255,0.85)', fontWeight: 700 }}>נק׳</span>
                     </div>
-                    <div style={{ position: 'absolute', bottom: 12, right: 14, zIndex: 1, display: 'flex', alignItems: 'center', gap: 5 }}>
-                      <span style={{ fontSize: 20, filter: 'drop-shadow(0 1px 3px rgba(0,0,0,0.4))' }}>{visual.emoji}</span>
-                      <span style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.95)', textShadow: '0 1px 3px rgba(0,0,0,0.5)', letterSpacing: '0.04em' }}>
+                    <div style={{ position: 'absolute', bottom: 10, right: 12, zIndex: 1, display: 'flex', alignItems: 'center', gap: 4 }}>
+                      <span style={{ fontSize: 17, filter: 'drop-shadow(0 1px 3px rgba(0,0,0,0.4))' }}>{visual.emoji}</span>
+                      <span style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.95)', textShadow: '0 1px 3px rgba(0,0,0,0.6)' }}>
                         {CATEGORY_LABELS[mission.category] || mission.category}
                       </span>
+                    </div>
+                    <div style={{ position: 'absolute', bottom: 8, left: 8, zIndex: 2 }}>
+                      <SpeakButton onBg size={40} text={[mission.title, mission.description]} />
                     </div>
                   </div>
                   {/* Card body */}
                   <div style={{ background: 'white', padding: '14px 16px' }}>
-                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, marginBottom: 4 }}>
-                      <div style={{ flex: 1, fontSize: 15, fontWeight: 800, color: NAVY, lineHeight: 1.3 }}>{mission.title}</div>
-                      <SpeakButton text={[mission.title, mission.description]} />
-                    </div>
-                    <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
-                      <span style={{ fontSize: 11, color: '#8a7a60' }}>⏱ {mission.estimated_minutes} דק׳</span>
-                      <span style={{ fontSize: 11, color: '#4ECDC4', fontWeight: 600 }}>🔁 יומי</span>
-                    </div>
+                    <div style={{ fontSize: 15, fontWeight: 800, color: NAVY, lineHeight: 1.3, marginBottom: 6 }}>{mission.title}</div>
                     <button onClick={() => onQuickDaily(mission)} style={{
                       width: '100%', padding: '12px', background: CORAL, color: 'white',
-                      border: 'none', borderRadius: 50, cursor: 'pointer',
+                      border: 'none', borderRadius: 50, cursor: 'pointer', whiteSpace: 'nowrap',
                       fontWeight: 700, fontSize: 14, fontFamily: 'var(--font-heebo), sans-serif',
                       boxShadow: '0 4px 12px rgba(255,107,107,0.35)'
                     }}>עשיתי! ⭐</button>

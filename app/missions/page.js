@@ -416,31 +416,30 @@ function ChallengeCard({ mission, index, isParent, currentProfile, onStart, onAs
           <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.05) 55%, transparent 100%)' }} />
         )}
 
-        {/* Points badge — top left (physical, start in RTL) */}
-        <div style={{ position: 'absolute', top: 12, left: 14, zIndex: 1 }}>
-          <div style={{
-            background: 'rgba(255,255,255,0.18)', borderRadius: 14,
-            padding: '7px 13px', backdropFilter: 'blur(6px)',
-            border: '1px solid rgba(255,255,255,0.28)', textAlign: 'center'
-          }}>
-            <div style={{ fontSize: 22, fontWeight: 900, color: 'white', lineHeight: 1 }}>{mission.points}</div>
-            <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.9)', fontWeight: 700 }}>נק׳</div>
-          </div>
+        {/* Points badge — top left, compact pill */}
+        <div style={{ position: 'absolute', top: 10, left: 10, zIndex: 1, background: 'rgba(0,0,0,0.42)', borderRadius: 20, padding: '4px 11px', backdropFilter: 'blur(6px)', display: 'flex', alignItems: 'baseline', gap: 4 }}>
+          <span style={{ fontSize: 15, fontWeight: 900, color: 'white', lineHeight: 1 }}>{mission.points}</span>
+          <span style={{ fontSize: 9, color: 'rgba(255,255,255,0.85)', fontWeight: 700 }}>נק׳</span>
         </div>
 
         {/* Category — bottom right */}
-        <div style={{ position: 'absolute', bottom: 12, right: 14, zIndex: 1, display: 'flex', alignItems: 'center', gap: 5 }}>
-          <span style={{ fontSize: 20, filter: 'drop-shadow(0 1px 3px rgba(0,0,0,0.4))' }}>{visual.emoji}</span>
-          <span style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.95)', textShadow: '0 1px 3px rgba(0,0,0,0.5)', letterSpacing: '0.04em' }}>
+        <div style={{ position: 'absolute', bottom: 10, right: 12, zIndex: 1, display: 'flex', alignItems: 'center', gap: 4 }}>
+          <span style={{ fontSize: 17, filter: 'drop-shadow(0 1px 3px rgba(0,0,0,0.4))' }}>{visual.emoji}</span>
+          <span style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.95)', textShadow: '0 1px 3px rgba(0,0,0,0.6)', letterSpacing: '0.04em' }}>
             {CATEGORY_LABELS[mission.category] || mission.category}
           </span>
+        </div>
+
+        {/* Read aloud — bottom left, floating */}
+        <div style={{ position: 'absolute', bottom: 8, left: 8, zIndex: 2 }}>
+          <SpeakButton onBg size={40} text={[mission.title, mission.description]} />
         </div>
 
         {/* Edit — top right, parent only */}
         {isParent && (
           <button onClick={() => onEdit(mission)} style={{
             position: 'absolute', top: 10, right: 12, zIndex: 1,
-            background: 'rgba(255,255,255,0.2)', border: '1px solid rgba(255,255,255,0.3)',
+            background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.3)',
             borderRadius: '50%', width: 30, height: 30, cursor: 'pointer', fontSize: 13,
             display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(4px)'
           }}>✏️</button>
@@ -449,10 +448,7 @@ function ChallengeCard({ mission, index, isParent, currentProfile, onStart, onAs
 
       {/* Card body */}
       <div style={{ background: 'white', padding: '14px 16px' }}>
-        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, marginBottom: 4 }}>
-          <div style={{ flex: 1, fontSize: 15, fontWeight: 800, color: NAVY, lineHeight: 1.3 }}>{mission.title}</div>
-          <SpeakButton text={[mission.title, mission.description]} />
-        </div>
+        <div style={{ fontSize: 15, fontWeight: 800, color: NAVY, lineHeight: 1.3, marginBottom: 4 }}>{mission.title}</div>
         {mission.description && (
           <div style={{ fontSize: 12, color: '#6b5e4e', marginBottom: 8, lineHeight: 1.5 }}>{mission.description}</div>
         )}
@@ -474,12 +470,12 @@ function ChallengeCard({ mission, index, isParent, currentProfile, onStart, onAs
             width: '100%', padding: '12px',
             background: starting === mission.id ? '#e8e0d0' : CORAL,
             color: starting === mission.id ? '#a09080' : 'white',
-            border: 'none', borderRadius: 50,
+            border: 'none', borderRadius: 50, whiteSpace: 'nowrap',
             cursor: starting === mission.id ? 'default' : 'pointer',
             fontWeight: 700, fontSize: 14, fontFamily: 'var(--font-heebo), sans-serif',
             boxShadow: starting === mission.id ? 'none' : '0 4px 12px rgba(255,107,107,0.35)'
           }}>
-            {starting === mission.id ? 'שולח...' : 'אני עושה את זה ⭐'}
+            {starting === mission.id ? 'שולח...' : 'יאללה! ⭐'}
           </button>
         )}
       </div>
