@@ -4,6 +4,7 @@ import { supabase, getCurrentProfile } from '../../lib/supabase'
 import { useRouter } from 'next/navigation'
 import BottomNav from '../../components/BottomNav'
 import ViewAsBanner from '../../components/ViewAsBanner'
+import SpeakButton from '../../components/SpeakButton'
 
 const CORAL = '#FF6B6B'
 const TEAL = '#4ECDC4'
@@ -600,23 +601,17 @@ export default function ActiveEarningPage() {
                     <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.05) 55%, transparent 100%)' }} />
                   )}
 
-                  {/* Points badge */}
-                  <div style={{ position: 'absolute', top: 12, left: 14, zIndex: 1 }}>
-                    <div style={{
-                      background: 'rgba(255,255,255,0.18)', borderRadius: 14,
-                      padding: '7px 13px', backdropFilter: 'blur(6px)',
-                      border: '1px solid rgba(255,255,255,0.28)', textAlign: 'center'
-                    }}>
-                      <div style={{ fontSize: 22, fontWeight: 900, color: 'white', lineHeight: 1 }}>{a.mission?.points}</div>
-                      <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.9)', fontWeight: 700 }}>נק׳</div>
-                    </div>
+                  {/* Points pill — top left */}
+                  <div style={{ position: 'absolute', top: 10, left: 10, zIndex: 1, background: 'rgba(0,0,0,0.42)', borderRadius: 20, padding: '4px 11px', backdropFilter: 'blur(6px)', display: 'flex', alignItems: 'baseline', gap: 4 }}>
+                    <span style={{ fontSize: 15, fontWeight: 900, color: 'white', lineHeight: 1 }}>{a.mission?.points}</span>
+                    <span style={{ fontSize: 9, color: 'rgba(255,255,255,0.85)', fontWeight: 700 }}>נק׳</span>
                   </div>
 
-                  {/* Category + due date */}
-                  <div style={{ position: 'absolute', bottom: 12, right: 14, zIndex: 1 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: a.due_date ? 4 : 0 }}>
-                      <span style={{ fontSize: 20 }}>{visual.emoji}</span>
-                      <span style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.95)', textShadow: '0 1px 3px rgba(0,0,0,0.5)' }}>
+                  {/* Category + due date — bottom right */}
+                  <div style={{ position: 'absolute', bottom: 10, right: 12, zIndex: 1, textAlign: 'left' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: a.due_date ? 3 : 0 }}>
+                      <span style={{ fontSize: 17, filter: 'drop-shadow(0 1px 3px rgba(0,0,0,0.4))' }}>{visual.emoji}</span>
+                      <span style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.95)', textShadow: '0 1px 3px rgba(0,0,0,0.6)' }}>
                         {CATEGORY_LABELS[a.mission?.category] || a.mission?.category}
                       </span>
                     </div>
@@ -626,14 +621,19 @@ export default function ActiveEarningPage() {
                       </div>
                     )}
                   </div>
+
+                  {/* Read aloud — bottom left, floating */}
+                  <div style={{ position: 'absolute', bottom: 8, left: 8, zIndex: 2 }}>
+                    <SpeakButton onBg size={40} text={[a.mission?.title, a.mission?.description]} />
+                  </div>
                 </div>
 
                 {/* Card body */}
                 <div style={{ background: 'white', padding: '14px 16px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-                    {memberProfile && <Avatar profile={memberProfile} size={32} />}
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: 15, fontWeight: 800, color: NAVY }}>{a.mission?.title}</div>
+                    {isParent && memberProfile && <Avatar profile={memberProfile} size={32} />}
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 15, fontWeight: 800, color: NAVY, lineHeight: 1.3 }}>{a.mission?.title}</div>
                       {isParent && <div style={{ fontSize: 12, color: '#a09080', marginTop: 2 }}>{memberProfile?.name}</div>}
                     </div>
                   </div>
@@ -641,7 +641,7 @@ export default function ActiveEarningPage() {
                   {(!isParent || isViewingAsKid) && (
                     <button onClick={() => handleComplete(a)} style={{
                       width: '100%', padding: '12px', background: CORAL,
-                      color: 'white', border: 'none', borderRadius: 50,
+                      color: 'white', border: 'none', borderRadius: 50, whiteSpace: 'nowrap',
                       cursor: 'pointer', fontWeight: 700, fontSize: 15,
                       fontFamily: 'var(--font-heebo), sans-serif'
                     }}>סיימתי! 🙌</button>
@@ -652,11 +652,11 @@ export default function ActiveEarningPage() {
                       width: '100%', padding: '12px',
                       background: awarding.has(a.id) ? '#e8e0d0' : GOLD,
                       color: awarding.has(a.id) ? '#a09080' : NAVY,
-                      border: 'none', borderRadius: 50,
+                      border: 'none', borderRadius: 50, whiteSpace: 'nowrap',
                       cursor: awarding.has(a.id) ? 'default' : 'pointer',
-                      fontWeight: 700, fontSize: 15,
+                      fontWeight: 700, fontSize: 14,
                       fontFamily: 'var(--font-heebo), sans-serif'
-                    }}>{awarding.has(a.id) ? 'מעבד...' : `⭐ אשר ותן ${a.mission?.points} נקודות`}</button>
+                    }}>{awarding.has(a.id) ? 'מעבד...' : `⭐ אשר +${a.mission?.points}`}</button>
                   )}
                 </div>
               </div>

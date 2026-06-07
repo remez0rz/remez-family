@@ -700,17 +700,6 @@ export default function MissionsPage() {
               {isParent ? 'שלח אתגרים לבני המשפחה' : 'בחרו אתגר קטן וצברו נקודות'}
             </div>
           </div>
-          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-            {isParent && !isViewingAsKid && (
-              <button onClick={() => setShowForm(true)} style={{
-                background: 'white', color: CORAL, border: 'none',
-                borderRadius: 50, padding: '7px 14px',
-                fontWeight: 700, fontSize: 13, cursor: 'pointer',
-                fontFamily: 'var(--font-heebo), sans-serif',
-                boxShadow: '0 4px 12px rgba(255,107,107,0.35)'
-              }}>+ אתגר</button>
-            )}
-          </div>
         </div>
 
         {/* Points hero for kids */}
@@ -775,19 +764,28 @@ export default function MissionsPage() {
               }}>{f.label}</button>
             ))}
           </div>
-          {/* Sort selector */}
-          <select value={sortOrder} onChange={e => setSortOrder(e.target.value)} style={{
-            flexShrink: 0, padding: '7px 8px', borderRadius: 20,
-            background: sortOrder !== 'default' ? CORAL : 'rgba(255,255,255,0.1)',
-            border: 'none', color: 'white', fontSize: 12, fontWeight: 600,
-            fontFamily: 'var(--font-heebo), sans-serif', cursor: 'pointer', outline: 'none'
-          }}>
-            <option value="default" style={{ color: NAVY }}>⬆ מיון</option>
-            <option value="newest"     style={{ color: NAVY }}>✨ חדש קודם</option>
-            <option value="points_asc" style={{ color: NAVY }}>⬆ נקודות: מעט</option>
-            <option value="points_desc" style={{ color: NAVY }}>⬇ נקודות: הרבה</option>
-            <option value="alpha"      style={{ color: NAVY }}>א-ב סדר אלפביתי</option>
-          </select>
+          {/* Sort — compact icon button (native select overlaid for the menu) */}
+          <div style={{ position: 'relative', flexShrink: 0, width: 38, height: 34 }}>
+            <div style={{
+              width: 38, height: 34, borderRadius: 20,
+              background: sortOrder !== 'default' ? CORAL : 'rgba(255,255,255,0.12)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: 16, color: 'white', pointerEvents: 'none'
+            }}>⇅</div>
+            <select value={sortOrder} onChange={e => setSortOrder(e.target.value)} aria-label="מיון"
+              style={{
+                position: 'absolute', inset: 0, width: '100%', height: '100%',
+                opacity: 0, cursor: 'pointer', border: 'none',
+                WebkitAppearance: 'none', appearance: 'none',
+                fontFamily: 'var(--font-heebo), sans-serif'
+              }}>
+              <option value="default"     style={{ color: NAVY }}>מיון רגיל</option>
+              <option value="newest"      style={{ color: NAVY }}>✨ חדש קודם</option>
+              <option value="points_asc"  style={{ color: NAVY }}>⬆ נקודות: מעט</option>
+              <option value="points_desc" style={{ color: NAVY }}>⬇ נקודות: הרבה</option>
+              <option value="alpha"       style={{ color: NAVY }}>א-ב סדר אלפביתי</option>
+            </select>
+          </div>
         </div>
       </div>
 
