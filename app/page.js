@@ -4,6 +4,7 @@ import { supabase, getCurrentProfile } from './lib/supabase'
 import { useRouter } from 'next/navigation'
 import dynamic from 'next/dynamic'
 import BottomNav from './components/BottomNav'
+import { EnableNotificationsButton } from './components/PushRegister'
 import { flagFor, isWorldCupActive } from './lib/worldcup'
 
 const GroceryList      = dynamic(() => import('./components/GroceryList'),      { ssr: false })
@@ -436,6 +437,7 @@ function KidHome({ currentProfile, missions, dailyMissions, completedTodayIds, r
 
       <div className="app-body">
 
+        <EnableNotificationsButton profileId={currentProfile?.id} />
         <MondialBanner />
 
         {/* All done for today */}
@@ -756,6 +758,7 @@ function ParentHome({ currentProfile, profiles, activeAssignments, recentFeed, r
 
       <div className="app-body">
 
+        <EnableNotificationsButton profileId={currentProfile?.id} />
         <MondialBanner />
 
         {/* Pending approvals banner */}

@@ -1,7 +1,8 @@
 // World Cup 2026 shared data & helpers
 
-// Tournament window (Israel time). Flags show on avatars only during this period.
-export const WC_START = new Date('2026-06-11T00:00:00+03:00')
+// Tournament window (Israel time). Flags + Mondial UI show during this period.
+// Starts before kickoff (June 11) so the family can pick teams in the lead-up.
+export const WC_START = new Date('2026-06-01T00:00:00+03:00')
 export const WC_END   = new Date('2026-07-20T00:00:00+03:00')
 
 export function isWorldCupActive(date = new Date()) {
