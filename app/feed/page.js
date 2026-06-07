@@ -4,6 +4,7 @@ import { supabase, getCurrentProfile } from '../lib/supabase'
 import { useRouter } from 'next/navigation'
 import BottomNav from '../components/BottomNav'
 import ViewAsBanner from '../components/ViewAsBanner'
+import SpeakButton from '../components/SpeakButton'
 
 const CORAL = '#FF6B6B'
 const TEAL = '#4ECDC4'
@@ -218,6 +219,7 @@ function FeedCard({ post, profiles, currentProfile, reactionData, onNavigate }) 
             {isTazkir && <span style={{ fontSize: 9, color: '#c0b0a0' }}>לחץ לפרטים ›</span>}
           </div>
         </div>
+        <SpeakButton text={[post.title, post.content, post.best_moment, post.funny_moment]} size={32} />
       </div>
 
       {hasMedia && <MediaGallery urls={post.media_urls} />}

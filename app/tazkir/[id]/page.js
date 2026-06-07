@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import { supabase, getCurrentProfile } from '../../lib/supabase'
 import { useRouter, useParams } from 'next/navigation'
 import BottomNav from '../../components/BottomNav'
+import SpeakButton from '../../components/SpeakButton'
 
 const NAVY      = '#2D2D2D'
 const CORAL     = '#FF6B6B'
@@ -72,7 +73,11 @@ export default function TazkirDetailPage() {
         <div style={{ position: 'absolute', top: -30, left: -30, width: 110, height: 110, borderRadius: '50%', background: 'rgba(255,255,255,0.1)' }} />
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', position: 'relative', zIndex: 1 }}>
           <div style={{ flex: 1, minWidth: 0, paddingLeft: 10 }}>
-            <div style={{ fontSize: 20, fontWeight: 900, color: 'white', lineHeight: 1.3 }}>{tazkir.title}</div>
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
+              <div style={{ flex: 1, fontSize: 20, fontWeight: 900, color: 'white', lineHeight: 1.3 }}>{tazkir.title}</div>
+              <SpeakButton onBg size={36}
+                text={[tazkir.title, tazkir.what_happened, tazkir.best_moment, tazkir.funny_moment, tazkir.quote]} />
+            </div>
             {dateStr && <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.8)', marginTop: 4 }}>📅 {dateStr}</div>}
           </div>
           <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
