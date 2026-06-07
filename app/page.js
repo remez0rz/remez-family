@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 import { useEffect, useState } from 'react'
 import { supabase, getCurrentProfile } from './lib/supabase'
 import { useRouter } from 'next/navigation'
@@ -40,12 +40,12 @@ function QuickDailyDoc({ mission, uploading, onSubmit, onSkip, onClose }) {
       fontFamily: 'var(--font-heebo), sans-serif', direction: 'rtl', padding: 16
     }}>
       <div style={{ background: '#2D2D2D', borderRadius: 28, padding: '24px 20px', maxWidth: 360, width: '100%', position: 'relative' }}>
-        <button onClick={onClose} style={{ position: 'absolute', top: 14, left: 14, background: 'rgba(255,255,255,0.1)', border: 'none', borderRadius: '50%', width: 28, height: 28, color: 'white', cursor: 'pointer', fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>âœ•</button>
+        <button onClick={onClose} style={{ position: 'absolute', top: 14, left: 14, background: 'rgba(255,255,255,0.1)', border: 'none', borderRadius: '50%', width: 28, height: 28, color: 'white', cursor: 'pointer', fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
         <div style={{ textAlign: 'center', marginBottom: 16 }}>
-          <div style={{ fontSize: 28, marginBottom: 6 }}>ðŸŒ…</div>
-          <div style={{ fontSize: 17, fontWeight: 900, color: 'white', marginBottom: 4 }}>××™×š ×”×œ×š?</div>
+          <div style={{ fontSize: 28, marginBottom: 6 }}>🌅</div>
+          <div style={{ fontSize: 17, fontWeight: 900, color: 'white', marginBottom: 4 }}>איך הלך?</div>
           <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', fontWeight: 600 }}>{mission.title}</div>
-          <div style={{ display: 'inline-block', marginTop: 6, background: `linear-gradient(135deg, #FFB830, #FFD166)`, borderRadius: 20, padding: '4px 12px', fontSize: 13, fontWeight: 800, color: '#2D2D2D' }}>+{mission.points} × ×§×•×“×•×ª</div>
+          <div style={{ display: 'inline-block', marginTop: 6, background: `linear-gradient(135deg, #FFB830, #FFD166)`, borderRadius: 20, padding: '4px 12px', fontSize: 13, fontWeight: 800, color: '#2D2D2D' }}>+{mission.points} נקודות</div>
         </div>
 
         <input type="file" accept="image/*" capture="environment" onChange={handleSelect} style={{ display: 'none' }} id="qd-cam-photo" />
@@ -58,38 +58,38 @@ function QuickDailyDoc({ mission, uploading, onSubmit, onSkip, onClose }) {
               ? <video src={preview} controls style={{ width: '100%', borderRadius: 12, maxHeight: 160, display: 'block' }} />
               : <img src={preview} alt="p" style={{ width: '100%', borderRadius: 12, maxHeight: 160, objectFit: 'cover', display: 'block' }} />
             }
-            <button onClick={() => { setFile(null); setPreview(null); setIsVideo(false) }} style={{ position: 'absolute', top: 8, left: 8, background: 'rgba(0,0,0,0.6)', border: 'none', borderRadius: '50%', width: 26, height: 26, color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12 }}>âœ•</button>
+            <button onClick={() => { setFile(null); setPreview(null); setIsVideo(false) }} style={{ position: 'absolute', top: 8, left: 8, background: 'rgba(0,0,0,0.6)', border: 'none', borderRadius: '50%', width: 26, height: 26, color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12 }}>✕</button>
           </div>
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 10 }}>
-            <label htmlFor="qd-cam-photo" style={{ padding: '10px 4px', background: 'rgba(255,255,255,0.08)', borderRadius: 12, border: '1.5px dashed rgba(255,255,255,0.2)', textAlign: 'center', cursor: 'pointer', fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.8)' }}>ðŸ“·<br/>×ª×ž×•× ×”</label>
-            <label htmlFor="qd-cam-video" style={{ padding: '10px 4px', background: 'rgba(255,255,255,0.08)', borderRadius: 12, border: '1.5px dashed rgba(255,255,255,0.2)', textAlign: 'center', cursor: 'pointer', fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.8)' }}>ðŸŽ¬<br/>×¡×¨×˜×•×Ÿ</label>
-            <label htmlFor="qd-gal" style={{ padding: '10px 4px', background: 'rgba(255,255,255,0.08)', borderRadius: 12, border: '1.5px dashed rgba(255,255,255,0.2)', textAlign: 'center', cursor: 'pointer', fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.8)' }}>ðŸ–¼ï¸<br/>×’×œ×¨×™×”</label>
+            <label htmlFor="qd-cam-photo" style={{ padding: '10px 4px', background: 'rgba(255,255,255,0.08)', borderRadius: 12, border: '1.5px dashed rgba(255,255,255,0.2)', textAlign: 'center', cursor: 'pointer', fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.8)' }}>📷<br/>תמונה</label>
+            <label htmlFor="qd-cam-video" style={{ padding: '10px 4px', background: 'rgba(255,255,255,0.08)', borderRadius: 12, border: '1.5px dashed rgba(255,255,255,0.2)', textAlign: 'center', cursor: 'pointer', fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.8)' }}>🎬<br/>סרטון</label>
+            <label htmlFor="qd-gal" style={{ padding: '10px 4px', background: 'rgba(255,255,255,0.08)', borderRadius: 12, border: '1.5px dashed rgba(255,255,255,0.2)', textAlign: 'center', cursor: 'pointer', fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.8)' }}>🖼️<br/>גלריה</label>
           </div>
         )}
 
         <textarea value={text} onChange={e => setText(e.target.value)}
-          placeholder="×ž×©×”×• ×§×¦×¨ ×¢×œ ×ž×” ×©×¢×©×™×ª... (×œ× ×—×•×‘×”)"
+          placeholder="משהו קצר על מה שעשית... (לא חובה)"
           style={{ width: '100%', padding: '10px 12px', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 10, fontSize: 13, color: 'white', background: 'rgba(255,255,255,0.08)', fontFamily: 'var(--font-heebo), sans-serif', boxSizing: 'border-box', resize: 'none', minHeight: 56, lineHeight: 1.5, marginBottom: 12, outline: 'none' }}
         />
 
         <button onClick={() => onSubmit({ text, file })} disabled={uploading} style={{ width: '100%', padding: '13px', background: '#FF6B6B', border: 'none', borderRadius: 50, cursor: 'pointer', fontWeight: 800, fontSize: 15, color: 'white', fontFamily: 'var(--font-heebo), sans-serif', marginBottom: 8 }}>
-          {uploading ? '×©×•×œ×—...' : '×¡×™×™×ž×ª×™! ðŸŽ‰'}
+          {uploading ? 'שולח...' : 'סיימתי! 🎉'}
         </button>
-        <button onClick={onSkip} style={{ width: '100%', padding: '9px', background: 'transparent', border: 'none', cursor: 'pointer', fontSize: 12, color: 'rgba(255,255,255,0.4)', fontFamily: 'var(--font-heebo), sans-serif' }}>×“×œ×’ (×‘×œ×™ ×ª×ž×•× ×”)</button>
+        <button onClick={onSkip} style={{ width: '100%', padding: '9px', background: 'transparent', border: 'none', cursor: 'pointer', fontSize: 12, color: 'rgba(255,255,255,0.4)', fontFamily: 'var(--font-heebo), sans-serif' }}>דלג (בלי תמונה)</button>
       </div>
     </div>
   )
 }
 
-// â”€â”€ Quick Mission Modal (parent home shortcut) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Quick Mission Modal (parent home shortcut) ────────────────────────────────
 const QUICK_CATEGORIES = [
-  { id: 'Family',   emoji: 'ðŸ‘¨â€ðŸ‘©â€ðŸ‘§', label: '×ž×©×¤×—×”' },
-  { id: 'Helping',  emoji: 'ðŸ¤',     label: '×¢×–×¨×”' },
-  { id: 'Learning', emoji: 'ðŸ§ ',     label: '×œ×™×ž×•×“' },
-  { id: 'Outdoor',  emoji: 'ðŸŒ¿',     label: '×‘×—×•×¥' },
-  { id: 'Creative', emoji: 'ðŸŽ¨',     label: '×™×¦×™×¨×”' },
-  { id: 'Daily',    emoji: 'ðŸŒ…',     label: '×™×•×ž×™' },
+  { id: 'Family',   emoji: '👨‍👩‍👧', label: 'משפחה' },
+  { id: 'Helping',  emoji: '🤝',     label: 'עזרה' },
+  { id: 'Learning', emoji: '🧠',     label: 'לימוד' },
+  { id: 'Outdoor',  emoji: '🌿',     label: 'בחוץ' },
+  { id: 'Creative', emoji: '🎨',     label: 'יצירה' },
+  { id: 'Daily',    emoji: '🌅',     label: 'יומי' },
 ]
 
 function QuickMissionModal({ profiles, onClose, onCreated }) {
@@ -122,9 +122,9 @@ function QuickMissionModal({ profiles, onClose, onCreated }) {
         assignTo.map(id => ({ mission_id: mission.id, assigned_to: id, status: 'active' }))
       )
       // Push notify assigned kids
-      const names = assignTo.map(id => profiles.find(p => p.id === id)?.name).filter(Boolean).join(' ×•')
+      const names = assignTo.map(id => profiles.find(p => p.id === id)?.name).filter(Boolean).join(' ו')
       fetch('/api/push/send', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ memberIds: assignTo, title: 'â­ ××ª×’×¨ ×—×“×©!', body: `${title.trim()} â€” ×‘× ×œ×¦×‘×•×¨ × ×§×•×“×•×ª!`, url: '/missions/active', tag: 'newmission' })
+        body: JSON.stringify({ memberIds: assignTo, title: '⭐ אתגר חדש!', body: `${title.trim()} — בא לצבור נקודות!`, url: '/missions/active', tag: 'newmission' })
       }).catch(() => {})
     }
 
@@ -140,19 +140,19 @@ function QuickMissionModal({ profiles, onClose, onCreated }) {
         <div style={{ width: 40, height: 4, background: '#e0d8c8', borderRadius: 4, margin: '0 auto 20px' }} />
 
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-          <div style={{ fontSize: 18, fontWeight: 900, color: NAVY }}>âš¡ ×ž×©×™×ž×” ×ž×”×™×¨×”</div>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer', color: '#a09080' }}>âœ•</button>
+          <div style={{ fontSize: 18, fontWeight: 900, color: NAVY }}>⚡ משימה מהירה</div>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer', color: '#a09080' }}>✕</button>
         </div>
 
         {/* Title */}
         <input value={title} onChange={e => setTitle(e.target.value)}
-          placeholder="×©× ×”×ž×©×™×ž×” â€” ×œ×ž×©×œ: ×¡×“×¨ ××ª ×”×—×“×¨"
+          placeholder="שם המשימה — למשל: סדר את החדר"
           autoFocus
           style={{ width: '100%', padding: '13px 14px', border: '1.5px solid #ede8e0', borderRadius: 14, fontSize: 15, color: NAVY, background: '#faf8f4', fontFamily: 'var(--font-heebo), sans-serif', boxSizing: 'border-box', outline: 'none', marginBottom: 14, fontWeight: 600 }} />
 
         {/* Points */}
         <div style={{ marginBottom: 14 }}>
-          <div style={{ fontSize: 12, fontWeight: 700, color: '#6b5e4e', marginBottom: 8 }}>× ×§×•×“×•×ª</div>
+          <div style={{ fontSize: 12, fontWeight: 700, color: '#6b5e4e', marginBottom: 8 }}>נקודות</div>
           <div style={{ display: 'flex', gap: 8 }}>
             {[10, 20, 30, 50, 100].map(p => (
               <button key={p} onClick={() => setPoints(p)} style={{
@@ -169,7 +169,7 @@ function QuickMissionModal({ profiles, onClose, onCreated }) {
 
         {/* Category */}
         <div style={{ marginBottom: 14 }}>
-          <div style={{ fontSize: 12, fontWeight: 700, color: '#6b5e4e', marginBottom: 8 }}>×§×˜×’×•×¨×™×”</div>
+          <div style={{ fontSize: 12, fontWeight: 700, color: '#6b5e4e', marginBottom: 8 }}>קטגוריה</div>
           <div style={{ display: 'flex', gap: 7, flexWrap: 'wrap' }}>
             {QUICK_CATEGORIES.map(c => (
               <button key={c.id} onClick={() => setCategory(c.id)} style={{
@@ -185,7 +185,7 @@ function QuickMissionModal({ profiles, onClose, onCreated }) {
         {/* Assign to */}
         {children.length > 0 && (
           <div style={{ marginBottom: 14 }}>
-            <div style={{ fontSize: 12, fontWeight: 700, color: '#6b5e4e', marginBottom: 8 }}>×©×œ×— ×ž×™×“ ×œ... (×œ× ×—×•×‘×”)</div>
+            <div style={{ fontSize: 12, fontWeight: 700, color: '#6b5e4e', marginBottom: 8 }}>שלח מיד ל... (לא חובה)</div>
             <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>
               {children.map(child => (
                 <div key={child.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
@@ -214,8 +214,8 @@ function QuickMissionModal({ profiles, onClose, onCreated }) {
           <input type="checkbox" checked={repeatable} onChange={e => setRepeatable(e.target.checked)}
             style={{ width: 18, height: 18, accentColor: CORAL, cursor: 'pointer' }} />
           <div>
-            <div style={{ fontSize: 13, fontWeight: 700, color: NAVY }}>×ž×©×™×ž×” ×—×•×–×¨×ª</div>
-            <div style={{ fontSize: 11, color: '#a09080' }}>×”×™×œ×“ ×™×•×›×œ ×œ×‘×¦×¢ ×©×•×‘ ×•×©×•×‘</div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: NAVY }}>משימה חוזרת</div>
+            <div style={{ fontSize: 11, color: '#a09080' }}>הילד יוכל לבצע שוב ושוב</div>
           </div>
         </label>
 
@@ -227,7 +227,7 @@ function QuickMissionModal({ profiles, onClose, onCreated }) {
           fontWeight: 900, fontSize: 15, fontFamily: 'var(--font-heebo), sans-serif',
           boxShadow: title.trim() ? '0 4px 16px rgba(255,107,107,0.4)' : 'none'
         }}>
-          {saving ? 'â³ ×©×•×ž×¨...' : assignTo.length ? `âš¡ ×¦×•×¨ ×•×©×œ×— ×œ${assignTo.length > 1 ? assignTo.length + ' ×™×œ×“×™×' : profiles.find(p => p.id === assignTo[0])?.name || '×™×œ×“'}` : 'âž• ×¦×•×¨ ×ž×©×™×ž×”'}
+          {saving ? '⏳ שומר...' : assignTo.length ? `⚡ צור ושלח ל${assignTo.length > 1 ? assignTo.length + ' ילדים' : profiles.find(p => p.id === assignTo[0])?.name || 'ילד'}` : '➕ צור משימה'}
         </button>
       </div>
     </div>
@@ -235,12 +235,12 @@ function QuickMissionModal({ profiles, onClose, onCreated }) {
 }
 
 const REACTIONS = [
-  { type: 'proud',  emoji: 'â¤ï¸' },
-  { type: 'fire',   emoji: 'ðŸ”¥' },
-  { type: 'clap',   emoji: 'ðŸ‘' },
-  { type: 'star',   emoji: 'â­' },
-  { type: 'trophy', emoji: 'ðŸ†' },
-  { type: 'wow',    emoji: 'ðŸ¤¯' },
+  { type: 'proud',  emoji: '❤️' },
+  { type: 'fire',   emoji: '🔥' },
+  { type: 'clap',   emoji: '👏' },
+  { type: 'star',   emoji: '⭐' },
+  { type: 'trophy', emoji: '🏆' },
+  { type: 'wow',    emoji: '🤯' },
 ]
 
 const MISSION_GRADIENTS = [
@@ -250,23 +250,23 @@ const MISSION_GRADIENTS = [
 ]
 
 const CATEGORY_LABELS = {
-  Family: '×ž×©×¤×—×”', Learning: '×œ×•×ž×“×™× ×‘×›×™×£', Helping: '×¢×•×–×¨×™× ×‘×‘×™×ª',
-  Creative: '×™×¦×™×¨×”', Funny: '×ž×¦×—×™×§×™×', Outdoor: '×‘×—×•×¥',
-  Reading: '×§×¨×™××”', English: '×× ×’×œ×™×ª', Hebrew: '×¢×‘×¨×™×ª',
-  Kindness: '×ž×¢×©×™× ×˜×•×‘×™×', House: '×”×‘×™×ª ×©×œ× ×•', Memory: '×–×™×›×¨×•× ×•×ª',
-  Health: '×‘×¨×™××•×ª', Weekend: '×¡×•×¤×´×©', Daily: '×ž×©×™×ž×•×ª ×™×•×ž×™×•×ª', Special: '×¤×¨×¡×™× ×ž×™×•×—×“×™×',
+  Family: 'משפחה', Learning: 'לומדים בכיף', Helping: 'עוזרים בבית',
+  Creative: 'יצירה', Funny: 'מצחיקים', Outdoor: 'בחוץ',
+  Reading: 'קריאה', English: 'אנגלית', Hebrew: 'עברית',
+  Kindness: 'מעשים טובים', House: 'הבית שלנו', Memory: 'זיכרונות',
+  Health: 'בריאות', Weekend: 'סופ״ש', Daily: 'משימות יומיות', Special: 'פרסים מיוחדים',
 }
 
 const CATEGORY_VISUAL = {
-  Funny:    { emoji: 'ðŸ˜‚' }, Creative: { emoji: 'ðŸŽ¨' },
-  Weekend:  { emoji: 'ðŸŒ…' }, Learning: { emoji: 'ðŸ§ ' },
-  Reading:  { emoji: 'ðŸ“–' }, English:  { emoji: 'ðŸŒ' },
-  Hebrew:   { emoji: 'âœ¡ï¸' }, Helping:  { emoji: 'ðŸ¤' },
-  Kindness: { emoji: 'â¤ï¸' }, House:    { emoji: 'ðŸ ' },
-  Outdoor:  { emoji: 'ðŸŒ¿' }, Health:   { emoji: 'ðŸ’ª' },
-  Family:   { emoji: 'ðŸ‘¨â€ðŸ‘©â€ðŸ‘§' }, Memory:  { emoji: 'ðŸ“¸' },
-  Daily:    { emoji: 'ðŸŒ…' },
-  Special:  { emoji: 'ðŸŽ' },
+  Funny:    { emoji: '😂' }, Creative: { emoji: '🎨' },
+  Weekend:  { emoji: '🌅' }, Learning: { emoji: '🧠' },
+  Reading:  { emoji: '📖' }, English:  { emoji: '🌍' },
+  Hebrew:   { emoji: '✡️' }, Helping:  { emoji: '🤝' },
+  Kindness: { emoji: '❤️' }, House:    { emoji: '🏠' },
+  Outdoor:  { emoji: '🌿' }, Health:   { emoji: '💪' },
+  Family:   { emoji: '👨‍👩‍👧' }, Memory:  { emoji: '📸' },
+  Daily:    { emoji: '🌅' },
+  Special:  { emoji: '🎁' },
 }
 
 function Avatar({ profile, size = 40 }) {
@@ -339,14 +339,14 @@ function MondialBanner({ profile }) {
       boxShadow: '0 4px 16px rgba(26,107,60,0.35)'
     }}>
       <div onClick={() => router.push('/mondial')} style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', marginBottom: 12 }}>
-        <div style={{ fontSize: 30 }}>âš½</div>
+        <div style={{ fontSize: 30 }}>⚽</div>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: 15, fontWeight: 900, color: 'white' }}>×ž×•× ×“×™××œ 2026</div>
+          <div style={{ fontSize: 15, fontWeight: 900, color: 'white' }}>מונדיאל 2026</div>
           <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.85)', fontWeight: 600, marginTop: 1 }}>
-            {myTeam ? `×”× ×‘×—×¨×ª ×©×œ×š: ${myTeam.flag} ${myTeam.name}` : '×‘×—×¨/×™ × ×‘×—×¨×ª ×œ×¢×™×“×•×“ ðŸ‘‡'}
+            {myTeam ? `הנבחרת שלך: ${myTeam.flag} ${myTeam.name}` : 'בחר/י נבחרת לעידוד 👇'}
           </div>
         </div>
-        <div style={{ background: 'rgba(255,255,255,0.2)', borderRadius: 20, padding: '6px 12px', fontSize: 12, fontWeight: 800, color: 'white', whiteSpace: 'nowrap' }}>×”×›×œ â†</div>
+        <div style={{ background: 'rgba(255,255,255,0.2)', borderRadius: 20, padding: '6px 12px', fontSize: 12, fontWeight: 800, color: 'white', whiteSpace: 'nowrap' }}>הכל ←</div>
       </div>
 
       {/* Inline quick team picker */}
@@ -375,7 +375,7 @@ function SectionTitle({ title, href }) {
   return (
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
       <div style={{ fontSize: 15, fontWeight: 800, color: NAVY }}>{title}</div>
-      {href && <a href={href} style={{ fontSize: 12, color: CORAL, textDecoration: 'none', fontWeight: 700, background: '#FFE8E8', borderRadius: 20, padding: '3px 10px' }}>×”×›×œ â†</a>}
+      {href && <a href={href} style={{ fontSize: 12, color: CORAL, textDecoration: 'none', fontWeight: 700, background: '#FFE8E8', borderRadius: 20, padding: '3px 10px' }}>הכל ←</a>}
     </div>
   )
 }
@@ -389,9 +389,9 @@ function KidHome({ currentProfile, missions, dailyMissions, completedTodayIds, r
 
   const timeAgo = (dateStr) => {
     const diff = Math.floor((Date.now() - new Date(dateStr)) / 86400000)
-    if (diff === 0) return '×”×™×•×'
-    if (diff === 1) return '××ª×ž×•×œ'
-    return `×œ×¤× ×™ ${diff} ×™×ž×™×`
+    if (diff === 0) return 'היום'
+    if (diff === 1) return 'אתמול'
+    return `לפני ${diff} ימים`
   }
 
   return (
@@ -408,12 +408,12 @@ function KidHome({ currentProfile, missions, dailyMissions, completedTodayIds, r
 
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20, position: 'relative', zIndex: 1 }}>
           <div>
-            <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.9)', fontWeight: 700, letterSpacing: '0.5px' }}>×ž×©×¤×—×ª ×¨×ž×–</div>
+            <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.9)', fontWeight: 700, letterSpacing: '0.5px' }}>משפחת רמז</div>
             <div style={{ fontSize: 26, fontWeight: 900, color: 'white', lineHeight: 1.2, marginTop: 2 }}>
-              ×”×™×™ {currentProfile.name} ðŸ‘‹
+              היי {currentProfile.name} 👋
             </div>
             <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.92)', marginTop: 4, fontWeight: 700 }}>
-              ×ž×” ×‘× ×œ×š ×œ×¦×‘×•×¨ ×”×™×•×?
+              מה בא לך לצבור היום?
             </div>
           </div>
           <a href="/profiles" style={{ textDecoration: 'none' }}>
@@ -428,21 +428,21 @@ function KidHome({ currentProfile, missions, dailyMissions, completedTodayIds, r
               <div style={{ fontSize: 48, fontWeight: 900, color: 'white', lineHeight: 1, textShadow: '0 2px 8px rgba(0,0,0,0.15)' }}>
                 {currentProfile.total_points}
               </div>
-              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.85)', marginTop: 2, fontWeight: 600 }}>×™×ª×¨×” ðŸ’°</div>
+              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.85)', marginTop: 2, fontWeight: 600 }}>יתרה 💰</div>
             </div>
             <div style={{ width: 1, height: 40, background: 'rgba(255,255,255,0.3)', margin: '0 8px' }} />
             <div style={{ textAlign: 'center', flex: 1 }}>
               <div style={{ fontSize: 26, fontWeight: 900, color: 'white', lineHeight: 1 }}>
                 {currentProfile.level || 1}
               </div>
-              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.85)', marginTop: 2, fontWeight: 600 }}>×¨×ž×” ðŸ…</div>
+              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.85)', marginTop: 2, fontWeight: 600 }}>רמה 🏅</div>
             </div>
             <div style={{ width: 1, height: 40, background: 'rgba(255,255,255,0.3)', margin: '0 8px' }} />
             <div style={{ textAlign: 'center', flex: 1 }}>
               <div style={{ fontSize: 22, fontWeight: 900, color: 'white', lineHeight: 1 }}>
                 {currentProfile.total_experience || currentProfile.total_points}
               </div>
-              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.85)', marginTop: 2, fontWeight: 600 }}>XP ×›×•×œ×œ â­</div>
+              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.85)', marginTop: 2, fontWeight: 600 }}>XP כולל ⭐</div>
             </div>
           </div>
 
@@ -450,7 +450,7 @@ function KidHome({ currentProfile, missions, dailyMissions, completedTodayIds, r
             <>
               <ProgressBar value={currentProfile.total_points} max={next.points_required} color="white" />
               <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.95)', marginTop: 8, textAlign: 'center', fontWeight: 700 }}>
-                ×¢×•×“ {next.points_required - currentProfile.total_points} × ×§×•×“×•×ª ×•{next.title} × ×¤×ª×— âœ¨
+                עוד {next.points_required - currentProfile.total_points} נקודות ו{next.title} נפתח ✨
               </div>
             </>
           ) : null}
@@ -461,13 +461,13 @@ function KidHome({ currentProfile, missions, dailyMissions, completedTodayIds, r
               padding: '12px', textAlign: 'center',
               textDecoration: 'none', fontWeight: 900, fontSize: 14,
               boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
-            }}>â­ ×¦×•×‘×¨×™×</a>
+            }}>⭐ צוברים</a>
             <a href="/rewards" style={{
               flex: 1, background: 'rgba(255,255,255,0.2)', color: 'white', borderRadius: 50,
               padding: '12px', textAlign: 'center',
               textDecoration: 'none', fontWeight: 700, fontSize: 14,
               border: '1.5px solid rgba(255,255,255,0.4)'
-            }}>âœ¨ ×¤×¨×¡×™×</a>
+            }}>✨ פרסים</a>
           </div>
         </div>
       </div>
@@ -480,20 +480,20 @@ function KidHome({ currentProfile, missions, dailyMissions, completedTodayIds, r
         {/* All done for today */}
         {todayMissions.length === 0 && visibleDailyMissions.length === 0 && activeAssignments.length === 0 && (
           <div style={{ background: 'white', borderRadius: 20, padding: '24px 20px', textAlign: 'center', boxShadow: '0 4px 16px rgba(0,0,0,0.07)', marginBottom: 14 }}>
-            <div style={{ fontSize: 48, marginBottom: 8 }}>ðŸ†</div>
-            <div style={{ fontSize: 16, fontWeight: 800, color: NAVY, marginBottom: 6 }}>×›×œ ×”×›×‘×•×“!</div>
-            <div style={{ fontSize: 13, color: '#8a7a60', marginBottom: 16 }}>×¡×™×™×ž×ª ××ª ×›×œ ×”××ª×’×¨×™× ×œ×”×™×•×</div>
-            <a href="/missions" style={{ display: 'inline-block', background: CORAL, color: 'white', borderRadius: 50, padding: '10px 24px', textDecoration: 'none', fontWeight: 700, fontSize: 13 }}>×’×œ×” ×¢×•×“ ××ª×’×¨×™× â†’</a>
+            <div style={{ fontSize: 48, marginBottom: 8 }}>🏆</div>
+            <div style={{ fontSize: 16, fontWeight: 800, color: NAVY, marginBottom: 6 }}>כל הכבוד!</div>
+            <div style={{ fontSize: 13, color: '#8a7a60', marginBottom: 16 }}>סיימת את כל האתגרים להיום</div>
+            <a href="/missions" style={{ display: 'inline-block', background: CORAL, color: 'white', borderRadius: 50, padding: '10px 24px', textDecoration: 'none', fontWeight: 700, fontSize: 13 }}>גלה עוד אתגרים →</a>
           </div>
         )}
 
         {/* Today's challenges */}
         {todayMissions.length > 0 && (
           <div style={{ marginBottom: 12 }}>
-            <SectionTitle title="â­ ××ª×’×¨×™ ×”×™×•×" href="/missions" />
+            <SectionTitle title="⭐ אתגרי היום" href="/missions" />
             <div className="cards-grid">
             {todayMissions.map((mission, i) => {
-              const visual    = CATEGORY_VISUAL[mission.category] || { emoji: 'â­' }
+              const visual    = CATEGORY_VISUAL[mission.category] || { emoji: '⭐' }
               const gradient  = MISSION_GRADIENTS[i % MISSION_GRADIENTS.length]
               const starting  = startingMission === mission.id
               const hasImage  = !!mission.image_url
@@ -517,7 +517,7 @@ function KidHome({ currentProfile, missions, dailyMissions, completedTodayIds, r
                         border: '1px solid rgba(255,255,255,0.28)', textAlign: 'center'
                       }}>
                         <div style={{ fontSize: 20, fontWeight: 900, color: 'white', lineHeight: 1 }}>+{mission.points}</div>
-                        <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.9)', fontWeight: 700 }}>× ×§×³ Â· {mission.estimated_minutes} ×“×§×³</div>
+                        <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.9)', fontWeight: 700 }}>נק׳ · {mission.estimated_minutes} דק׳</div>
                       </div>
                     </div>
                     <div style={{ position: 'absolute', bottom: 12, right: 14, zIndex: 1, display: 'flex', alignItems: 'center', gap: 5 }}>
@@ -538,7 +538,7 @@ function KidHome({ currentProfile, missions, dailyMissions, completedTodayIds, r
                       fontFamily: 'var(--font-heebo), sans-serif',
                       boxShadow: starting ? 'none' : '0 4px 12px rgba(255,107,107,0.35)',
                     }}>
-                      {starting ? '×©×•×œ×—...' : '×× ×™ ×¨×•×¦×” ×œ× ×¡×•×ª â­'}
+                      {starting ? 'שולח...' : 'אני רוצה לנסות ⭐'}
                     </button>
                   </div>
                 </div>
@@ -548,20 +548,20 @@ function KidHome({ currentProfile, missions, dailyMissions, completedTodayIds, r
             <a href="/missions" style={{
               display: 'block', textAlign: 'center', fontSize: 13,
               color: CORAL, textDecoration: 'none', fontWeight: 700, marginBottom: 12, marginTop: 4
-            }}>×œ×›×œ ××ª×’×¨×™ ×”× ×§×•×“×•×ª â†</a>
+            }}>לכל אתגרי הנקודות ←</a>
           </div>
         )}
 
         {/* Next reward */}
         {next && (
           <Card style={{ marginBottom: 12 }}>
-            <SectionTitle title="âœ¨ ×”×—×•×•×™×” ×”×‘××” ×©×œ×š" href="/rewards" />
+            <SectionTitle title="✨ החוויה הבאה שלך" href="/rewards" />
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <div style={{ fontSize: 36 }}>{next.emoji || 'âœ¨'}</div>
+              <div style={{ fontSize: 36 }}>{next.emoji || '✨'}</div>
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: 15, fontWeight: 800, color: NAVY }}>{next.title}</div>
                 <div style={{ fontSize: 12, color: '#8a7a60', marginTop: 2 }}>
-                  ×¢×•×“ {next.points_required - currentProfile.total_points} × ×§×•×“×•×ª ×•×”×™× × ×¤×ª×—×ª
+                  עוד {next.points_required - currentProfile.total_points} נקודות והיא נפתחת
                 </div>
                 <div style={{ background: '#F0EBE0', borderRadius: 8, height: 8, marginTop: 8 }}>
                   <div style={{
@@ -578,7 +578,7 @@ function KidHome({ currentProfile, missions, dailyMissions, completedTodayIds, r
         {/* Active missions */}
         {activeAssignments.length > 0 && (
           <Card style={{ marginBottom: 12 }}>
-            <SectionTitle title="ðŸƒ ×‘×ª×”×œ×™×š" href="/missions/active" />
+            <SectionTitle title="🏃 בתהליך" href="/missions/active" />
             {activeAssignments.slice(0, 3).map((a, i) => (
               <div key={a.id} style={{
                 display: 'flex', justifyContent: 'space-between', alignItems: 'center',
@@ -595,18 +595,18 @@ function KidHome({ currentProfile, missions, dailyMissions, completedTodayIds, r
           </Card>
         )}
 
-        {/* Daily missions â€” full cards like mission page */}
+        {/* Daily missions — full cards like mission page */}
         {dailyMissions.length > 0 && (
           <div style={{ marginBottom: 12 }}>
-            <SectionTitle title="ðŸŒ… ×ž×©×™×ž×•×ª ×™×•×ž×™×•×ª" href="/missions" />
+            <SectionTitle title="🌅 משימות יומיות" href="/missions" />
             <div className="cards-grid">
             {dailyMissions.map((mission, i) => {
-              const visual   = CATEGORY_VISUAL[mission.category] || { emoji: 'ðŸŒ…' }
+              const visual   = CATEGORY_VISUAL[mission.category] || { emoji: '🌅' }
               const gradient = MISSION_GRADIENTS[i % MISSION_GRADIENTS.length]
               const hasImage = !!mission.image_url
               return (
                 <div key={mission.id} style={{ borderRadius: 24, marginBottom: 0, overflow: 'hidden', boxShadow: '0 6px 24px rgba(0,0,0,0.1)' }}>
-                  {/* Visual header â€” identical to ChallengeCard */}
+                  {/* Visual header — identical to ChallengeCard */}
                   <div style={{
                     position: 'relative', height: 180,
                     background: hasImage
@@ -617,7 +617,7 @@ function KidHome({ currentProfile, missions, dailyMissions, completedTodayIds, r
                     <div style={{ position: 'absolute', top: 12, left: 14, zIndex: 1 }}>
                       <div style={{ background: 'rgba(255,255,255,0.18)', borderRadius: 14, padding: '7px 13px', backdropFilter: 'blur(6px)', border: '1px solid rgba(255,255,255,0.28)', textAlign: 'center' }}>
                         <div style={{ fontSize: 22, fontWeight: 900, color: 'white', lineHeight: 1 }}>{mission.points}</div>
-                        <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.9)', fontWeight: 700 }}>× ×§×³</div>
+                        <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.9)', fontWeight: 700 }}>נק׳</div>
                       </div>
                     </div>
                     <div style={{ position: 'absolute', bottom: 12, right: 14, zIndex: 1, display: 'flex', alignItems: 'center', gap: 5 }}>
@@ -631,15 +631,15 @@ function KidHome({ currentProfile, missions, dailyMissions, completedTodayIds, r
                   <div style={{ background: 'white', padding: '14px 16px' }}>
                     <div style={{ fontSize: 15, fontWeight: 800, color: NAVY, lineHeight: 1.3, marginBottom: 4 }}>{mission.title}</div>
                     <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
-                      <span style={{ fontSize: 11, color: '#8a7a60' }}>â± {mission.estimated_minutes} ×“×§×³</span>
-                      <span style={{ fontSize: 11, color: '#4ECDC4', fontWeight: 600 }}>ðŸ” ×™×•×ž×™</span>
+                      <span style={{ fontSize: 11, color: '#8a7a60' }}>⏱ {mission.estimated_minutes} דק׳</span>
+                      <span style={{ fontSize: 11, color: '#4ECDC4', fontWeight: 600 }}>🔁 יומי</span>
                     </div>
                     <button onClick={() => onQuickDaily(mission)} style={{
                       width: '100%', padding: '12px', background: CORAL, color: 'white',
                       border: 'none', borderRadius: 50, cursor: 'pointer',
                       fontWeight: 700, fontSize: 14, fontFamily: 'var(--font-heebo), sans-serif',
                       boxShadow: '0 4px 12px rgba(255,107,107,0.35)'
-                    }}>×¢×©×™×ª×™! â­</button>
+                    }}>עשיתי! ⭐</button>
                   </div>
                 </div>
               )
@@ -657,7 +657,7 @@ function KidHome({ currentProfile, missions, dailyMissions, completedTodayIds, r
         {/* Recent feed */}
         {recentFeed.length > 0 && (
           <Card>
-            <SectionTitle title="ðŸŽ‰ ×¨×’×¢×™× ×©×ž×—×™×" href="/feed" />
+            <SectionTitle title="🎉 רגעים שמחים" href="/feed" />
             {recentFeed.map((post, i) => {
               const coverPhoto  = post.media_urls?.[0]
               const isVideo     = url => /\.(mp4|mov|webm|avi)(\?|$)/i.test(url)
@@ -716,9 +716,9 @@ function ParentHome({ currentProfile, profiles, activeAssignments, recentFeed, r
 
   const timeAgo = (dateStr) => {
     const diff = Math.floor((Date.now() - new Date(dateStr)) / 86400000)
-    if (diff === 0) return '×”×™×•×'
-    if (diff === 1) return '××ª×ž×•×œ'
-    return `×œ×¤× ×™ ${diff} ×™×ž×™×`
+    if (diff === 0) return 'היום'
+    if (diff === 1) return 'אתמול'
+    return `לפני ${diff} ימים`
   }
 
   return (
@@ -737,8 +737,8 @@ function ParentHome({ currentProfile, profiles, activeAssignments, recentFeed, r
 
       {quickMissionDone && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 900, background: 'rgba(10,22,40,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 12, fontFamily: 'var(--font-heebo), sans-serif', direction: 'rtl' }}>
-          <div style={{ fontSize: 52 }}>âš¡</div>
-          <div style={{ fontSize: 20, fontWeight: 900, color: 'white' }}>×”×ž×©×™×ž×” × ×•×¦×¨×”!</div>
+          <div style={{ fontSize: 52 }}>⚡</div>
+          <div style={{ fontSize: 20, fontWeight: 900, color: 'white' }}>המשימה נוצרה!</div>
         </div>
       )}
 
@@ -751,8 +751,8 @@ function ParentHome({ currentProfile, profiles, activeAssignments, recentFeed, r
         <div style={{ position: 'absolute', top: -40, left: -40, width: 160, height: 160, borderRadius: '50%', background: 'rgba(255,255,255,0.1)' }} />
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'relative', zIndex: 1 }}>
           <div>
-            <div style={{ fontSize: 24, fontWeight: 900, color: 'white' }}>×ž×©×¤×—×ª ×¨×ž×– ðŸ¡</div>
-            <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.8)', marginTop: 3, fontWeight: 600 }}>×ž×” ×¢×•×©×™× ×”×™×•×?</div>
+            <div style={{ fontSize: 24, fontWeight: 900, color: 'white' }}>משפחת רמז 🏡</div>
+            <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.8)', marginTop: 3, fontWeight: 600 }}>מה עושים היום?</div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <button onClick={() => setShowQuickMission(true)} style={{
@@ -763,7 +763,7 @@ function ParentHome({ currentProfile, profiles, activeAssignments, recentFeed, r
               boxShadow: '0 3px 10px rgba(255,107,107,0.35)',
               display: 'flex', alignItems: 'center', gap: 5,
               whiteSpace: 'nowrap'
-            }}>âš¡ ×ž×©×™×ž×” ×ž×”×™×¨×”</button>
+            }}>⚡ משימה מהירה</button>
             <a href="/profiles" style={{ textDecoration: 'none' }}>
               <Avatar profile={currentProfile} size={40} />
             </a>
@@ -773,7 +773,7 @@ function ParentHome({ currentProfile, profiles, activeAssignments, recentFeed, r
         {/* View-as child switcher */}
         {children.length > 0 && (
           <div style={{ marginTop: 14, position: 'relative', zIndex: 1 }}>
-            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.7)', fontWeight: 600, marginBottom: 8 }}>ðŸ‘ ×”×¦×’ ××ª ×”××¤×œ×™×§×¦×™×” ×›:</div>
+            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.7)', fontWeight: 600, marginBottom: 8 }}>👁 הצג את האפליקציה כ:</div>
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
               {children.map(child => (
                 <button key={child.id} onClick={() => handleViewAs(child.id)} style={{
@@ -806,14 +806,14 @@ function ParentHome({ currentProfile, profiles, activeAssignments, recentFeed, r
               display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14,
               boxShadow: '0 4px 16px rgba(255,184,48,0.35)'
             }}>
-              <div style={{ fontSize: 24 }}>â³</div>
+              <div style={{ fontSize: 24 }}>⏳</div>
               <div style={{ flex: 1 }}>
                 <div style={{ fontWeight: 700, fontSize: 14, color: NAVY }}>
-                  {pending.length} ××ª×’×¨×™× ×ž×ž×ª×™× ×™× ×œ××™×©×•×¨×š
+                  {pending.length} אתגרים ממתינים לאישורך
                 </div>
-                <div style={{ fontSize: 12, color: 'rgba(10,22,40,0.6)', marginTop: 2 }}>×œ×—×¥ ×œ××™×©×•×¨ ×ž×”×™×¨</div>
+                <div style={{ fontSize: 12, color: 'rgba(10,22,40,0.6)', marginTop: 2 }}>לחץ לאישור מהיר</div>
               </div>
-              <div style={{ color: NAVY, fontSize: 18 }}>â†</div>
+              <div style={{ color: NAVY, fontSize: 18 }}>←</div>
             </div>
           </a>
         )}
@@ -821,7 +821,7 @@ function ParentHome({ currentProfile, profiles, activeAssignments, recentFeed, r
         {/* Leaderboard */}
         {children.length > 0 && (
           <Card>
-            <SectionTitle title="â­ ×˜×‘×œ×ª × ×§×•×“×•×ª" href="/profiles" />
+            <SectionTitle title="⭐ טבלת נקודות" href="/profiles" />
             {children.map((child, i) => {
               const next  = getNextReward(child.total_points)
               const color = childColors[i] || GOLD
@@ -833,7 +833,7 @@ function ParentHome({ currentProfile, profiles, activeAssignments, recentFeed, r
                     <div style={{ flex: 1 }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                         <span style={{ fontWeight: 700, fontSize: 14, color: NAVY }}>{child.name}</span>
-                        <span style={{ fontWeight: 700, color, fontSize: 14 }}>{child.total_points} × ×§×³</span>
+                        <span style={{ fontWeight: 700, color, fontSize: 14 }}>{child.total_points} נק׳</span>
                       </div>
                       <div style={{ background: '#F0EBE0', borderRadius: 8, height: 8, marginTop: 5 }}>
                         <div style={{
@@ -843,7 +843,7 @@ function ParentHome({ currentProfile, profiles, activeAssignments, recentFeed, r
                         }} />
                       </div>
                       {next && <div style={{ color: '#a09080', fontSize: 11, marginTop: 2 }}>
-                        ×¢×•×“ {next.points_required - child.total_points} × ×§×³ ×œ{next.title}
+                        עוד {next.points_required - child.total_points} נק׳ ל{next.title}
                       </div>}
                     </div>
                   </div>
@@ -861,16 +861,16 @@ function ParentHome({ currentProfile, profiles, activeAssignments, recentFeed, r
               display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14,
               boxShadow: '0 4px 16px rgba(155,127,212,0.35)'
             }}>
-              <div style={{ fontSize: 24 }}>âœ¨</div>
+              <div style={{ fontSize: 24 }}>✨</div>
               <div style={{ flex: 1 }}>
                 <div style={{ fontWeight: 700, fontSize: 14, color: 'white' }}>
-                  {pendingClaims.length} ×¤×¨×¡×™× ×ž×ž×ª×™× ×™× ×œ××™×©×•×¨×š
+                  {pendingClaims.length} פרסים ממתינים לאישורך
                 </div>
                 <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.8)', marginTop: 2 }}>
-                  {pendingClaims.map(c => `${c.member?.name} ×¨×•×¦×”: ${c.reward?.emoji} ${c.reward?.title}`).slice(0,2).join(' Â· ')}
+                  {pendingClaims.map(c => `${c.member?.name} רוצה: ${c.reward?.emoji} ${c.reward?.title}`).slice(0,2).join(' · ')}
                 </div>
               </div>
-              <div style={{ color: 'white', fontSize: 18 }}>â†</div>
+              <div style={{ color: 'white', fontSize: 18 }}>←</div>
             </div>
           </a>
         )}
@@ -882,8 +882,8 @@ function ParentHome({ currentProfile, profiles, activeAssignments, recentFeed, r
           return (
             <div style={{ marginBottom: 14 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-                <div style={{ fontSize: 15, fontWeight: 800, color: NAVY }}>ðŸŒ… ×“×•×— ×™×•×ž×™ â€” {today}</div>
-                <div style={{ fontSize: 11, color: '#8a7a60' }}>×ž×ª××¤×¡ ×›×œ ×‘×•×§×¨</div>
+                <div style={{ fontSize: 15, fontWeight: 800, color: NAVY }}>🌅 דוח יומי — {today}</div>
+                <div style={{ fontSize: 11, color: '#8a7a60' }}>מתאפס כל בוקר</div>
               </div>
               {children.map(child => {
                 const childReport = dailyReport.filter(a => a.assigned_to === child.id)
@@ -897,7 +897,7 @@ function ParentHome({ currentProfile, profiles, activeAssignments, recentFeed, r
                       <div style={{ flex: 1 }}>
                         <span style={{ fontWeight: 700, fontSize: 14, color: NAVY }}>{child.name}</span>
                         <span style={{ fontSize: 11, color: childReport.length > 0 ? '#4ECDC4' : '#a09080', marginRight: 8, fontWeight: 600 }}>
-                          {childReport.length > 0 ? ` âœ“ ${childReport.length} ×ž×©×™×ž×•×ª` : ' â€” ×¢×“×™×™×Ÿ ×œ× ×¢×©×” ×”×™×•×'}
+                          {childReport.length > 0 ? ` ✓ ${childReport.length} משימות` : ' — עדיין לא עשה היום'}
                         </span>
                       </div>
                     </div>
@@ -907,7 +907,7 @@ function ParentHome({ currentProfile, profiles, activeAssignments, recentFeed, r
                         padding: '8px 10px', background: '#f8fffe', borderRadius: 10, marginBottom: 6,
                         border: '1px solid #e0f8f4'
                       }}>
-                        <span style={{ fontSize: 16, flexShrink: 0 }}>âœ…</span>
+                        <span style={{ fontSize: 16, flexShrink: 0 }}>✅</span>
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ fontSize: 13, fontWeight: 700, color: NAVY }}>{a.mission?.title}</div>
                           {a.proof_text && <div style={{ fontSize: 11, color: '#6b5e4e', marginTop: 2 }}>{a.proof_text}</div>}
@@ -926,7 +926,7 @@ function ParentHome({ currentProfile, profiles, activeAssignments, recentFeed, r
           )
         })()}
 
-        {/* 2026 Wishlist â€” full width swipeable gallery */}
+        {/* 2026 Wishlist — full width swipeable gallery */}
         <WishlistGallery />
 
         {/* Grocery list + Calendar */}
@@ -935,10 +935,10 @@ function ParentHome({ currentProfile, profiles, activeAssignments, recentFeed, r
           <FamilyCalendar />
         </div>
 
-        {/* Recent feed â€” consistent with moments page */}
+        {/* Recent feed — consistent with moments page */}
         {recentFeed.length > 0 && (
           <div style={{ marginBottom: 14 }}>
-            <SectionTitle title="ðŸŽ‰ ×¨×’×¢×™× ×©×ž×—×™×" href="/feed" />
+            <SectionTitle title="🎉 רגעים שמחים" href="/feed" />
             {recentFeed.map((post, i) => {
               const coverPhoto    = post.media_urls?.[0]
               const isVid         = url => /\.(mp4|mov|webm|avi)(\?|$)/i.test(url)
@@ -963,7 +963,7 @@ function ParentHome({ currentProfile, profiles, activeAssignments, recentFeed, r
                             </div>
                           ))
                         : <div style={{ width: 34, height: 34, borderRadius: '50%', background: '#f0ebe0', border: `2px solid ${CORAL}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>
-                            {isTazkir ? 'ðŸ“' : 'â­'}
+                            {isTazkir ? '📝' : '⭐'}
                           </div>
                       }
                     </div>
@@ -974,7 +974,7 @@ function ParentHome({ currentProfile, profiles, activeAssignments, recentFeed, r
                           fontSize: 9, fontWeight: 700, padding: '2px 7px', borderRadius: 20,
                           background: isTazkir ? '#EDE7F6' : '#D5F5F0',
                           color: isTazkir ? '#9B7FD4' : '#4ECDC4'
-                        }}>{isTazkir ? 'ðŸ“ ×ª×—×§×™×¨' : 'â­ ××ª×’×¨'}</span>
+                        }}>{isTazkir ? '📝 תחקיר' : '⭐ אתגר'}</span>
                         <span style={{ fontSize: 10, color: '#a09080' }}>{timeAgo(post.created_at)}</span>
                       </div>
                     </div>
@@ -1191,7 +1191,7 @@ export default function HomePage() {
     if (assignment) {
       await supabase.from('point_events').insert({
         member_id: memberId, points: mission.points,
-        reason: `×¦×‘×¨: ${mission.title}`, assignment_id: assignment.id
+        reason: `צבר: ${mission.title}`, assignment_id: assignment.id
       })
 
       const { data: profile } = await supabase.from('profiles')
@@ -1208,7 +1208,7 @@ export default function HomePage() {
     setAllCompletedIds(prev => new Set([...prev, mission.id]))
     setQuickDocMission(null)
     setQuickDocUploading(false)
-    setQuickSuccess(`+${mission.points} × ×§×•×“×•×ª! ðŸŽ‰`)
+    setQuickSuccess(`+${mission.points} נקודות! 🎉`)
     setTimeout(() => { setQuickSuccess(null); loadData() }, 2200)
   }
 
@@ -1226,7 +1226,7 @@ export default function HomePage() {
     ? activeAssignments
     : activeAssignments.filter(a => a.member?.id === effectiveProfile?.id)
 
-  // Filter today's missions â€” exclude already active ones
+  // Filter today's missions — exclude already active ones
   const activeMissionIds = new Set(myAssignments.map(a => a.mission_id))
   // Regular missions: hidden all day once completed (parent must re-assign)
   const todayMissions = missions.filter(m => !activeMissionIds.has(m.id) && !allCompletedIds.has(m.id)).slice(0, 3)
@@ -1236,8 +1236,8 @@ export default function HomePage() {
   if (loading) return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #FFF9F0 0%, #FFF0F9 100%)', fontFamily: 'var(--font-heebo), sans-serif' }}>
       <div style={{ textAlign: 'center' }}>
-        <div style={{ fontSize: 48, marginBottom: 12 }}>ðŸ¡</div>
-        <div style={{ color: CORAL, fontSize: 16, fontWeight: 700 }}>×˜×•×¢× ×™× ××ª ×”×‘×™×ª...</div>
+        <div style={{ fontSize: 48, marginBottom: 12 }}>🏡</div>
+        <div style={{ color: CORAL, fontSize: 16, fontWeight: 700 }}>טוענים את הבית...</div>
       </div>
     </div>
   )
@@ -1259,9 +1259,9 @@ export default function HomePage() {
           boxShadow: '0 2px 8px rgba(155,127,212,0.4)'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ fontSize: 16 }}>ðŸ‘</span>
+            <span style={{ fontSize: 16 }}>👁</span>
             <span style={{ color: 'white', fontWeight: 700, fontSize: 13 }}>
-              ×ž×¦×™×’ ×›: {viewAsProfile.name}
+              מציג כ: {viewAsProfile.name}
             </span>
           </div>
           <button onClick={() => handleViewAs(null)} style={{
@@ -1270,7 +1270,7 @@ export default function HomePage() {
             padding: '5px 14px', cursor: 'pointer',
             fontFamily: 'var(--font-heebo), sans-serif'
           }}>
-            ×—×–×¨×” ×œ×ª×¦×•×’×ª ×”×•×¨×”
+            חזרה לתצוגת הורה
           </button>
         </div>
       )}
