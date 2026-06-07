@@ -125,6 +125,10 @@ const PROMPTS = {
     `${FAMILY} enjoying a pizza and soccer night, open pizza boxes, watching a match on TV, cheering together, cozy evening`,
   'בוחר/ת את המשחק שצופים בו':
     `${BOY10} proudly holding a TV remote choosing a soccer match for the family to watch, soccer ball under his arm, family gathered on the couch`,
+
+  // Gaming reward
+  'סקין ברובלוקס':
+    `${BOY10} cheering with both arms raised in front of a computer screen, holding a game controller, colorful video game glow, excited celebration, sparkles around him`,
 }
 
 function loadProgress() {
