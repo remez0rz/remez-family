@@ -86,52 +86,50 @@ function ExperienceCard({ reward, index, currentPoints, currentLevel, isParent, 
         background: reward.image_url
           ? `url(${reward.image_url}) center/cover`
           : `linear-gradient(135deg, ${gradient[0]}, ${gradient[1]})`,
-        padding: '24px 20px 20px',
-        display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between',
-        minHeight: 110, position: 'relative'
+        minHeight: 128, position: 'relative',
+        display: 'flex', alignItems: 'center', justifyContent: 'center'
       }}>
-        {reward.image_url && <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.5), transparent)' }} />}
+        {reward.image_url && <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.55), rgba(0,0,0,0.05))' }} />}
         {!levelOk && (
-          <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2 }}>
+          <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 4 }}>
             <div style={{ background: 'rgba(0,0,0,0.6)', borderRadius: 20, padding: '8px 16px', color: 'white', fontSize: 13, fontWeight: 800 }}>
               🔒 פתוח ברמה {reward.level_required}
             </div>
           </div>
         )}
-        <div style={{ fontSize: 52, position: 'relative', zIndex: 1, filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.2))' }}>
-          {reward.emoji || '✨'}
+
+        {/* Points pill — top right */}
+        <div style={{ position: 'absolute', top: 10, right: 10, zIndex: 1, background: 'rgba(0,0,0,0.45)', borderRadius: 20, padding: '4px 11px', backdropFilter: 'blur(6px)', display: 'flex', alignItems: 'baseline', gap: 4 }}>
+          <span style={{ fontSize: 15, fontWeight: 900, color: 'white', lineHeight: 1 }}>{reward.points_required}</span>
+          <span style={{ fontSize: 9, color: 'rgba(255,255,255,0.85)', fontWeight: 700 }}>נק׳</span>
         </div>
-        <div style={{ position: 'relative', zIndex: 1, textAlign: 'center' }}>
-          <div style={{
-            background: unlocked ? 'white' : 'rgba(255,255,255,0.2)',
-            borderRadius: 16, padding: '8px 14px', backdropFilter: 'blur(4px)'
-          }}>
-            <div style={{ fontSize: 24, fontWeight: 900, color: unlocked ? gradient[0] : 'white', lineHeight: 1 }}>
-              {reward.points_required}
-            </div>
-            <div style={{ fontSize: 10, fontWeight: 700, color: unlocked ? gradient[0] : 'rgba(255,255,255,0.9)' }}>נק׳</div>
-          </div>
-          {unlocked && (
-            <div style={{ marginTop: 6, fontSize: 11, fontWeight: 800, color: 'white', background: 'rgba(0,0,0,0.25)', borderRadius: 20, padding: '3px 10px' }}>
-              זמין! ✨
-            </div>
-          )}
+
+        {/* Available badge — top left */}
+        {unlocked && (
+          <div style={{ position: 'absolute', top: 10, left: 10, zIndex: 1, background: '#FFD166', color: '#5a4500', borderRadius: 20, padding: '4px 11px', fontSize: 11, fontWeight: 900 }}>זמין! ✨</div>
+        )}
+
+        {/* Hero emoji (shown when there is no cover image) */}
+        {!reward.image_url && (
+          <div style={{ fontSize: 58, position: 'relative', zIndex: 1, filter: 'drop-shadow(0 3px 8px rgba(0,0,0,0.25))' }}>{reward.emoji || '✨'}</div>
+        )}
+
+        {/* Read aloud — bottom left, floating */}
+        <div style={{ position: 'absolute', bottom: 8, left: 8, zIndex: 3 }}>
+          <SpeakButton onBg size={42} text={[reward.title, reward.description]} />
         </div>
       </div>
 
-      <div style={{ background: 'white', padding: '16px 18px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
-          <div style={{ flex: 1, paddingLeft: 10 }}>
-            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
-              <div style={{ flex: 1, fontSize: 16, fontWeight: 800, color: NAVY, lineHeight: 1.2 }}>{reward.title}</div>
-              <SpeakButton text={[reward.title, reward.description]} size={42} />
-            </div>
+      <div style={{ background: 'white', padding: '14px 16px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8, marginBottom: 8 }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: 16, fontWeight: 800, color: NAVY, lineHeight: 1.25 }}>{reward.title}</div>
             {reward.description && (
               <div style={{ fontSize: 12, color: '#888888', marginTop: 4, lineHeight: 1.5 }}>{reward.description}</div>
             )}
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
-            <span style={{ fontSize: 10, fontWeight: 700, padding: '3px 10px', borderRadius: 20, background: config.bg, color: config.color }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4, flexShrink: 0 }}>
+            <span style={{ fontSize: 10, fontWeight: 700, padding: '3px 10px', borderRadius: 20, background: config.bg, color: config.color, whiteSpace: 'nowrap' }}>
               {config.label}
             </span>
             {isParent && (
@@ -165,10 +163,10 @@ function ExperienceCard({ reward, index, currentPoints, currentLevel, isParent, 
           <button onClick={() => onClaim(reward)} style={{
             width: '100%', padding: '13px', background: CORAL, color: 'white',
             border: 'none', borderRadius: 50, cursor: 'pointer',
-            fontWeight: 800, fontSize: 14, marginTop: 4,
+            fontWeight: 800, fontSize: 14, marginTop: 4, whiteSpace: 'nowrap',
             fontFamily: 'var(--font-heebo), sans-serif',
             boxShadow: '0 4px 12px rgba(255,107,107,0.35)'
-          }}>אני רוצה את זה! ✨</button>
+          }}>רוצה! ✨</button>
         )}
 
         {unlocked && isParent && (

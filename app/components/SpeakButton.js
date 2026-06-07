@@ -71,17 +71,19 @@ export default function SpeakButton({ text, size = 44, color = '#FF6B6B', onBg =
       title="הקריאו לי"
       style={{
         width: size, height: size, borderRadius: '50%', flexShrink: 0,
-        border: 'none', cursor: 'pointer', padding: 0,
+        cursor: 'pointer', padding: 0,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        fontSize: size * 0.5, lineHeight: 1,
-        background: onBg
-          ? (speaking ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.22)')
-          : (speaking ? color : color + '1f'),
-        color: onBg ? (speaking ? color : 'white') : color,
-        boxShadow: speaking ? `0 0 0 3px ${color}44` : 'none',
+        fontSize: size * 0.52, lineHeight: 1,
+        // Solid, high-contrast fill so it always stands out
+        background: speaking ? '#FFD166' : (onBg ? 'white' : color),
+        color: 'white',
+        border: `2.5px solid ${onBg ? 'white' : 'rgba(255,255,255,0.9)'}`,
+        boxShadow: speaking
+          ? `0 0 0 4px ${color}55, 0 3px 10px rgba(0,0,0,0.25)`
+          : '0 3px 10px rgba(0,0,0,0.28)',
         transition: 'all 0.15s',
         fontFamily: 'var(--font-heebo), sans-serif',
-        animation: speaking ? 'speakPulse 1s ease-in-out infinite' : 'none',
+        animation: speaking ? 'speakPulse 0.9s ease-in-out infinite' : 'none',
       }}
     >
       {speaking ? '⏸️' : '🔊'}
