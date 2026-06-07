@@ -75,7 +75,7 @@ export default function TazkirDetailPage() {
           <div style={{ flex: 1, minWidth: 0, paddingLeft: 10 }}>
             <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
               <div style={{ flex: 1, fontSize: 20, fontWeight: 900, color: 'white', lineHeight: 1.3 }}>{tazkir.title}</div>
-              <SpeakButton onBg size={36}
+              <SpeakButton onBg size={46}
                 text={[tazkir.title, tazkir.what_happened, tazkir.best_moment, tazkir.funny_moment, tazkir.quote]} />
             </div>
             {dateStr && <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.8)', marginTop: 4 }}>📅 {dateStr}</div>}

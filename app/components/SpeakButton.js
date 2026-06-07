@@ -22,7 +22,7 @@ function getHebrewVoice() {
  *   color  — accent color (default coral)
  *   onBg   — set true when placed on a colored/dark background (uses white style)
  */
-export default function SpeakButton({ text, size = 34, color = '#FF6B6B', onBg = false, style = {} }) {
+export default function SpeakButton({ text, size = 44, color = '#FF6B6B', onBg = false, style = {} }) {
   const [supported, setSupported] = useState(true)
   const [speaking, setSpeaking]   = useState(false)
   const utterRef = useRef(null)

@@ -591,7 +591,7 @@ function KidHome({ currentProfile, missions, dailyMissions, completedTodayIds, r
                 marginBottom: i < activeAssignments.length - 1 ? 10 : 0
               }}>
                 <div style={{ fontSize: 13, fontWeight: 600, color: NAVY, flex: 1, paddingLeft: 8 }}>{a.mission.title}</div>
-                <SpeakButton text={[a.mission.title, a.mission.description]} size={30} />
+                <SpeakButton text={[a.mission.title, a.mission.description]} size={38} />
                 <div style={{ fontWeight: 800, fontSize: 13, color: 'white', background: GREEN, padding: '4px 12px', borderRadius: 20, boxShadow: '0 2px 6px rgba(78,205,196,0.4)', marginRight: 8 }}>
                   +{a.mission.points}
                 </div>

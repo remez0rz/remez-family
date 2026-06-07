@@ -219,7 +219,7 @@ function FeedCard({ post, profiles, currentProfile, reactionData, onNavigate }) 
             {isTazkir && <span style={{ fontSize: 9, color: '#c0b0a0' }}>לחץ לפרטים ›</span>}
           </div>
         </div>
-        <SpeakButton text={[post.title, post.content, post.best_moment, post.funny_moment]} size={32} />
+        <SpeakButton text={[post.title, post.content, post.best_moment, post.funny_moment]} size={40} />
       </div>
 
       {hasMedia && <MediaGallery urls={post.media_urls} />}

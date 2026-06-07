@@ -124,7 +124,7 @@ function ExperienceCard({ reward, index, currentPoints, currentLevel, isParent, 
           <div style={{ flex: 1, paddingLeft: 10 }}>
             <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
               <div style={{ flex: 1, fontSize: 16, fontWeight: 800, color: NAVY, lineHeight: 1.2 }}>{reward.title}</div>
-              <SpeakButton text={[reward.title, reward.description]} size={32} />
+              <SpeakButton text={[reward.title, reward.description]} size={42} />
             </div>
             {reward.description && (
               <div style={{ fontSize: 12, color: '#888888', marginTop: 4, lineHeight: 1.5 }}>{reward.description}</div>
