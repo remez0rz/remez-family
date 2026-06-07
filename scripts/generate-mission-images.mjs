@@ -253,6 +253,30 @@ const PROMPTS = {
     'A child helping set up Shabbat table with candles and challah bread, family gathering warmly',
   'אתגר בלי מסך':
     'A child happily drawing and creating activities without any screens, peaceful and focused, afternoon light',
+
+  // ── MONDIAL / WORLD CUP ──────────────────────────────────────────────────
+  '⚽ צפינו במשחק מונדיאל כמשפחה':
+    'A whole family snuggled on the couch watching a soccer match on TV together, cheering with raised arms, soccer ball and snacks nearby, cozy living room glowing from the screen',
+  '🔮 ניחשתי נכון את תוצאת המשחק':
+    'An excited child holding up a small chalkboard with a happy score guess, soccer ball beside them, celebrating a correct prediction with a big grin',
+  '🎨 יצרתי יצירה בנושא נבחרת אהובה':
+    'A child painting a colorful soccer-themed artwork with a generic team jersey and a soccer ball, crayons and paints spread across the table, proud creative moment',
+  '🥨 הכנתי נשנושים לערב משחק':
+    'A cheerful child arranging a tray of fun game-night snacks and popcorn for the family before a soccer match, bright kitchen, soccer ball on the counter',
+  '🗺️ למדתי על מדינה משתתפת':
+    'A curious child pointing at a colorful globe and an open atlas, discovering a faraway country, soccer ball nearby, warm study corner',
+  '👕 הגעתי לערב מונדיאל בצבעי הנבחרת':
+    'A proud child wearing a colorful generic sports jersey and face paint in team colors, holding a soccer ball, festive cheering pose',
+  '📊 עדכנתי את טבלת הבתים':
+    'A focused child updating a colorful standings chart on a whiteboard with stickers and stars, soccer ball at their feet, organized fun moment',
+  '🎤 הייתי הפרשן/ית של המשחק':
+    'An enthusiastic child holding a toy microphone commentating excitedly in front of a TV showing a soccer match, animated expression, living room',
+  '🏆 ניחשתי מי תזכה במונדיאל':
+    'A child joyfully lifting a shiny golden trophy cup with both hands, confetti falling around them, soccer ball nearby, triumphant celebration',
+  '🙌 חגגתי גול עם כל המשפחה':
+    'A whole family jumping up and celebrating a goal together in the living room, arms in the air, pure joy, soccer ball and TV glowing in background',
+  '📺 צפיתי בתקציר המשחקים עם אבא':
+    'A father and child sitting close together watching soccer match highlights on TV in the evening, both smiling and pointing at the screen, cozy warm light',
 }
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
