@@ -4,6 +4,7 @@ import { supabase, getCurrentProfile } from '../lib/supabase'
 import { useRouter } from 'next/navigation'
 import BottomNav from '../components/BottomNav'
 import ViewAsBanner from '../components/ViewAsBanner'
+import SpeakButton from '../components/SpeakButton'
 
 const NAVY   = '#2D2D2D'
 const GOLD   = '#FFB830'
@@ -121,7 +122,10 @@ function ExperienceCard({ reward, index, currentPoints, currentLevel, isParent, 
       <div style={{ background: 'white', padding: '16px 18px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
           <div style={{ flex: 1, paddingLeft: 10 }}>
-            <div style={{ fontSize: 16, fontWeight: 800, color: NAVY, lineHeight: 1.2 }}>{reward.title}</div>
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
+              <div style={{ flex: 1, fontSize: 16, fontWeight: 800, color: NAVY, lineHeight: 1.2 }}>{reward.title}</div>
+              <SpeakButton text={[reward.title, reward.description]} size={32} />
+            </div>
             {reward.description && (
               <div style={{ fontSize: 12, color: '#888888', marginTop: 4, lineHeight: 1.5 }}>{reward.description}</div>
             )}

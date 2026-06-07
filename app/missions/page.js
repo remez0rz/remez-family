@@ -4,6 +4,7 @@ import { supabase, getCurrentProfile } from '../lib/supabase'
 import { useRouter } from 'next/navigation'
 import BottomNav from '../components/BottomNav'
 import ViewAsBanner from '../components/ViewAsBanner'
+import SpeakButton from '../components/SpeakButton'
 
 const NAVY = '#2D2D2D'
 const GOLD = '#FFB830'
@@ -448,7 +449,10 @@ function ChallengeCard({ mission, index, isParent, currentProfile, onStart, onAs
 
       {/* Card body */}
       <div style={{ background: 'white', padding: '14px 16px' }}>
-        <div style={{ fontSize: 15, fontWeight: 800, color: NAVY, lineHeight: 1.3, marginBottom: 4 }}>{mission.title}</div>
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, marginBottom: 4 }}>
+          <div style={{ flex: 1, fontSize: 15, fontWeight: 800, color: NAVY, lineHeight: 1.3 }}>{mission.title}</div>
+          <SpeakButton text={[mission.title, mission.description]} />
+        </div>
         {mission.description && (
           <div style={{ fontSize: 12, color: '#6b5e4e', marginBottom: 8, lineHeight: 1.5 }}>{mission.description}</div>
         )}

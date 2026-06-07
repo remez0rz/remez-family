@@ -2,6 +2,11 @@
 
 * { box-sizing: border-box; }
 
+@keyframes speakPulse {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.12); }
+}
+
 :root {
   --background: #f5f0e8;
   --foreground: #1a1208;

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import dynamic from 'next/dynamic'
 import BottomNav from './components/BottomNav'
 import { EnableNotificationsButton } from './components/PushRegister'
+import SpeakButton from './components/SpeakButton'
 import { flagFor, isWorldCupActive, WC_TEAMS, teamByCode } from './lib/worldcup'
 
 const GroceryList      = dynamic(() => import('./components/GroceryList'),      { ssr: false })
@@ -528,7 +529,10 @@ function KidHome({ currentProfile, missions, dailyMissions, completedTodayIds, r
                     </div>
                   </div>
                   <div style={{ background: 'white', padding: '14px 18px' }}>
-                    <div style={{ fontSize: 14, fontWeight: 800, color: NAVY, marginBottom: 10 }}>{mission.title}</div>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, marginBottom: 10 }}>
+                      <div style={{ flex: 1, fontSize: 14, fontWeight: 800, color: NAVY }}>{mission.title}</div>
+                      <SpeakButton text={[mission.title, mission.description]} />
+                    </div>
                     <button onClick={() => handleStartMission(mission)} disabled={starting} style={{
                       width: '100%', padding: '11px',
                       background: starting ? '#F0EBE0' : CORAL,
@@ -629,7 +633,10 @@ function KidHome({ currentProfile, missions, dailyMissions, completedTodayIds, r
                   </div>
                   {/* Card body */}
                   <div style={{ background: 'white', padding: '14px 16px' }}>
-                    <div style={{ fontSize: 15, fontWeight: 800, color: NAVY, lineHeight: 1.3, marginBottom: 4 }}>{mission.title}</div>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, marginBottom: 4 }}>
+                      <div style={{ flex: 1, fontSize: 15, fontWeight: 800, color: NAVY, lineHeight: 1.3 }}>{mission.title}</div>
+                      <SpeakButton text={[mission.title, mission.description]} />
+                    </div>
                     <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
                       <span style={{ fontSize: 11, color: '#8a7a60' }}>⏱ {mission.estimated_minutes} דק׳</span>
                       <span style={{ fontSize: 11, color: '#4ECDC4', fontWeight: 600 }}>🔁 יומי</span>
