@@ -347,6 +347,7 @@ export default function ActiveEarningPage() {
   const [awarding, setAwarding]             = useState(new Set())
   const [completedRecent, setCompletedRecent] = useState([])
   const [revoking, setRevoking]             = useState(new Set())
+  const [removing, setRemoving]             = useState(new Set())
   const [viewAsId, setViewAsId]             = useState(null)
   const router = useRouter()
 
@@ -497,6 +498,16 @@ export default function ActiveEarningPage() {
     setCompletedRecent(prev => prev.filter(a => a.id !== assignment.id))
     setAssignments(prev => [...prev, { ...assignment, status: 'active', completed_at: null }])
     setRevoking(prev => { const n = new Set(prev); n.delete(assignment.id); return n })
+  }
+
+  // Remove an active assignment without awarding points (cancel / undo a mistaken assign)
+  const removeAssignment = async (assignment) => {
+    if (removing.has(assignment.id)) return
+    if (!window.confirm(`להסיר את "${assignment.mission?.title}" מהמשימות הפעילות? (לא יינתנו נקודות)`)) return
+    setRemoving(prev => new Set([...prev, assignment.id]))
+    await supabase.from('assignments').delete().eq('id', assignment.id)
+    setAssignments(prev => prev.filter(a => a.id !== assignment.id))
+    setRemoving(prev => { const n = new Set(prev); n.delete(assignment.id); return n })
   }
 
   const closeCelebration = () => {
@@ -657,6 +668,15 @@ export default function ActiveEarningPage() {
                       fontWeight: 700, fontSize: 14,
                       fontFamily: 'var(--font-heebo), sans-serif'
                     }}>{awarding.has(a.id) ? 'מעבד...' : `⭐ אשר +${a.mission?.points}`}</button>
+                  )}
+
+                  {isParent && !isViewingAsKid && (
+                    <button onClick={() => removeAssignment(a)} disabled={removing.has(a.id)} style={{
+                      width: '100%', padding: '8px', marginTop: 8,
+                      background: 'transparent', color: '#b06a6a',
+                      border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: 12,
+                      fontFamily: 'var(--font-heebo), sans-serif'
+                    }}>{removing.has(a.id) ? 'מסיר...' : '✕ הסר מהפעילות'}</button>
                   )}
                 </div>
               </div>

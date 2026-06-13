@@ -116,6 +116,7 @@ function MissionFormModal({ mission, profiles = [], onClose, onSaved }) {
   })
   const [assignTo, setAssignTo]   = useState([])
   const [saving, setSaving]       = useState(false)
+  const [deleting, setDeleting]   = useState(false)
   const [uploading, setUploading] = useState(false)
 
   const handleImageUpload = async (e) => {
@@ -150,6 +151,17 @@ function MissionFormModal({ mission, profiles = [], onClose, onSaved }) {
       await supabase.from('missions').update(form).eq('id', mission.id)
     }
     setSaving(false)
+    onSaved()
+  }
+
+  const handleDelete = async () => {
+    if (isNew || deleting) return
+    if (!window.confirm(`למחוק לצמיתות את "${mission.title}"? המשימה תוסר גם מהמשימות הפעילות של הילדים.`)) return
+    setDeleting(true)
+    // Remove active assignments for this mission, then the mission itself
+    await supabase.from('assignments').delete().eq('mission_id', mission.id).eq('status', 'active')
+    await supabase.from('missions').delete().eq('id', mission.id)
+    setDeleting(false)
     onSaved()
   }
 
@@ -309,6 +321,18 @@ function MissionFormModal({ mission, profiles = [], onClose, onSaved }) {
         }}>
           {saving ? 'שומר...' : isNew ? '+ הוסף אתגר' : 'שמור אתגר'}
         </button>
+
+        {!isNew && (
+          <button onClick={handleDelete} disabled={deleting} style={{
+            width: '100%', padding: '12px', marginTop: 10,
+            background: 'transparent', color: '#d04545',
+            border: '1.5px solid #f0c0c0', borderRadius: 50,
+            cursor: 'pointer', fontWeight: 700, fontSize: 14,
+            fontFamily: 'var(--font-heebo), sans-serif'
+          }}>
+            {deleting ? 'מוחק...' : '🗑 מחק משימה'}
+          </button>
+        )}
       </div>
     </div>
   )
