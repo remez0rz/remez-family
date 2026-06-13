@@ -10,7 +10,7 @@ import { createClient } from '@supabase/supabase-js'
 const [, , email, title = 'משפחת רמז', body = 'התראת בדיקה 🎉', url = '/'] = process.argv
 
 const SUPA_URL = process.env.NEXT_PUBLIC_SUPABASE_URL
-const SUPA_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+const SUPA_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
 if (!email) { console.error('Usage: send-push.mjs <email> [title] [body] [url]'); process.exit(1) }
 if (!process.env.VAPID_PRIVATE_KEY) { console.error('Missing VAPID env vars'); process.exit(1) }

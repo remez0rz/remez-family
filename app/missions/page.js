@@ -160,8 +160,9 @@ function MissionFormModal({ mission, profiles = [], onClose, onSaved }) {
     setDeleting(true)
     // Remove active assignments for this mission, then the mission itself
     await supabase.from('assignments').delete().eq('mission_id', mission.id).eq('status', 'active')
-    await supabase.from('missions').delete().eq('id', mission.id)
+    const { error } = await supabase.from('missions').delete().eq('id', mission.id)
     setDeleting(false)
+    if (error) { alert('מחיקה נכשלה: ' + error.message); return }
     onSaved()
   }
 
@@ -348,19 +349,32 @@ function ParentAssignModal({ mission, profiles, onClose, onAssigned }) {
   const handleAssign = async () => {
     if (!assignedTo.length) return
     setAssigning(true)
-    await supabase.from('assignments').insert(
-      assignedTo.map(id => ({
-        mission_id: mission.id, assigned_to: id, status: 'active',
-        ...(dueDate ? { due_date: dueDate } : {})
-      }))
-    )
-    if (notify && assignedTo.length) {
-      const names = assignedTo.map(id => profiles.find(p => p.id === id)?.name).filter(Boolean).join(' ו')
-      fetch('/api/push/send', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ memberIds: assignedTo, title: '⭐ אתגר חדש!', body: `${mission.title} — בא לצבור נקודות!`, url: '/missions/active', tag: 'newmission' })
-      }).catch(() => {})
+
+    // Skip kids who already have this mission active (unique index also enforces this)
+    const { data: existing } = await supabase.from('assignments')
+      .select('assigned_to').eq('mission_id', mission.id).eq('status', 'active').in('assigned_to', assignedTo)
+    const alreadyHas = new Set((existing || []).map(r => r.assigned_to))
+    const toAssign   = assignedTo.filter(id => !alreadyHas.has(id))
+
+    if (toAssign.length) {
+      const { error } = await supabase.from('assignments').insert(
+        toAssign.map(id => ({
+          mission_id: mission.id, assigned_to: id, status: 'active',
+          ...(dueDate ? { due_date: dueDate } : {})
+        }))
+      )
+      if (error) { setAssigning(false); alert('השיוך נכשל: ' + error.message); return }
+
+      if (notify) {
+        fetch('/api/push/send', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ memberIds: toAssign, title: '⭐ אתגר חדש!', body: `${mission.title} — בא לצבור נקודות!`, url: '/missions/active', tag: 'newmission' })
+        }).catch(() => {})
+      }
     }
     setAssigning(false)
+    if (toAssign.length < assignedTo.length) {
+      alert(toAssign.length === 0 ? 'כבר שויך לכל הנבחרים 🙂' : 'חלק כבר היה משויך — נוספו רק החדשים')
+    }
     onAssigned()
   }
 

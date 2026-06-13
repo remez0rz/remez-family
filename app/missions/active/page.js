@@ -505,9 +505,10 @@ export default function ActiveEarningPage() {
     if (removing.has(assignment.id)) return
     if (!window.confirm(`להסיר את "${assignment.mission?.title}" מהמשימות הפעילות? (לא יינתנו נקודות)`)) return
     setRemoving(prev => new Set([...prev, assignment.id]))
-    await supabase.from('assignments').delete().eq('id', assignment.id)
-    setAssignments(prev => prev.filter(a => a.id !== assignment.id))
+    const { error } = await supabase.from('assignments').delete().eq('id', assignment.id)
     setRemoving(prev => { const n = new Set(prev); n.delete(assignment.id); return n })
+    if (error) { alert('ההסרה נכשלה: ' + error.message); return }
+    setAssignments(prev => prev.filter(a => a.id !== assignment.id))
   }
 
   const closeCelebration = () => {

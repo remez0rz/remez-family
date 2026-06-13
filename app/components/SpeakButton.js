@@ -1,18 +1,23 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
 
-// Picks the best available Hebrew voice (cached across instances)
+// Hebrew voice resolution — initialised once for the whole app, not per button.
 let cachedVoice = null
-function getHebrewVoice() {
+function resolveHebrewVoice() {
   if (typeof window === 'undefined' || !window.speechSynthesis) return null
-  if (cachedVoice) return cachedVoice
   const voices = window.speechSynthesis.getVoices() || []
   cachedVoice =
     voices.find(v => v.lang === 'he-IL') ||
     voices.find(v => v.lang?.toLowerCase().startsWith('he')) ||
-    null
+    cachedVoice || null
   return cachedVoice
 }
+if (typeof window !== 'undefined' && window.speechSynthesis) {
+  resolveHebrewVoice()
+  // getVoices() is often empty until this fires once; register a single global listener
+  window.speechSynthesis.addEventListener?.('voiceschanged', resolveHebrewVoice)
+}
+const speechSupported = typeof window !== 'undefined' && 'speechSynthesis' in window
 
 /**
  * Tap-to-read-aloud button for pre-readers.
@@ -23,22 +28,17 @@ function getHebrewVoice() {
  *   onBg   — set true when placed on a colored/dark background (uses white style)
  */
 export default function SpeakButton({ text, size = 44, color = '#FF6B6B', onBg = false, style = {} }) {
-  const [supported, setSupported] = useState(true)
-  const [speaking, setSpeaking]   = useState(false)
-  const utterRef = useRef(null)
+  const [speaking, setSpeaking] = useState(false)
+  const speakingRef = useRef(false)
 
-  useEffect(() => {
-    const ok = typeof window !== 'undefined' && 'speechSynthesis' in window
-    setSupported(ok)
-    if (ok) {
-      // Warm up the voice list (some browsers load async)
-      window.speechSynthesis.getVoices()
-      window.speechSynthesis.onvoiceschanged = () => { cachedVoice = null; getHebrewVoice() }
-    }
-    return () => { try { window.speechSynthesis?.cancel() } catch {} }
+  // On unmount, only stop speech if THIS button is the one currently speaking
+  useEffect(() => () => {
+    if (speakingRef.current) { try { window.speechSynthesis.cancel() } catch {} }
   }, [])
 
-  if (!supported) return null
+  const setSpeak = (v) => { speakingRef.current = v; setSpeaking(v) }
+
+  if (!speechSupported) return null
 
   const content = Array.isArray(text) ? text.filter(Boolean).join('. ') : (text || '')
   if (!content.trim()) return null
@@ -48,20 +48,19 @@ export default function SpeakButton({ text, size = 44, color = '#FF6B6B', onBg =
     e.preventDefault()
     const synth = window.speechSynthesis
     try {
-      if (synth.speaking || speaking) { synth.cancel(); setSpeaking(false); return }
+      if (synth.speaking || speaking) { synth.cancel(); setSpeak(false); return }
       const u = new SpeechSynthesisUtterance(content)
       u.lang = 'he-IL'
-      const v = getHebrewVoice()
+      const v = resolveHebrewVoice()
       if (v) u.voice = v
       u.rate = 0.92
       u.pitch = 1.05
-      u.onend = () => setSpeaking(false)
-      u.onerror = () => setSpeaking(false)
-      utterRef.current = u
-      setSpeaking(true)
+      u.onend = () => setSpeak(false)
+      u.onerror = () => setSpeak(false)
+      setSpeak(true)
       synth.cancel() // clear any queued speech first
       synth.speak(u)
-    } catch { setSpeaking(false) }
+    } catch { setSpeak(false) }
   }
 
   return (
@@ -84,6 +83,7 @@ export default function SpeakButton({ text, size = 44, color = '#FF6B6B', onBg =
         transition: 'all 0.15s',
         fontFamily: 'var(--font-heebo), sans-serif',
         animation: speaking ? 'speakPulse 0.9s ease-in-out infinite' : 'none',
+        ...style,
       }}
     >
       {speaking ? '⏸️' : '🔊'}

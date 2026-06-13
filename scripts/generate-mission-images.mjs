@@ -25,7 +25,8 @@ const __dirname = dirname(fileURLToPath(import.meta.url))
 // ── Config ─────────────────────────────────────────────────────────────────
 const FAL_KEY    = process.env.FAL_KEY
 const SUPA_URL   = process.env.NEXT_PUBLIC_SUPABASE_URL
-const SUPA_KEY   = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+// Service-role key bypasses RLS (writes now require auth); falls back to anon for read-only use
+const SUPA_KEY   = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 const PROGRESS_FILE = join(__dirname, 'image-gen-progress.json')
 
 if (!FAL_KEY || !SUPA_URL || !SUPA_KEY) {
