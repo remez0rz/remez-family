@@ -130,6 +130,24 @@ const PROMPTS = {
   // Gaming reward
   'סקין ברובלוקס':
     `${BOY10} cheering with both arms raised in front of a computer screen, holding a game controller, colorful video game glow, excited celebration, sparkles around him`,
+
+  // High-point rewards
+  'קורקינט או אופניים חדשים':
+    `${BOY10} riding a shiny brand new bicycle outdoors with a big helmet and huge smile, sunny park path, wind in motion`,
+  'משחק וידאו חדש':
+    `${BOY10} excitedly holding up a brand new video game box with both hands in front of a TV, controller nearby, big happy grin`,
+  'מסיבת יום הולדת עם חברים':
+    `${KIDS} and friends at a fun birthday party with balloons, party hats, cake and confetti, everyone laughing`,
+  'יום בפארק שעשועים':
+    `${KIDS} on a colorful roller coaster ride at an amusement park with arms in the air, huge smiles, ferris wheel in background`,
+  'יום פעילות לבחירתך':
+    `${BOY10} and ${GIRL7} bowling and playing arcade games together, colorful fun activity center, laughing`,
+  'צעצוע גדול לבחירה':
+    `${BOY5} hugging a big new toy with both arms, the happiest smile, colorful toy store shelves behind`,
+  'שינה אצל חבר':
+    `${BOY10} at a fun sleepover with a friend, sleeping bags, pillow fight, flashlights, cozy bedroom at night`,
+  'ערב קולנוע בחוץ':
+    `${KIDS} at a movie theater holding popcorn and drinks, big cinema screen glowing, excited faces`,
 }
 
 function loadProgress() {
