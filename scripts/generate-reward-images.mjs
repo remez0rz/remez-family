@@ -148,6 +148,8 @@ const PROMPTS = {
     `${BOY10} at a fun sleepover with a friend, sleeping bags, pillow fight, flashlights, cozy bedroom at night`,
   'ערב קולנוע בחוץ':
     `${KIDS} at a movie theater holding popcorn and drinks, big cinema screen glowing, excited faces`,
+  'רכבת הרים על הברכיים של אבא':
+    `A laughing dad bouncing his giggling young child on his knees pretending to be a roller coaster, cozy living room, playful joyful moment`,
 }
 
 function loadProgress() {
