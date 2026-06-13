@@ -254,6 +254,8 @@ const PROMPTS = {
     'A child helping set up Shabbat table with candles and challah bread, family gathering warmly',
   'אתגר בלי מסך':
     'A child happily drawing and creating activities without any screens, peaceful and focused, afternoon light',
+  '🗑️ לזרוק את הזבל':
+    'A cheerful child proudly carrying a tied trash bag out to the bin, giving a thumbs up, tidy home entrance, sunny day',
 
   // ── MONDIAL / WORLD CUP ──────────────────────────────────────────────────
   '⚽ צפינו במשחק מונדיאל כמשפחה':
