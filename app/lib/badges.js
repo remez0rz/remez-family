@@ -78,11 +78,17 @@ export async function checkAndAwardBadges(memberId) {
     }
 
     if (earned) {
-      await supabase.from('member_badges').insert({
+      // Only celebrate a badge that actually persisted. RLS or a race can reject
+      // the insert; without this check we'd "re-award" it on every completion.
+      const { error: insertError } = await supabase.from('member_badges').insert({
         member_id:  memberId,
         badge_id:   badge.id,
         awarded_at: new Date().toISOString()
       })
+      if (insertError) {
+        console.error('Failed to award badge', badge.id, insertError.message)
+        continue
+      }
       newlyEarned.push(badge)
     }
   }
