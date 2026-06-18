@@ -187,6 +187,7 @@ export default function ProfilesPage() {
 
   const parents  = profiles.filter(p => p.role === 'parent')
   const children = profiles.filter(p => p.role === 'child').sort((a, b) => b.total_points - a.total_points)
+  const grandparents = profiles.filter(p => p.role === 'grandparent')
   const childColors = [CORAL, TEAL, '#9B7FD4']
 
   if (loading) return (
@@ -398,6 +399,47 @@ export default function ProfilesPage() {
                   padding: '4px 12px', fontSize: 12, fontWeight: 700, color: 'white'
                 }}>
                   מנהל
+                </div>
+              </div>
+            ))}
+          </>
+        )}
+
+        {/* Grandparents */}
+        {grandparents.length > 0 && (
+          <>
+            <div style={{ fontSize: 12, fontWeight: 700, color: '#888888', marginBottom: 10, marginTop: 4, letterSpacing: '0.05em' }}>
+              סבא וסבתא 💜
+            </div>
+            {grandparents.map(gp => (
+              <div key={gp.id} style={{
+                background: 'white', borderRadius: 24,
+                boxShadow: '0 4px 20px rgba(0,0,0,0.07)',
+                border: '2px solid rgba(155,127,212,0.2)',
+                marginBottom: 10, padding: '14px 16px',
+                display: 'flex', alignItems: 'center', gap: 14
+              }}>
+                <div style={{ position: 'relative', flexShrink: 0 }}>
+                  <Avatar profile={gp} size={52} />
+                  {isParent && !isViewingAsKid && (
+                    <button onClick={() => setUploadTarget(gp)} style={{
+                      position: 'absolute', bottom: -2, right: -2,
+                      background: '#9B7FD4', border: '2px solid white',
+                      borderRadius: '50%', width: 22, height: 22,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      cursor: 'pointer', fontSize: 10
+                    }}>📷</button>
+                  )}
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 16, fontWeight: 700, color: NAVY }}>{gp.name}</div>
+                  <div style={{ fontSize: 12, color: '#888888', marginTop: 2 }}>סבא/סבתא</div>
+                </div>
+                <div style={{
+                  background: '#9B7FD4', borderRadius: 20,
+                  padding: '4px 12px', fontSize: 12, fontWeight: 700, color: 'white'
+                }}>
+                  אורח אהוב
                 </div>
               </div>
             ))}

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import BottomNav from '../components/BottomNav'
 import ViewAsBanner from '../components/ViewAsBanner'
 import SpeakButton from '../components/SpeakButton'
+import CommentThread from '../components/CommentThread'
 
 const CORAL = '#FF6B6B'
 const TEAL = '#4ECDC4'
@@ -171,10 +172,11 @@ function ContentWithLinks({ text }) {
   )
 }
 
-function FeedCard({ post, profiles, currentProfile, reactionData, onNavigate }) {
+function FeedCard({ post, profiles, currentProfile, reactionData, onNavigate, onToggleSave }) {
   const isTazkir  = post.type === 'tahkir'
   const isMission = post.type === 'mission_completed'
   const hasMedia  = post.media_urls?.length > 0
+  const isParent  = currentProfile?.role === 'parent'
 
   const participantProfiles = (post.participants || [])
     .map(name => profiles.find(p => p.name === name))
@@ -220,6 +222,18 @@ function FeedCard({ post, profiles, currentProfile, reactionData, onNavigate }) 
           </div>
         </div>
         <SpeakButton text={[post.title, post.content, post.best_moment, post.funny_moment]} size={40} />
+        {isParent && (
+          <button
+            onClick={(e) => { e.stopPropagation(); onToggleSave && onToggleSave(post) }}
+            title={post.saved ? 'הסר מהספר המשפחתי' : 'שמור בספר המשפחתי'}
+            style={{
+              flexShrink: 0, width: 40, height: 40, borderRadius: '50%', border: 'none',
+              background: post.saved ? '#FFF0D5' : '#F7F4EE', cursor: 'pointer', fontSize: 18
+            }}>{post.saved ? '🔖' : '📑'}</button>
+        )}
+        {!isParent && post.saved && (
+          <span title="בספר המשפחתי" style={{ flexShrink: 0, fontSize: 18 }}>🔖</span>
+        )}
       </div>
 
       {hasMedia && <MediaGallery urls={post.media_urls} />}
@@ -290,6 +304,12 @@ function FeedCard({ post, profiles, currentProfile, reactionData, onNavigate }) 
           currentProfileId={currentProfile?.id}
           initialReactions={reactionData[post.id] || {}}
         />
+        <CommentThread
+          postId={post.id}
+          currentProfile={currentProfile}
+          profiles={profiles}
+          participants={post.participants || []}
+        />
         {/* Edit button — shown for the post creator only */}
         {currentProfile?.id === post.created_by && (
           <div style={{ marginTop: 8, display: 'flex', justifyContent: 'flex-end' }}>
@@ -321,6 +341,7 @@ export default function FeedPage() {
   const [page, setPage]                     = useState(0)
   const [typeFilter, setTypeFilter]         = useState('all')
   const [memberFilter, setMemberFilter]     = useState('all')
+  const [savedOnly, setSavedOnly]           = useState(false)
   const [viewAsId, setViewAsId]             = useState(null)
   const router = useRouter()
 
@@ -343,7 +364,7 @@ export default function FeedPage() {
       setHasMore(true)
       loadPosts(0, true)
     }
-  }, [typeFilter, memberFilter])
+  }, [typeFilter, memberFilter, savedOnly])
 
   const loadInit = async () => {
     const profile = await getCurrentProfile()
@@ -373,6 +394,9 @@ export default function FeedPage() {
     }
     if (memberFilter !== 'all') {
       query = query.contains('participants', [memberFilter])
+    }
+    if (savedOnly) {
+      query = query.eq('saved', true)
     }
 
     const { data: postData } = await query
@@ -404,6 +428,15 @@ export default function FeedPage() {
   }
 
   const viewAsProfile = viewAsId ? profiles.find(p => p.id === viewAsId) : null
+
+  // Parent-only: add/remove a moment from the Family Memory Book.
+  const handleToggleSave = async (post) => {
+    const next = !post.saved
+    setPosts(prev => prev.map(p => p.id === post.id ? { ...p, saved: next } : p))
+    await supabase.from('feed_posts')
+      .update({ saved: next, saved_at: next ? new Date().toISOString() : null })
+      .eq('id', post.id)
+  }
 
   if (loading) return (
     <div style={{
@@ -466,6 +499,15 @@ export default function FeedPage() {
               {f.emoji} {f.label}
             </button>
           ))}
+          <button onClick={() => setSavedOnly(v => !v)} style={{
+            padding: '7px 14px', borderRadius: 20, border: 'none', cursor: 'pointer',
+            background: savedOnly ? GOLD : 'rgba(255,255,255,0.2)',
+            color: savedOnly ? NAVY : 'white',
+            fontWeight: savedOnly ? 800 : 500,
+            fontSize: 13, fontFamily: 'var(--font-heebo), sans-serif', flexShrink: 0
+          }}>
+            🔖 ספר משפחתי
+          </button>
         </div>
 
         {/* Member filter with real avatars */}
@@ -508,12 +550,12 @@ export default function FeedPage() {
           <div style={{ textAlign: 'center', padding: '48px 20px' }}>
             <div style={{ fontSize: 48, marginBottom: 12 }}>📸</div>
             <div style={{ fontSize: 16, fontWeight: 700, color: NAVY, marginBottom: 8 }}>
-              {typeFilter !== 'all' || memberFilter !== 'all' ? 'אין תוצאות לפילטר הזה' : 'עדיין אין זיכרונות'}
+              {savedOnly ? 'הספר המשפחתי עדיין ריק' : (typeFilter !== 'all' || memberFilter !== 'all') ? 'אין תוצאות לפילטר הזה' : 'עדיין אין זיכרונות'}
             </div>
             <div style={{ fontSize: 13, color: '#8a7a60', marginBottom: 20 }}>
-              {typeFilter !== 'all' || memberFilter !== 'all' ? 'נסו פילטר אחר' : 'השלימו אתגר או פתחו תחקיר ראשון'}
+              {savedOnly ? 'סמנו רגעים אהובים עם 🔖 כדי לשמור אותם כאן' : (typeFilter !== 'all' || memberFilter !== 'all') ? 'נסו פילטר אחר' : 'השלימו אתגר או פתחו תחקיר ראשון'}
             </div>
-            {typeFilter === 'all' && memberFilter === 'all' && (
+            {typeFilter === 'all' && memberFilter === 'all' && !savedOnly && (
               <a href="/tazkir/new" style={{
                 display: 'inline-block', padding: '12px 24px',
                 background: CORAL, color: 'white', borderRadius: 50,
@@ -531,6 +573,7 @@ export default function FeedPage() {
                 currentProfile={currentProfile}
                 reactionData={reactionData}
                 onNavigate={(path) => router.push(path.startsWith('/') ? path : `/tazkir/${path}`)}
+                onToggleSave={handleToggleSave}
               />
             ))}
 

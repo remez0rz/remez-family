@@ -1,5 +1,7 @@
 'use client'
+import { useEffect, useState } from 'react'
 import { usePathname } from 'next/navigation'
+import { getCurrentProfile } from '../lib/supabase'
 
 const CORAL  = '#FF6B6B'
 const GOLD   = '#FFB830'
@@ -13,8 +15,24 @@ const NAV_ITEMS = [
   { href: '/feed',            label: 'רגעים',  emoji: '📖' },
 ]
 
+// Grandparents have a deliberately small, warm navigation — no missions/points.
+const GRANDPARENT_NAV = [
+  { href: '/',         label: 'המעגל',  emoji: '💜' },
+  { href: '/feed',     label: 'רגעים',  emoji: '📖', center: true },
+  { href: '/profiles', label: 'המשפחה', emoji: '👨‍👩‍👧' },
+]
+
 export default function BottomNav({ activeMissionCount = 0 }) {
   const pathname = usePathname()
+  const [items, setItems] = useState(NAV_ITEMS)
+
+  useEffect(() => {
+    let cancelled = false
+    getCurrentProfile()
+      .then(p => { if (!cancelled && p?.role === 'grandparent') setItems(GRANDPARENT_NAV) })
+      .catch(() => {})
+    return () => { cancelled = true }
+  }, [])
 
   return (
     <div className="app-nav" style={{
@@ -26,7 +44,7 @@ export default function BottomNav({ activeMissionCount = 0 }) {
       fontFamily: 'var(--font-heebo), sans-serif'
     }}>
     <div className="app-nav-inner" style={{ display: 'flex', justifyContent: 'space-around' }}>
-      {NAV_ITEMS.map(item => {
+      {items.map(item => {
         const active = pathname === item.href ||
           (item.href !== '/' && pathname.startsWith(item.href) && !item.center)
         const isCenter = item.center

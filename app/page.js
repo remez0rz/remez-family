@@ -6,6 +6,7 @@ import dynamic from 'next/dynamic'
 import BottomNav from './components/BottomNav'
 import { EnableNotificationsButton } from './components/PushRegister'
 import SpeakButton from './components/SpeakButton'
+import CommentThread from './components/CommentThread'
 import { flagFor, isWorldCupActive, WC_TEAMS, teamByCode } from './lib/worldcup'
 
 const GroceryList      = dynamic(() => import('./components/GroceryList'),      { ssr: false })
@@ -1008,6 +1009,129 @@ function ParentHome({ currentProfile, profiles, activeAssignments, recentFeed, r
   )
 }
 
+// Grandparent homepage — a warm "family album" rather than a chore dashboard.
+function GrandparentHome({ currentProfile, profiles, recentFeed, reactionData, handleReaction }) {
+  const router = useRouter()
+  const children = profiles.filter(p => p.role === 'child').sort((a, b) => b.total_points - a.total_points)
+  const isVid = url => /\.(mp4|mov|webm|avi)(\?|$)/i.test(url || '')
+  const timeAgo = (dateStr) => {
+    const diff = Math.floor((Date.now() - new Date(dateStr)) / 86400000)
+    if (diff === 0) return 'היום'
+    if (diff === 1) return 'אתמול'
+    return `לפני ${diff} ימים`
+  }
+
+  return (
+    <>
+      {/* Header */}
+      <div style={{
+        background: 'linear-gradient(135deg, #9B7FD4 0%, #C084FC 100%)',
+        padding: '24px 18px 30px', borderRadius: '0 0 32px 32px', marginBottom: 18,
+        position: 'relative', overflow: 'hidden'
+      }}>
+        <div style={{ position: 'absolute', top: -40, left: -40, width: 160, height: 160, borderRadius: '50%', background: 'rgba(255,255,255,0.12)' }} />
+        <div style={{ position: 'absolute', bottom: -20, right: -20, width: 100, height: 100, borderRadius: '50%', background: 'rgba(255,255,255,0.1)' }} />
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', position: 'relative', zIndex: 1 }}>
+          <div>
+            <div style={{ fontSize: 26, fontWeight: 900, color: 'white', lineHeight: 1.2 }}>המעגל המשפחתי 💜</div>
+            <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.92)', marginTop: 6, fontWeight: 600, maxWidth: 240, lineHeight: 1.5 }}>
+              כל הרגעים הקטנים שלא רוצים לפספס
+            </div>
+          </div>
+          <a href="/profiles" style={{ textDecoration: 'none' }}>
+            <Avatar profile={currentProfile} size={48} />
+          </a>
+        </div>
+
+        {/* Grandchildren strip */}
+        {children.length > 0 && (
+          <div style={{ display: 'flex', gap: 14, marginTop: 18, position: 'relative', zIndex: 1, flexWrap: 'wrap' }}>
+            {children.map(child => (
+              <div key={child.id} onClick={() => router.push(`/profiles/${child.id}`)}
+                style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, cursor: 'pointer' }}>
+                <Avatar profile={child} size={46} />
+                <span style={{ fontSize: 12, fontWeight: 700, color: 'white' }}>{child.name}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div className="app-body">
+        <EnableNotificationsButton profileId={currentProfile?.id} />
+
+        <SectionTitle title="💜 הרגעים האחרונים" href="/feed" />
+
+        {recentFeed.length === 0 ? (
+          <Card>
+            <div style={{ textAlign: 'center', padding: '20px 8px' }}>
+              <div style={{ fontSize: 44, marginBottom: 10 }}>📸</div>
+              <div style={{ fontSize: 14, color: '#8a7a60' }}>עוד אין רגעים — בקרוב יהיו כאן!</div>
+            </div>
+          </Card>
+        ) : recentFeed.map((post) => {
+          const cover = post.media_urls?.[0]
+          const postReactions = reactionData[post.id] || {}
+          const participants = (post.participants || []).map(n => profiles.find(p => p.name === n)).filter(Boolean)
+          return (
+            <Card key={post.id} style={{ padding: 0, overflow: 'hidden' }}>
+              <div style={{ padding: '14px 16px 8px', display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div style={{ display: 'flex' }}>
+                  {participants.length > 0
+                    ? participants.slice(0, 3).map((p, i) => (
+                        <div key={p.id} style={{ marginLeft: i > 0 ? -8 : 0, zIndex: 3 - i }}><Avatar profile={p} size={36} /></div>
+                      ))
+                    : <div style={{ width: 36, height: 36, borderRadius: '50%', background: '#f0ebe0', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17 }}>⭐</div>
+                  }
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: NAVY, lineHeight: 1.3 }}>{post.title}</div>
+                  <div style={{ fontSize: 11, color: '#b0a090', marginTop: 2 }}>{timeAgo(post.created_at)}</div>
+                </div>
+              </div>
+
+              {cover && !isVid(cover) && (
+                <img src={cover} alt="" onClick={() => router.push('/feed')}
+                  style={{ width: '100%', maxHeight: 240, objectFit: 'cover', display: 'block', cursor: 'pointer' }} />
+              )}
+              {post.content && (
+                <div style={{ padding: '8px 16px 0', fontSize: 13, color: '#5a4a3a', lineHeight: 1.5 }}>{post.content}</div>
+              )}
+
+              {/* Reactions */}
+              <div style={{ padding: '10px 16px 8px', display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                {REACTIONS.map(r => (
+                  <button key={r.type} onClick={() => handleReaction(post.id, r.type)} style={{
+                    background: postReactions[r.type] ? '#FFF0D5' : '#F7F4EE',
+                    border: `1.5px solid ${postReactions[r.type] ? GOLD : '#EDE8E0'}`,
+                    borderRadius: 20, padding: '6px 12px', cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', gap: 4, fontFamily: 'var(--font-heebo), sans-serif'
+                  }}>
+                    <span style={{ fontSize: 15 }}>{r.emoji}</span>
+                    {postReactions[r.type] > 0 && <span style={{ fontSize: 11, fontWeight: 700, color: NAVY }}>{postReactions[r.type]}</span>}
+                  </button>
+                ))}
+              </div>
+
+              {/* Comment + voice channel */}
+              <div style={{ padding: '0 16px 14px' }}>
+                <CommentThread postId={post.id} currentProfile={currentProfile} profiles={profiles} participants={post.participants || []} />
+              </div>
+            </Card>
+          )
+        })}
+
+        <a href="/feed" style={{
+          display: 'block', textAlign: 'center', padding: '13px',
+          background: 'white', borderRadius: 24, color: '#9B7FD4',
+          textDecoration: 'none', fontWeight: 800, fontSize: 14,
+          boxShadow: '0 4px 20px rgba(0,0,0,0.07)', marginTop: 4
+        }}>לכל הרגעים של המשפחה ←</a>
+      </div>
+    </>
+  )
+}
+
 export default function HomePage() {
   const [currentProfile, setCurrentProfile] = useState(null)
   const [profiles, setProfiles]             = useState([])
@@ -1214,6 +1338,7 @@ export default function HomePage() {
   }
 
   const isParent = currentProfile?.role === 'parent'
+  const isGrandparent = currentProfile?.role === 'grandparent'
   const viewAsProfile = viewAsId ? profiles.find(p => p.id === viewAsId) : null
   const isViewingAsKid = isParent && !!viewAsProfile
   const effectiveProfile = viewAsProfile || currentProfile
@@ -1271,7 +1396,15 @@ export default function HomePage() {
         </div>
       )}
 
-      {isParent && !isViewingAsKid ? (
+      {isGrandparent ? (
+        <GrandparentHome
+          currentProfile={currentProfile}
+          profiles={profiles}
+          recentFeed={recentFeed}
+          reactionData={reactions}
+          handleReaction={handleReaction}
+        />
+      ) : isParent && !isViewingAsKid ? (
         <ParentHome
           currentProfile={currentProfile}
           profiles={profiles}

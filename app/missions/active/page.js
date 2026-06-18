@@ -226,8 +226,9 @@ function DocumentationForm({ assignment, onSubmit, onSkip }) {
   )
 }
 
-function CelebrationScreen({ assignment, newTotal, nextReward, leveledUp, newLevel, newBadges, onClose, onTazkir }) {
+function CelebrationScreen({ assignment, newTotal, nextReward, leveledUp, newLevel, newBadges, hasMedia, onShareGrandparents, onClose, onTazkir }) {
   const [show, setShow] = useState(false)
+  const [shareState, setShareState] = useState('idle') // idle | sharing | done
   const points     = assignment.mission.points
   const isLearning = ['Learning','Reading','English','Hebrew'].includes(assignment.mission?.category)
 
@@ -320,6 +321,36 @@ function CelebrationScreen({ assignment, newTotal, nextReward, leveledUp, newLev
               </span>
             </div>
             <ProgressBar value={newTotal} max={nextReward.points_required} color={GOLD} />
+          </div>
+        )}
+
+        {/* Family Connection: show grandma & grandpa */}
+        {hasMedia && (
+          <div style={{
+            background: 'rgba(155,127,212,0.18)', borderRadius: 20,
+            padding: '14px 16px', marginBottom: 16, border: '1px solid rgba(155,127,212,0.35)'
+          }}>
+            {shareState === 'done' ? (
+              <div style={{ fontSize: 14, fontWeight: 800, color: '#C084FC' }}>
+                💜 נשלח לסבא וסבתא! +{5} נקודות חיבור
+              </div>
+            ) : (
+              <>
+                <div style={{ fontSize: 15, fontWeight: 800, color: 'white', marginBottom: 4 }}>רוצה להראות לסבא וסבתא? 💜</div>
+                <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', marginBottom: 12 }}>שתפו את הרגע וקבלו +5 נקודות חיבור משפחתיות</div>
+                <button
+                  onClick={async () => { setShareState('sharing'); await onShareGrandparents(); setShareState('done') }}
+                  disabled={shareState === 'sharing'}
+                  style={{
+                    width: '100%', padding: '11px',
+                    background: 'linear-gradient(135deg, #9B7FD4, #C084FC)',
+                    border: 'none', borderRadius: 50, cursor: shareState === 'sharing' ? 'default' : 'pointer',
+                    fontWeight: 800, fontSize: 14, color: 'white', fontFamily: 'var(--font-heebo), sans-serif'
+                  }}>
+                  {shareState === 'sharing' ? 'שולח...' : '💜 שתף עם סבא וסבתא (+5)'}
+                </button>
+              </>
+            )}
           </div>
         )}
 
@@ -450,8 +481,37 @@ export default function ActiveEarningPage() {
     const nextReward = getNextReward(newTotal)  // next reward by balance
     setAwarding(prev => { const s = new Set(prev); s.delete(assignment.id); return s })
     setDocTarget(null)
-    setCelebration({ assignment, newTotal, nextReward, leveledUp, newLevel, newBadges })
+    setCelebration({ assignment, newTotal, nextReward, leveledUp, newLevel, newBadges, hasMedia: !!doc?.photoUrl })
     loadData()
+  }
+
+  // Family Connection: a small, flat bonus for sharing a documented moment with
+  // grandparents. No caps in v1 — kept deliberately small. The moment is already
+  // in the feed (grandparents can see it); this just rewards the intent to share.
+  const SHARE_BONUS = 5
+  const shareWithGrandparents = async (assignment) => {
+    const memberId = assignment.assigned_to
+    await supabase.from('point_events').insert({
+      member_id: memberId, points: SHARE_BONUS,
+      reason: 'בונוס שיתוף עם סבא וסבתא 💜', assignment_id: assignment.id
+    })
+    const { data: p } = await supabase.from('profiles')
+      .select('total_points, total_experience').eq('id', memberId).single()
+    if (p) {
+      await supabase.from('profiles').update({
+        total_points:     (p.total_points     || 0) + SHARE_BONUS,
+        total_experience: (p.total_experience || 0) + SHARE_BONUS,
+      }).eq('id', memberId)
+    }
+    // Let the grandparents know a new moment is waiting for them.
+    const { data: gps } = await supabase.from('profiles')
+      .select('id').eq('role', 'grandparent').eq('active', true)
+    const ids = (gps || []).map(g => g.id)
+    if (ids.length) {
+      fetch('/api/push/send', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ memberIds: ids, title: '💜 רגע חדש מהמשפחה', body: `${assignment.member.name} שיתף/ה רגע חדש`, url: '/feed', tag: 'share' })
+      }).catch(() => {})
+    }
   }
 
   const handleComplete = (assignment) => {
@@ -563,6 +623,8 @@ export default function ActiveEarningPage() {
           leveledUp={celebration.leveledUp}
           newLevel={celebration.newLevel}
           newBadges={celebration.newBadges}
+          hasMedia={celebration.hasMedia}
+          onShareGrandparents={() => shareWithGrandparents(celebration.assignment)}
           onClose={closeCelebration}
         />
       )}
