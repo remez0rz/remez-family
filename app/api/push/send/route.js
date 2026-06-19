@@ -27,7 +27,7 @@ export async function POST(req) {
     (process.env.VAPID_PRIVATE_KEY || '').trim()
   )
   try {
-    const { memberIds, title, body, url = '/', tag = 'remez' } = await req.json()
+    const { memberIds, title, body, url = '/', tag = 'remez', image, icon } = await req.json()
     if (!memberIds?.length || !title) return NextResponse.json({ error: 'Missing params' }, { status: 400 })
 
     // Load subscriptions for the given member IDs
@@ -38,7 +38,7 @@ export async function POST(req) {
 
     if (!subs?.length) return NextResponse.json({ sent: 0 })
 
-    const payload = JSON.stringify({ title, body, url, tag })
+    const payload = JSON.stringify({ title, body, url, tag, image, icon })
     const results = await Promise.allSettled(
       subs.map(s => webpush.sendNotification(s.subscription, payload))
     )
