@@ -28,11 +28,12 @@ export default function VoiceRecorder({ onRecorded, onCancel, disabled }) {
   const blobRef     = useRef(null)
   const mimeRef     = useRef('')
   const timerRef    = useRef(null)
+  const urlRef      = useRef(null)  // latest object URL, for reliable revoke on unmount
 
   const cleanup = () => {
     clearInterval(timerRef.current)
     streamRef.current?.getTracks().forEach(t => t.stop())
-    if (blobUrl) URL.revokeObjectURL(blobUrl)
+    if (urlRef.current) URL.revokeObjectURL(urlRef.current)
   }
 
   useEffect(() => () => cleanup(), [])
@@ -52,6 +53,7 @@ export default function VoiceRecorder({ onRecorded, onCancel, disabled }) {
         const blob = new Blob(chunksRef.current, { type: mimeRef.current || 'audio/webm' })
         blobRef.current = blob
         const url = URL.createObjectURL(blob)
+        urlRef.current = url
         setBlobUrl(url)
         setState('preview')
         streamRef.current?.getTracks().forEach(t => t.stop())
@@ -75,7 +77,7 @@ export default function VoiceRecorder({ onRecorded, onCancel, disabled }) {
   }
 
   const reset = () => {
-    if (blobUrl) URL.revokeObjectURL(blobUrl)
+    if (urlRef.current) { URL.revokeObjectURL(urlRef.current); urlRef.current = null }
     blobRef.current = null
     setBlobUrl(null)
     setSeconds(0)
