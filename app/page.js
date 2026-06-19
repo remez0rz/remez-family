@@ -707,6 +707,7 @@ function ParentHome({ currentProfile, profiles, activeAssignments, recentFeed, r
   const [showQuickMission, setShowQuickMission] = useState(false)
   const [quickMissionDone, setQuickMissionDone] = useState(false)
   const children    = profiles.filter(p => p.role === 'child').sort((a, b) => b.total_points - a.total_points)
+  const grandparents = profiles.filter(p => p.role === 'grandparent')
   const childColors = [GOLD, PURPLE, GREEN]
   const getNextReward = (points) => rewards.find(r => r.points_required > points)
   const pending     = activeAssignments.filter(a => a.status === 'submitted')
@@ -767,22 +768,23 @@ function ParentHome({ currentProfile, profiles, activeAssignments, recentFeed, r
           </div>
         </div>
 
-        {/* View-as child switcher */}
-        {children.length > 0 && (
+        {/* View-as switcher — preview the app as a child or a grandparent */}
+        {(children.length > 0 || grandparents.length > 0) && (
           <div style={{ marginTop: 14, position: 'relative', zIndex: 1 }}>
             <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.7)', fontWeight: 600, marginBottom: 8 }}>👁 הצג את האפליקציה כ:</div>
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-              {children.map(child => (
-                <button key={child.id} onClick={() => handleViewAs(child.id)} style={{
+              {[...children, ...grandparents].map(member => (
+                <button key={member.id} onClick={() => handleViewAs(member.id)} style={{
                   display: 'flex', alignItems: 'center', gap: 6,
-                  background: 'rgba(255,255,255,0.2)', border: '1.5px solid rgba(255,255,255,0.4)',
+                  background: 'rgba(255,255,255,0.2)',
+                  border: `1.5px solid ${member.role === 'grandparent' ? 'rgba(192,132,252,0.9)' : 'rgba(255,255,255,0.4)'}`,
                   borderRadius: 20, padding: '6px 12px', cursor: 'pointer',
                   color: 'white', fontSize: 13, fontWeight: 700,
                   fontFamily: 'var(--font-heebo), sans-serif',
                   transition: 'all 0.15s ease'
                 }}>
-                  <Avatar profile={child} size={22} />
-                  {child.name}
+                  <Avatar profile={member} size={22} />
+                  {member.role === 'grandparent' ? `💜 ${member.name}` : member.name}
                 </button>
               ))}
             </div>
@@ -1010,7 +1012,7 @@ function ParentHome({ currentProfile, profiles, activeAssignments, recentFeed, r
 }
 
 // Grandparent homepage — a warm "family album" rather than a chore dashboard.
-function GrandparentHome({ currentProfile, profiles, recentFeed, reactionData, handleReaction }) {
+function GrandparentHome({ currentProfile, displayProfile = currentProfile, profiles, recentFeed, reactionData, handleReaction }) {
   const router = useRouter()
   const children = profiles.filter(p => p.role === 'child').sort((a, b) => b.total_points - a.total_points)
   const isVid = url => /\.(mp4|mov|webm|avi)(\?|$)/i.test(url || '')
@@ -1039,7 +1041,7 @@ function GrandparentHome({ currentProfile, profiles, recentFeed, reactionData, h
             </div>
           </div>
           <a href="/profiles" style={{ textDecoration: 'none' }}>
-            <Avatar profile={currentProfile} size={48} />
+            <Avatar profile={displayProfile} size={48} />
           </a>
         </div>
 
@@ -1162,8 +1164,12 @@ export default function HomePage() {
   const handleViewAs = (profileId) => {
     if (profileId) {
       sessionStorage.setItem('viewAsProfileId', profileId)
+      // Remember the previewed role so BottomNav + other pages can mirror it.
+      const prof = profiles.find(p => p.id === profileId)
+      if (prof?.role) sessionStorage.setItem('viewAsRole', prof.role)
     } else {
       sessionStorage.removeItem('viewAsProfileId')
+      sessionStorage.removeItem('viewAsRole')
     }
     setViewAsId(profileId)
   }
@@ -1340,7 +1346,8 @@ export default function HomePage() {
   const isParent = currentProfile?.role === 'parent'
   const isGrandparent = currentProfile?.role === 'grandparent'
   const viewAsProfile = viewAsId ? profiles.find(p => p.id === viewAsId) : null
-  const isViewingAsKid = isParent && !!viewAsProfile
+  const isViewingAsKid = isParent && viewAsProfile?.role === 'child'
+  const isViewingAsGrandparent = isParent && viewAsProfile?.role === 'grandparent'
   const effectiveProfile = viewAsProfile || currentProfile
 
   const myAssignments = (isParent && !isViewingAsKid)
@@ -1371,7 +1378,7 @@ export default function HomePage() {
       boxSizing: 'border-box'
     }}>
       {/* View-as banner */}
-      {isViewingAsKid && (
+      {(isViewingAsKid || isViewingAsGrandparent) && (
         <div style={{
           position: 'sticky', top: 0, zIndex: 200,
           background: 'linear-gradient(90deg, #9B7FD4, #C084FC)',
@@ -1396,9 +1403,10 @@ export default function HomePage() {
         </div>
       )}
 
-      {isGrandparent ? (
+      {(isGrandparent || isViewingAsGrandparent) ? (
         <GrandparentHome
           currentProfile={currentProfile}
+          displayProfile={isViewingAsGrandparent ? viewAsProfile : currentProfile}
           profiles={profiles}
           recentFeed={recentFeed}
           reactionData={reactions}
@@ -1458,7 +1466,7 @@ export default function HomePage() {
         />
         </>
       )}
-      <BottomNav />
+      <BottomNav previewRole={(isGrandparent || isViewingAsGrandparent) ? 'grandparent' : undefined} />
     </div>
   )
 }

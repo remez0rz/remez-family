@@ -5,6 +5,7 @@ export default function ViewAsBanner({ viewAsProfile }) {
 
   const exit = () => {
     sessionStorage.removeItem('viewAsProfileId')
+    sessionStorage.removeItem('viewAsRole')
     window.location.reload()
   }
 

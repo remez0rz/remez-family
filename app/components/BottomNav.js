@@ -22,17 +22,26 @@ const GRANDPARENT_NAV = [
   { href: '/profiles', label: 'המשפחה', emoji: '👨‍👩‍👧' },
 ]
 
-export default function BottomNav({ activeMissionCount = 0 }) {
+export default function BottomNav({ activeMissionCount = 0, previewRole }) {
   const pathname = usePathname()
-  const [items, setItems] = useState(NAV_ITEMS)
+  // Start neutral (avoids SSR/hydration mismatch); resolve the real role after mount.
+  const [role, setRole] = useState(previewRole || null)
 
   useEffect(() => {
+    // 1) explicit preview from the home screen wins
+    if (previewRole) { setRole(previewRole); return }
+    // 2) a parent previewing via "view as" on another page
+    const vr = typeof window !== 'undefined' ? sessionStorage.getItem('viewAsRole') : null
+    if (vr) { setRole(vr); return }
+    // 3) otherwise the logged-in user's own role
     let cancelled = false
     getCurrentProfile()
-      .then(p => { if (!cancelled && p?.role === 'grandparent') setItems(GRANDPARENT_NAV) })
+      .then(p => { if (!cancelled) setRole(p?.role || null) })
       .catch(() => {})
     return () => { cancelled = true }
-  }, [])
+  }, [previewRole])
+
+  const items = role === 'grandparent' ? GRANDPARENT_NAV : NAV_ITEMS
 
   return (
     <div className="app-nav" style={{
