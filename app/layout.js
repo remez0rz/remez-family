@@ -26,8 +26,9 @@ export const viewport = {
   themeColor: "#0a1628",
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
+  // Allow pinch-zoom — accessibility matters, especially for grandparents.
+  maximumScale: 5,
+  userScalable: true,
 };
 
 export default function RootLayout({ children }) {

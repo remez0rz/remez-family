@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
+import { getAuthedProfile } from '../../../lib/serverAuth'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -8,6 +9,11 @@ const supabase = createClient(
 
 export async function POST(req) {
   try {
+    // Require a logged-in family member so a stranger can't attach their own
+    // device to a member and receive that member's notifications.
+    const caller = await getAuthedProfile()
+    if (!caller) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
     const { subscription, memberId } = await req.json()
     if (!subscription || !memberId) return NextResponse.json({ error: 'Missing params' }, { status: 400 })
 

@@ -505,18 +505,24 @@ export default function ExperiencesPage() {
     const reward = rewards.find(r => r.id === claim.reward_id)
     const member = profiles.find(p => p.id === claim.member_id)
 
-    await supabase.from('reward_claims').update({
+    // Guard against double-approval (two parents, or a double-tap): only flip a
+    // claim that is still 'claimed', and only deduct points if THIS call is the
+    // one that actually changed it. Otherwise the deduction could apply twice.
+    const { data: approved } = await supabase.from('reward_claims').update({
       status: 'approved',
       approved_by: currentProfile.id,
-    }).eq('id', claim.id)
+    }).eq('id', claim.id).eq('status', 'claimed').select()
+
+    if (!approved?.length) { loadData(); return }
 
     if (reward && member) {
-      const newTotal = Math.max((member.total_points || 0) - reward.points_required, 0)
-      await supabase.from('profiles').update({ total_points: newTotal }).eq('id', claim.member_id)
-      await supabase.from('point_events').insert({
-        member_id: claim.member_id,
-        points: -reward.points_required,
-        reason: `פתח חוויה: ${reward.title}`,
+      // Spend points atomically. XP/level are untouched (p_xp_delta: 0) — spending
+      // a balance shouldn't lower lifetime experience or rank.
+      await supabase.rpc('apply_points', {
+        p_member_id: claim.member_id,
+        p_points: -reward.points_required,
+        p_xp_delta: 0,
+        p_reason: `פתח חוויה: ${reward.title}`,
       })
     }
 

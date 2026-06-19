@@ -42,23 +42,13 @@ export async function checkAndAwardBirthdayBonus(member) {
 
   if (!assignment) return false
 
-  await supabase.from('point_events').insert({
-    member_id: member.id,
-    points: BIRTHDAY_POINTS,
-    reason: 'יום הולדת שמח! 🎂',
-    assignment_id: assignment.id
+  // Atomic award (ledger + total + XP + level in one transaction).
+  await supabase.rpc('apply_points', {
+    p_member_id: member.id,
+    p_points: BIRTHDAY_POINTS,
+    p_reason: 'יום הולדת שמח! 🎂',
+    p_assignment_id: assignment.id,
   })
-
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('total_points, total_experience, level')
-    .eq('id', member.id)
-    .single()
-
-  const newTotal = (profile?.total_points || 0) + BIRTHDAY_POINTS
-  const newXP    = (profile?.total_experience || 0) + BIRTHDAY_POINTS
-  const newLevel = Math.floor(newXP / 500) + 1
-  await supabase.from('profiles').update({ total_points: newTotal, total_experience: newXP, level: newLevel }).eq('id', member.id)
 
   // This one DOES go to feed — birthday is worth celebrating
   await supabase.from('feed_posts').insert({

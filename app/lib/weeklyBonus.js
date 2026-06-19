@@ -37,23 +37,13 @@ export async function checkAndAwardWeeklyBonus(memberId) {
 
   if (!assignment) return false
 
-  await supabase.from('point_events').insert({
-    member_id: memberId,
-    points: WEEKLY_BONUS_POINTS,
-    reason: 'בונוס שבועי — אנחנו אוהבים אותך ❤️',
-    assignment_id: assignment.id
+  // Atomic award (ledger + total + XP + level in one transaction).
+  await supabase.rpc('apply_points', {
+    p_member_id: memberId,
+    p_points: WEEKLY_BONUS_POINTS,
+    p_reason: 'בונוס שבועי — אנחנו אוהבים אותך ❤️',
+    p_assignment_id: assignment.id,
   })
-
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('total_points, total_experience, level')
-    .eq('id', memberId)
-    .single()
-
-  const newTotal = (profile?.total_points || 0) + WEEKLY_BONUS_POINTS
-  const newXP    = (profile?.total_experience || 0) + WEEKLY_BONUS_POINTS
-  const newLevel = Math.floor(newXP / 500) + 1
-  await supabase.from('profiles').update({ total_points: newTotal, total_experience: newXP, level: newLevel }).eq('id', memberId)
 
   return true
 }

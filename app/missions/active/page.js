@@ -436,22 +436,18 @@ export default function ActiveEarningPage() {
       proof_image_url: doc?.photoUrl || null
     }).eq('id', assignment.id)
 
-    await supabase.from('point_events').insert({
-      member_id: memberId, points,
-      reason: `צבר: ${assignment.mission.title}`,
-      assignment_id: assignment.id
-    })
+    // Atomic award (ledger + total + XP + level in one transaction); returns the
+    // new totals and whether this push crossed a level boundary.
+    const { data: result } = await supabase.rpc('apply_points', {
+      p_member_id: memberId,
+      p_points: points,
+      p_reason: `צבר: ${assignment.mission.title}`,
+      p_assignment_id: assignment.id,
+    }).single()
 
-    const { data: profile } = await supabase
-      .from('profiles').select('total_points, total_experience, level').eq('id', memberId).single()
-
-    const oldLevel  = profile?.level || 1
-    const newTotal  = (profile?.total_points || 0) + points
-    const newXP     = (profile?.total_experience || 0) + points
-    const newLevel  = Math.floor(newXP / 500) + 1
-    const leveledUp = newLevel > oldLevel
-
-    await supabase.from('profiles').update({ total_points: newTotal, total_experience: newXP, level: newLevel }).eq('id', memberId)
+    const newTotal  = result?.total_points ?? 0
+    const newLevel  = result?.level ?? 1
+    const leveledUp = result?.leveled_up ?? false
 
     const { checkAndAwardBadges } = await import('../../lib/badges')
     const newBadges = await checkAndAwardBadges(memberId)
@@ -491,18 +487,12 @@ export default function ActiveEarningPage() {
   const SHARE_BONUS = 5
   const shareWithGrandparents = async (assignment) => {
     const memberId = assignment.assigned_to
-    await supabase.from('point_events').insert({
-      member_id: memberId, points: SHARE_BONUS,
-      reason: 'בונוס שיתוף עם סבא וסבתא 💜', assignment_id: assignment.id
+    await supabase.rpc('apply_points', {
+      p_member_id: memberId,
+      p_points: SHARE_BONUS,
+      p_reason: 'בונוס שיתוף עם סבא וסבתא 💜',
+      p_assignment_id: assignment.id,
     })
-    const { data: p } = await supabase.from('profiles')
-      .select('total_points, total_experience').eq('id', memberId).single()
-    if (p) {
-      await supabase.from('profiles').update({
-        total_points:     (p.total_points     || 0) + SHARE_BONUS,
-        total_experience: (p.total_experience || 0) + SHARE_BONUS,
-      }).eq('id', memberId)
-    }
     // Let the grandparents know a new moment is waiting for them.
     const { data: gps } = await supabase.from('profiles')
       .select('id').eq('role', 'grandparent').eq('active', true)
@@ -539,14 +529,13 @@ export default function ActiveEarningPage() {
       proof_image_url: null,
     }).eq('id', assignment.id)
 
-    // 2. Subtract points from profile (floor at 0)
-    const { data: member } = await supabase.from('profiles').select('total_points, total_experience').eq('id', memberId).single()
-    if (member) {
-      await supabase.from('profiles').update({
-        total_points:     Math.max(0, (member.total_points     || 0) - points),
-        total_experience: Math.max(0, (member.total_experience || 0) - points),
-      }).eq('id', memberId)
-    }
+    // 2. Subtract points from profile (floor at 0, level recomputed). No ledger
+    //    row — this is a reversal of the original award, not a new event.
+    await supabase.rpc('apply_points', {
+      p_member_id: memberId,
+      p_points: -points,
+      p_log_event: false,
+    })
 
     // 3. Delete the linked feed post
     await supabase.from('feed_posts')

@@ -1,6 +1,7 @@
 import webpush from 'web-push'
 import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
+import { getAuthedProfile } from '../../../lib/serverAuth'
 
 export const dynamic = 'force-dynamic'
 
@@ -10,6 +11,11 @@ const supabase = createClient(
 )
 
 export async function POST(req) {
+  // Only a logged-in family member may trigger notifications — otherwise this is
+  // an open endpoint anyone could use to spam the family with arbitrary pushes.
+  const caller = await getAuthedProfile()
+  if (!caller) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
   // Initialize inside handler so env vars are available at runtime, not build time
   webpush.setVapidDetails(
     process.env.VAPID_EMAIL || 'mailto:remezhouse@gmail.com',
