@@ -26,9 +26,11 @@ export async function registerPush(profileId) {
     if (perm !== 'granted') return { ok: false, reason: 'denied' }
 
     const existing = await reg.pushManager.getSubscription()
+    // .trim() — the env value can carry a stray newline, which makes the browser
+    // reject the key as "not base64url without padding".
     const sub = existing || await reg.pushManager.subscribe({
       userVisibleOnly: true,
-      applicationServerKey: process.env.NEXT_PUBLIC_VAPID_KEY
+      applicationServerKey: (process.env.NEXT_PUBLIC_VAPID_KEY || '').trim()
     })
 
     const res = await fetch('/api/push/subscribe', {
