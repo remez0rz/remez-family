@@ -341,6 +341,7 @@ export default function FeedPage() {
   const [hasMore, setHasMore]               = useState(true)
   const [page, setPage]                     = useState(0)
   const [typeFilter, setTypeFilter]         = useState('all')
+  const [showTypeMenu, setShowTypeMenu]     = useState(false)
   const [memberFilter, setMemberFilter]     = useState('all')
   const [savedOnly, setSavedOnly]           = useState(false)
   const [storytellers, setStorytellers]     = useState([])  // names that appear in ≥1 moment
@@ -489,6 +490,37 @@ export default function FeedPage() {
             </div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, position: 'relative', zIndex: 2 }}>
+            {/* Type filter — collapsed into a button to save header space */}
+            <div style={{ position: 'relative' }}>
+              <button onClick={() => setShowTypeMenu(v => !v)} title="סינון"
+                aria-pressed={typeFilter !== 'all'} style={{
+                width: 38, height: 38, borderRadius: '50%', border: 'none', cursor: 'pointer',
+                background: typeFilter !== 'all' ? GOLD : 'rgba(255,255,255,0.2)',
+                fontSize: 16, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                boxShadow: typeFilter !== 'all' ? '0 2px 10px rgba(255,184,48,0.55)' : 'none'
+              }}>
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
+                </svg>
+              </button>
+              {showTypeMenu && (
+                <>
+                  <div onClick={() => setShowTypeMenu(false)} style={{ position: 'fixed', inset: 0, zIndex: 20 }} />
+                  <div style={{ position: 'absolute', top: 46, left: 0, zIndex: 30, background: 'white', borderRadius: 14, boxShadow: '0 8px 30px rgba(0,0,0,0.18)', padding: 6, minWidth: 160 }}>
+                    {TYPE_FILTERS.map(f => (
+                      <button key={f.id} onClick={() => { setTypeFilter(f.id); setShowTypeMenu(false) }} style={{
+                        display: 'flex', alignItems: 'center', gap: 8, width: '100%',
+                        padding: '10px 12px', borderRadius: 10, border: 'none', cursor: 'pointer',
+                        background: typeFilter === f.id ? '#FFF0F0' : 'transparent',
+                        color: typeFilter === f.id ? CORAL : NAVY,
+                        fontWeight: typeFilter === f.id ? 800 : 600, fontSize: 14,
+                        fontFamily: 'var(--font-heebo), sans-serif', textAlign: 'right'
+                      }}>{f.emoji} {f.label}</button>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
             <button onClick={() => setSavedOnly(v => !v)} title="הספר המשפחתי"
               aria-pressed={savedOnly} style={{
               width: 38, height: 38, borderRadius: '50%', border: 'none', cursor: 'pointer',
@@ -517,21 +549,18 @@ export default function FeedPage() {
           </div>
         )}
 
-        {/* Content-type segment */}
-        <div style={{ display: 'flex', gap: 8, marginBottom: storytellerProfiles.length > 1 ? 12 : 16 }}>
-          {TYPE_FILTERS.map(f => (
-            <button key={f.id} onClick={() => setTypeFilter(f.id)} style={{
-              padding: '7px 16px', borderRadius: 20, border: 'none', cursor: 'pointer',
-              background: typeFilter === f.id ? CORAL : 'rgba(255,255,255,0.2)',
-              color: 'white',
-              fontWeight: typeFilter === f.id ? 700 : 500,
-              fontSize: 13, fontFamily: 'var(--font-heebo), sans-serif',
-              flexShrink: 0
+        {/* Active type-filter chip (the picker itself lives in the header filter button) */}
+        {typeFilter !== 'all' && (
+          <div style={{ marginBottom: storytellerProfiles.length > 1 ? 12 : 16 }}>
+            <span onClick={() => setTypeFilter('all')} style={{
+              display: 'inline-flex', alignItems: 'center', gap: 6, cursor: 'pointer',
+              background: 'rgba(255,255,255,0.22)', color: 'white', borderRadius: 20,
+              padding: '5px 12px', fontSize: 12, fontWeight: 700
             }}>
-              {f.emoji} {f.label}
-            </button>
-          ))}
-        </div>
+              {TYPE_FILTERS.find(f => f.id === typeFilter)?.emoji} {TYPE_FILTERS.find(f => f.id === typeFilter)?.label} ✕
+            </span>
+          </div>
+        )}
 
         {/* Member filter — only people who actually have moments */}
         {storytellerProfiles.length > 1 && (
