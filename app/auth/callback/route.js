@@ -40,10 +40,13 @@ export async function GET(request) {
 
   const email = data.session.user.email
 
+  // Whitelist = an ACTIVE profile with this email. Deactivating a profile
+  // (active = false) fully revokes login, not just hides them from the UI.
   const { data: profile, error: profileError } = await supabase
     .from('profiles')
     .select('id')
     .eq('email', email)
+    .eq('active', true)
     .maybeSingle()
 
   if (profileError || !profile) {
