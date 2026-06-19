@@ -743,6 +743,8 @@ function ProfileMenu({ currentProfile, members, onViewAs, onSignOut, onClose }) 
           </>
         )}
 
+        <EnableNotificationsButton profileId={currentProfile?.id} forceShow />
+
         <a href="/profiles" style={{ textDecoration: 'none' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px', borderRadius: 14, background: '#FAF8F4', marginBottom: 8, color: NAVY, fontSize: 14, fontWeight: 700 }}>
             <span style={{ fontSize: 18 }}>👨‍👩‍👧</span> כל הפרופילים

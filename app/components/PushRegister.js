@@ -58,7 +58,12 @@ export default function PushRegister() {
 }
 
 // Visible button so users can deliberately turn notifications on (with feedback).
-export function EnableNotificationsButton({ profileId, style = {} }) {
+// forceShow: keep it visible even when permission is already granted — important
+// because granting permission in the browser/OS settings does NOT create the push
+// subscription; the app still has to run registerPush. Without this, the only
+// enable button would vanish after permission was granted, leaving no in-app way
+// to actually complete (or re-do) registration.
+export function EnableNotificationsButton({ profileId, style = {}, forceShow = false }) {
   const [state, setState] = useState('idle') // idle | working | done | error
   const [msg, setMsg]     = useState('')
   const [supported, setSupported] = useState(true)
@@ -70,19 +75,20 @@ export function EnableNotificationsButton({ profileId, style = {} }) {
     if (ok && Notification.permission === 'granted') setAlready(true)
   }, [])
 
-  // Hide entirely once notifications already work
-  if (!supported || already || state === 'done') return null
+  if (!supported) return null
+  // Compact mode hides once it's working; the profile-menu (forceShow) copy stays put.
+  if (!forceShow && (already || state === 'done')) return null
 
   const handleClick = async () => {
-    if (!profileId) return
+    if (!profileId || state === 'working') return
     setState('working'); setMsg('')
     const r = await registerPush(profileId)
     if (r.ok) {
-      setState('done')
+      setState('done'); setMsg('')
     } else {
       setState('error')
       setMsg(
-        r.reason === 'denied'      ? 'ההרשאה נדחתה. אפשר להפעיל שוב מהגדרות הדפדפן.' :
+        r.reason === 'denied'      ? 'ההרשאה נדחתה. אפשרו התראות בהגדרות האתר/הדפדפן.' :
         r.reason === 'unsupported' ? 'הדפדפן לא תומך בהתראות. ב‑iPhone צריך להוסיף למסך הבית.' :
         r.reason === 'save_failed' ? ('שמירה נכשלה: ' + (r.detail || '')) :
         ('שגיאה: ' + (r.detail || 'נסה שוב'))
@@ -90,25 +96,35 @@ export function EnableNotificationsButton({ profileId, style = {} }) {
     }
   }
 
+  const title =
+    state === 'working' ? 'מפעיל...' :
+    state === 'done'    ? '✓ ההתראות פעילות!' :
+    (already && forceShow) ? 'סיום הפעלת התראות' : 'הפעלת התראות'
+  const sub =
+    msg ? msg :
+    state === 'done' ? 'נרשמת בהצלחה — תקבלו עדכונים' :
+    (already && forceShow) ? 'נתת הרשאה — לחצו לסיום הרישום במכשיר' :
+    'קבלו עדכון על משימות ופרסים חדשים'
+
   return (
     <div onClick={handleClick} style={{
-      background: 'linear-gradient(135deg, #3B9FE8 0%, #2E7FD6 100%)',
+      background: state === 'done'
+        ? 'linear-gradient(135deg, #4ECDC4 0%, #3BB5AC 100%)'
+        : 'linear-gradient(135deg, #3B9FE8 0%, #2E7FD6 100%)',
       borderRadius: 18, padding: '13px 16px', marginBottom: 14, cursor: 'pointer',
       display: 'flex', alignItems: 'center', gap: 12,
       boxShadow: '0 4px 16px rgba(59,159,232,0.35)', ...style
     }}>
-      <div style={{ fontSize: 26 }}>{state === 'error' ? '⚠️' : '🔔'}</div>
+      <div style={{ fontSize: 26 }}>{state === 'error' ? '⚠️' : state === 'done' ? '✅' : '🔔'}</div>
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: 14, fontWeight: 900, color: 'white' }}>
-          {state === 'working' ? 'מפעיל...' : 'הפעלת התראות'}
-        </div>
-        <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.9)', fontWeight: 600, marginTop: 1 }}>
-          {msg || 'קבלו עדכון על משימות ופרסים חדשים'}
-        </div>
+        <div style={{ fontSize: 14, fontWeight: 900, color: 'white' }}>{title}</div>
+        <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.9)', fontWeight: 600, marginTop: 1 }}>{sub}</div>
       </div>
-      <div style={{ background: 'rgba(255,255,255,0.22)', borderRadius: 20, padding: '6px 12px', fontSize: 12, fontWeight: 800, color: 'white', whiteSpace: 'nowrap' }}>
-        {state === 'error' ? 'נסה שוב' : 'הפעל'}
-      </div>
+      {state !== 'done' && (
+        <div style={{ background: 'rgba(255,255,255,0.22)', borderRadius: 20, padding: '6px 12px', fontSize: 12, fontWeight: 800, color: 'white', whiteSpace: 'nowrap' }}>
+          {state === 'error' ? 'נסה שוב' : 'הפעל'}
+        </div>
+      )}
     </div>
   )
 }
