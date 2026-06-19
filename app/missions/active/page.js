@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import BottomNav from '../../components/BottomNav'
 import ViewAsBanner from '../../components/ViewAsBanner'
 import SpeakButton from '../../components/SpeakButton'
+import { phrases } from '../../lib/hebrew'
 
 const CORAL = '#FF6B6B'
 const TEAL = '#4ECDC4'
@@ -455,7 +456,7 @@ export default function ActiveEarningPage() {
     if (assignment.mission.category !== 'Daily') {
       await supabase.from('feed_posts').insert({
         type: 'mission_completed',
-        title: `${assignment.member.name} צבר/ה נקודות! ${assignment.mission.title}`,
+        title: `${assignment.member.name} ${phrases.earnedPoints(assignment.member.gender)} נקודות! ${assignment.mission.title}`,
         content: doc?.text || `+${points} נקודות 🎉`,
         media_urls: doc?.photoUrl ? [doc.photoUrl] : [],
         participants: [assignment.member.name],
@@ -470,7 +471,7 @@ export default function ActiveEarningPage() {
       const { data: parents } = await supabase.from('profiles').select('id').eq('role', 'parent').eq('active', true)
       const parentIds = (parents || []).map(p => p.id)
       fetch('/api/push/send', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ memberIds: [...parentIds, memberId], title: '🚀 עלית רמה!', body: `${assignment.member.name} הגיע/ה לרמה ${newLevel}!`, url: '/profiles', tag: 'levelup' })
+        body: JSON.stringify({ memberIds: [...parentIds, memberId], title: '🚀 עלית רמה!', body: `${assignment.member.name} ${phrases.reachedLevel(assignment.member.gender)} לרמה ${newLevel}!`, url: '/profiles', tag: 'levelup' })
       }).catch(() => {})
     }
 
@@ -499,7 +500,7 @@ export default function ActiveEarningPage() {
     const ids = (gps || []).map(g => g.id)
     if (ids.length) {
       fetch('/api/push/send', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ memberIds: ids, title: '💜 רגע חדש מהמשפחה', body: `${assignment.member.name} שיתף/ה רגע חדש`, url: '/feed', tag: 'share' })
+        body: JSON.stringify({ memberIds: ids, title: '💜 רגע חדש מהמשפחה', body: `${assignment.member.name} ${phrases.shared(assignment.member.gender)} רגע חדש`, url: '/feed', tag: 'share' })
       }).catch(() => {})
     }
   }

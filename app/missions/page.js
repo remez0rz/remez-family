@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import BottomNav from '../components/BottomNav'
 import ViewAsBanner from '../components/ViewAsBanner'
 import SpeakButton from '../components/SpeakButton'
+import PendingApprovals from '../components/PendingApprovals'
 
 const NAVY = '#2D2D2D'
 const GOLD = '#FFB830'
@@ -828,6 +829,10 @@ export default function MissionsPage() {
       </div>
 
       <div className="app-body" style={{ boxSizing: 'border-box' }}>
+
+        {isParent && !isViewingAsKid && (
+          <PendingApprovals kind="mission" onChange={loadData} />
+        )}
 
         {sortedFiltered.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '48px 20px' }}>

@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation'
 import BottomNav from '../components/BottomNav'
 import ViewAsBanner from '../components/ViewAsBanner'
 import SpeakButton from '../components/SpeakButton'
+import PendingApprovals from '../components/PendingApprovals'
+import { phrases } from '../lib/hebrew'
 
 const NAVY   = '#2D2D2D'
 const GOLD   = '#FFB830'
@@ -411,7 +413,7 @@ function KidClaimsSection({ claims, onRedeem }) {
               <div style={{ fontSize: 11, color: '#4ECDC4', fontWeight: 700, marginTop: 2 }}>✅ אושר על ידי ההורים!</div>
             </div>
           </div>
-          <button onClick={() => onRedeem(c.id)} style={{
+          <button onClick={() => onRedeem(c)} style={{
             width: '100%', marginTop: 12, padding: '12px',
             background: `linear-gradient(135deg, ${CORAL}, #FF8E53)`,
             color: 'white', border: 'none', borderRadius: 50, cursor: 'pointer',
@@ -442,6 +444,63 @@ function KidClaimsSection({ claims, onRedeem }) {
   )
 }
 
+// Shown after a child taps "ממשתי!" — capture the experience as a feed moment.
+function RewardDocModal({ claim, member, uploading, onSubmit, onSkip, onClose }) {
+  const [text, setText]       = useState('')
+  const [file, setFile]       = useState(null)
+  const [preview, setPreview] = useState(null)
+  const [isVideo, setIsVideo] = useState(false)
+
+  const handleSelect = (e) => {
+    const f = e.target.files[0]
+    if (!f) return
+    setFile(f); setIsVideo(f.type.startsWith('video/')); setPreview(URL.createObjectURL(f))
+    e.target.value = ''
+  }
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(10,22,40,0.96)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-heebo), sans-serif', direction: 'rtl', padding: 16 }}>
+      <div style={{ background: '#2D2D2D', borderRadius: 28, padding: '24px 20px', maxWidth: 360, width: '100%', position: 'relative' }}>
+        <button onClick={onClose} style={{ position: 'absolute', top: 14, left: 14, background: 'rgba(255,255,255,0.1)', border: 'none', borderRadius: '50%', width: 28, height: 28, color: 'white', cursor: 'pointer', fontSize: 14 }}>✕</button>
+        <div style={{ textAlign: 'center', marginBottom: 16 }}>
+          <div style={{ fontSize: 34, marginBottom: 6 }}>{claim.reward?.emoji || '🎉'}</div>
+          <div style={{ fontSize: 17, fontWeight: 900, color: 'white', marginBottom: 4 }}>איך היה?</div>
+          <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', fontWeight: 600 }}>{claim.reward?.title}</div>
+          <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)', marginTop: 6 }}>שתפו רגע מהחוויה — זה ייכנס ליומן המשפחתי 💜</div>
+        </div>
+
+        <input type="file" accept="image/*" capture="environment" onChange={handleSelect} style={{ display: 'none' }} id="rw-cam-photo" />
+        <input type="file" accept="video/*" capture="environment" onChange={handleSelect} style={{ display: 'none' }} id="rw-cam-video" />
+        <input type="file" accept="image/*,video/*" onChange={handleSelect} style={{ display: 'none' }} id="rw-gal" />
+
+        {preview ? (
+          <div style={{ position: 'relative', marginBottom: 10 }}>
+            {isVideo
+              ? <video src={preview} controls style={{ width: '100%', borderRadius: 12, maxHeight: 160, display: 'block' }} />
+              : <img src={preview} alt="p" style={{ width: '100%', borderRadius: 12, maxHeight: 160, objectFit: 'cover', display: 'block' }} />}
+            <button onClick={() => { setFile(null); setPreview(null); setIsVideo(false) }} style={{ position: 'absolute', top: 8, left: 8, background: 'rgba(0,0,0,0.6)', border: 'none', borderRadius: '50%', width: 26, height: 26, color: 'white', cursor: 'pointer', fontSize: 12 }}>✕</button>
+          </div>
+        ) : (
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 10 }}>
+            <label htmlFor="rw-cam-photo" style={{ padding: '10px 4px', background: 'rgba(255,255,255,0.08)', borderRadius: 12, border: '1.5px dashed rgba(255,255,255,0.2)', textAlign: 'center', cursor: 'pointer', fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.8)' }}>📷<br/>תמונה</label>
+            <label htmlFor="rw-cam-video" style={{ padding: '10px 4px', background: 'rgba(255,255,255,0.08)', borderRadius: 12, border: '1.5px dashed rgba(255,255,255,0.2)', textAlign: 'center', cursor: 'pointer', fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.8)' }}>🎬<br/>סרטון</label>
+            <label htmlFor="rw-gal" style={{ padding: '10px 4px', background: 'rgba(255,255,255,0.08)', borderRadius: 12, border: '1.5px dashed rgba(255,255,255,0.2)', textAlign: 'center', cursor: 'pointer', fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.8)' }}>🖼️<br/>גלריה</label>
+          </div>
+        )}
+
+        <textarea value={text} onChange={e => setText(e.target.value)}
+          placeholder="כמה מילים על החוויה... (לא חובה)"
+          style={{ width: '100%', padding: '10px 12px', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 10, fontSize: 13, color: 'white', background: 'rgba(255,255,255,0.08)', fontFamily: 'var(--font-heebo), sans-serif', boxSizing: 'border-box', resize: 'none', minHeight: 56, lineHeight: 1.5, marginBottom: 12, outline: 'none' }} />
+
+        <button onClick={() => onSubmit({ text, file })} disabled={uploading} style={{ width: '100%', padding: '13px', background: '#FF6B6B', border: 'none', borderRadius: 50, cursor: 'pointer', fontWeight: 800, fontSize: 15, color: 'white', fontFamily: 'var(--font-heebo), sans-serif', marginBottom: 8 }}>
+          {uploading ? 'שולח...' : 'שתף ליומן 🎉'}
+        </button>
+        <button onClick={onSkip} disabled={uploading} style={{ width: '100%', padding: '9px', background: 'transparent', border: 'none', cursor: 'pointer', fontSize: 12, color: 'rgba(255,255,255,0.4)', fontFamily: 'var(--font-heebo), sans-serif' }}>דלג (בלי שיתוף)</button>
+      </div>
+    </div>
+  )
+}
+
 export default function ExperiencesPage() {
   const [rewards, setRewards]               = useState([])
   const [profiles, setProfiles]             = useState([])
@@ -456,6 +515,8 @@ export default function ExperiencesPage() {
   const [claimed, setClaimed]               = useState(false)
   const [activeTier, setActiveTier]         = useState('all')
   const [viewAsId, setViewAsId]             = useState(null)
+  const [redeemTarget, setRedeemTarget]     = useState(null)
+  const [redeemUploading, setRedeemUploading] = useState(false)
   const router = useRouter()
 
   useEffect(() => {
@@ -547,11 +608,59 @@ export default function ExperiencesPage() {
     setTimeout(() => { setClaimed(false); loadData() }, 2500)
   }
 
-  const handleMarkRedeemed = async (claimId) => {
+  // Tapping "ממשתי!" opens the documentation modal instead of redeeming silently.
+  const handleMarkRedeemed = (claim) => setRedeemTarget(claim)
+
+  const finishRedeem = async (claimId) => {
     await supabase.from('reward_claims').update({
       status: 'redeemed', redeemed_at: new Date().toISOString()
     }).eq('id', claimId)
     setMyClaims(prev => prev.filter(c => c.id !== claimId))
+    setRedeemTarget(null)
+    setRedeemUploading(false)
+  }
+
+  // Skip documentation — just mark it redeemed.
+  const skipRedeem = () => { if (redeemTarget) finishRedeem(redeemTarget.id) }
+
+  // Document the experience → upload media, redeem, and post a feed moment.
+  const submitRedeem = async ({ text, file }) => {
+    if (!redeemTarget) return
+    setRedeemUploading(true)
+    const claim  = redeemTarget
+    const member = effectiveMember
+
+    let mediaUrl = null
+    if (file) {
+      const ext = file.name.split('.').pop()
+      const filename = `rewards/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
+      const { error } = await supabase.storage.from('family-media').upload(filename, file, { contentType: file.type })
+      if (!error) mediaUrl = supabase.storage.from('family-media').getPublicUrl(filename).data.publicUrl
+    }
+
+    if (member) {
+      await supabase.from('feed_posts').insert({
+        type: 'reward_redeemed',
+        title: `${member.name} ${phrases.enjoyed(member.gender)} מ${claim.reward?.title || 'חוויה'}! ${claim.reward?.emoji || '🎉'}`,
+        content: text?.trim() || null,
+        media_urls: mediaUrl ? [mediaUrl] : [],
+        participants: [member.name],
+        linked_type: 'reward_claim',
+        linked_id: claim.id,
+        created_by: member.id,
+      })
+
+      // Let grandparents know there's a new moment to enjoy.
+      const { data: gps } = await supabase.from('profiles').select('id').eq('role', 'grandparent').eq('active', true)
+      const ids = (gps || []).map(g => g.id)
+      if (ids.length) {
+        fetch('/api/push/send', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ memberIds: ids, title: '💜 רגע חדש מהמשפחה', body: `${member.name} ${phrases.shared(member.gender)} רגע חדש`, url: '/feed', tag: 'share' })
+        }).catch(() => {})
+      }
+    }
+
+    await finishRedeem(claim.id)
   }
 
   const handleSaved = () => {
@@ -594,6 +703,17 @@ export default function ExperiencesPage() {
       {claimTarget && (
         <UnlockModal reward={claimTarget} profile={effectiveMember}
           onClose={() => setClaimTarget(null)} onClaimed={handleClaimed} />
+      )}
+
+      {redeemTarget && (
+        <RewardDocModal
+          claim={redeemTarget}
+          member={effectiveMember}
+          uploading={redeemUploading}
+          onSubmit={submitRedeem}
+          onSkip={skipRedeem}
+          onClose={() => !redeemUploading && setRedeemTarget(null)}
+        />
       )}
 
       {(editTarget || showNewForm) && (
@@ -678,6 +798,10 @@ export default function ExperiencesPage() {
       </div>
 
       <div className="app-body" style={{ boxSizing: 'border-box' }}>
+
+        {isParent && !isViewingAsKid && (
+          <PendingApprovals kind="reward" onChange={loadData} />
+        )}
 
         {isParent && !isViewingAsKid && (
           <PendingClaimsSection

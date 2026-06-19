@@ -702,9 +702,70 @@ function KidHome({ currentProfile, missions, dailyMissions, completedTodayIds, r
 }
 
 // Parent homepage
+function ProfileMenu({ currentProfile, members, onViewAs, onSignOut, onClose }) {
+  return (
+    <div onClick={onClose} style={{
+      position: 'fixed', inset: 0, zIndex: 1100, background: 'rgba(10,22,40,0.55)',
+      display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
+      fontFamily: 'var(--font-heebo), sans-serif', direction: 'rtl'
+    }}>
+      <div onClick={e => e.stopPropagation()} style={{
+        background: 'white', borderRadius: '24px 24px 0 0', padding: '20px 18px 32px',
+        width: '100%', maxWidth: 480, maxHeight: '85vh', overflowY: 'auto'
+      }}>
+        <div style={{ width: 40, height: 4, background: '#e0d8c8', borderRadius: 4, margin: '0 auto 18px' }} />
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 18 }}>
+          <Avatar profile={currentProfile} size={48} />
+          <div>
+            <div style={{ fontSize: 17, fontWeight: 900, color: NAVY }}>{currentProfile?.name}</div>
+            <div style={{ fontSize: 12, color: '#a09080', fontWeight: 600 }}>הורה</div>
+          </div>
+        </div>
+
+        {members.length > 0 && (
+          <>
+            <div style={{ fontSize: 12, color: '#a09080', fontWeight: 700, marginBottom: 8 }}>👁 הצג את האפליקציה כ:</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 18 }}>
+              {members.map(member => (
+                <button key={member.id} onClick={() => onViewAs(member.id)} style={{
+                  display: 'flex', alignItems: 'center', gap: 10, width: '100%',
+                  background: '#FAF8F4', border: `1.5px solid ${member.role === 'grandparent' ? 'rgba(155,127,212,0.5)' : '#ede8e0'}`,
+                  borderRadius: 16, padding: '10px 12px', cursor: 'pointer',
+                  color: NAVY, fontSize: 14, fontWeight: 700,
+                  fontFamily: 'var(--font-heebo), sans-serif'
+                }}>
+                  <Avatar profile={member} size={32} />
+                  {member.role === 'grandparent' ? `💜 ${member.name}` : member.name}
+                </button>
+              ))}
+            </div>
+          </>
+        )}
+
+        <a href="/profiles" style={{ textDecoration: 'none' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px', borderRadius: 14, background: '#FAF8F4', marginBottom: 8, color: NAVY, fontSize: 14, fontWeight: 700 }}>
+            <span style={{ fontSize: 18 }}>👨‍👩‍👧</span> כל הפרופילים
+          </div>
+        </a>
+
+        <button onClick={onSignOut} style={{
+          display: 'flex', alignItems: 'center', gap: 10, width: '100%',
+          padding: '12px', borderRadius: 14, background: 'transparent', border: 'none',
+          cursor: 'pointer', color: '#D0463B', fontSize: 14, fontWeight: 700,
+          fontFamily: 'var(--font-heebo), sans-serif'
+        }}>
+          <span style={{ fontSize: 18 }}>🚪</span> יציאה
+        </button>
+      </div>
+    </div>
+  )
+}
+
 function ParentHome({ currentProfile, profiles, activeAssignments, recentFeed, rewards, reactionData, handleReaction, handleSignOut, handleViewAs, pendingClaims, dailyReport }) {
   const [showQuickMission, setShowQuickMission] = useState(false)
   const [quickMissionDone, setQuickMissionDone] = useState(false)
+  const [showProfileMenu, setShowProfileMenu] = useState(false)
   const children    = profiles.filter(p => p.role === 'child').sort((a, b) => b.total_points - a.total_points)
   const grandparents = profiles.filter(p => p.role === 'grandparent')
   const childColors = [GOLD, PURPLE, GREEN]
@@ -761,35 +822,24 @@ function ParentHome({ currentProfile, profiles, activeAssignments, recentFeed, r
               display: 'flex', alignItems: 'center', gap: 5,
               whiteSpace: 'nowrap'
             }}>⚡ משימה מהירה</button>
-            <a href="/profiles" style={{ textDecoration: 'none' }}>
+            <button onClick={() => setShowProfileMenu(true)} aria-label="תפריט פרופיל" style={{
+              background: 'none', border: 'none', padding: 0, cursor: 'pointer'
+            }}>
               <Avatar profile={currentProfile} size={40} />
-            </a>
+            </button>
           </div>
         </div>
-
-        {/* View-as switcher — preview the app as a child or a grandparent */}
-        {(children.length > 0 || grandparents.length > 0) && (
-          <div style={{ marginTop: 14, position: 'relative', zIndex: 1 }}>
-            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.7)', fontWeight: 600, marginBottom: 8 }}>👁 הצג את האפליקציה כ:</div>
-            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-              {[...children, ...grandparents].map(member => (
-                <button key={member.id} onClick={() => handleViewAs(member.id)} style={{
-                  display: 'flex', alignItems: 'center', gap: 6,
-                  background: 'rgba(255,255,255,0.2)',
-                  border: `1.5px solid ${member.role === 'grandparent' ? 'rgba(192,132,252,0.9)' : 'rgba(255,255,255,0.4)'}`,
-                  borderRadius: 20, padding: '6px 12px', cursor: 'pointer',
-                  color: 'white', fontSize: 13, fontWeight: 700,
-                  fontFamily: 'var(--font-heebo), sans-serif',
-                  transition: 'all 0.15s ease'
-                }}>
-                  <Avatar profile={member} size={22} />
-                  {member.role === 'grandparent' ? `💜 ${member.name}` : member.name}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
       </div>
+
+      {showProfileMenu && (
+        <ProfileMenu
+          currentProfile={currentProfile}
+          members={[...children, ...grandparents]}
+          onViewAs={handleViewAs}
+          onSignOut={handleSignOut}
+          onClose={() => setShowProfileMenu(false)}
+        />
+      )}
 
       <div className="app-body">
 

@@ -6,6 +6,7 @@ import BottomNav from '../components/BottomNav'
 import ViewAsBanner from '../components/ViewAsBanner'
 import SpeakButton from '../components/SpeakButton'
 import CommentThread from '../components/CommentThread'
+import GrandparentSuggest from '../components/GrandparentSuggest'
 
 const CORAL = '#FF6B6B'
 const TEAL = '#4ECDC4'
@@ -495,15 +496,17 @@ export default function FeedPage() {
               fontSize: 17, display: 'flex', alignItems: 'center', justifyContent: 'center',
               boxShadow: savedOnly ? '0 2px 10px rgba(255,184,48,0.55)' : 'none'
             }}>🔖</button>
-            {!actingAsGrandparent && (
-              <button onClick={() => router.push('/tazkir/new')} style={{
-                background: 'white', color: CORAL, border: 'none',
-                borderRadius: 50, padding: '7px 16px', cursor: 'pointer',
-                fontWeight: 700, fontSize: 13,
-                boxShadow: '0 4px 12px rgba(255,107,107,0.35)',
-                fontFamily: 'var(--font-heebo), sans-serif'
-              }}>+ תחקיר</button>
-            )}
+            {actingAsGrandparent
+              ? <GrandparentSuggest currentProfile={currentProfile} />
+              : (
+                <button onClick={() => router.push('/tazkir/new')} style={{
+                  background: 'white', color: CORAL, border: 'none',
+                  borderRadius: 50, padding: '7px 16px', cursor: 'pointer',
+                  fontWeight: 700, fontSize: 13,
+                  boxShadow: '0 4px 12px rgba(255,107,107,0.35)',
+                  fontFamily: 'var(--font-heebo), sans-serif'
+                }}>+ תחקיר</button>
+              )}
           </div>
         </div>
 
