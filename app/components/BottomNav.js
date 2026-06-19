@@ -16,8 +16,8 @@ const NAV_ITEMS = [
 ]
 
 // Grandparents have a deliberately small, warm navigation — no missions/points.
+// They share the family moments feed as their home, so just two destinations.
 const GRANDPARENT_NAV = [
-  { href: '/',         label: 'המעגל',  emoji: '💜' },
   { href: '/feed',     label: 'רגעים',  emoji: '📖', center: true },
   { href: '/profiles', label: 'המשפחה', emoji: '👨‍👩‍👧' },
 ]
