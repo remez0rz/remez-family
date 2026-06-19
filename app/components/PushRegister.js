@@ -100,13 +100,12 @@ export function EnableNotificationsButton({ profileId, style = {}, forceShow = f
 
   const title =
     state === 'working' ? 'מפעיל...' :
-    state === 'done'    ? '✓ ההתראות פעילות!' :
-    (already && forceShow) ? 'סיום הפעלת התראות' : 'הפעלת התראות'
+    state === 'done'    ? '✓ ההתראות פעילות' :
+    'אשר התראות'
   const sub =
     msg ? msg :
-    state === 'done' ? 'נרשמת בהצלחה — תקבלו עדכונים' :
-    (already && forceShow) ? 'נתת הרשאה — לחצו לסיום הרישום במכשיר' :
-    'קבלו עדכון על משימות ופרסים חדשים'
+    state === 'done' ? 'מעכשיו תקבלו עדכונים' :
+    'משימות, פרסים ורגעים חדשים'
 
   return (
     <div onClick={handleClick} style={{
