@@ -16,11 +16,15 @@ export async function POST(req) {
   const caller = await getAuthedProfile()
   if (!caller) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  // Initialize inside handler so env vars are available at runtime, not build time
+  // Initialize inside handler so env vars are available at runtime, not build time.
+  // Trim everything (env values can pick up stray whitespace/newlines) and force a
+  // valid VAPID subject — web-push rejects a subject without a mailto:/http(s) scheme.
+  let subject = (process.env.VAPID_EMAIL || '').trim() || 'remezhouse@gmail.com'
+  if (!/^(mailto:|https?:)/i.test(subject)) subject = `mailto:${subject}`
   webpush.setVapidDetails(
-    process.env.VAPID_EMAIL || 'mailto:remezhouse@gmail.com',
-    process.env.NEXT_PUBLIC_VAPID_KEY,
-    process.env.VAPID_PRIVATE_KEY
+    subject,
+    (process.env.NEXT_PUBLIC_VAPID_KEY || '').trim(),
+    (process.env.VAPID_PRIVATE_KEY || '').trim()
   )
   try {
     const { memberIds, title, body, url = '/', tag = 'remez' } = await req.json()
