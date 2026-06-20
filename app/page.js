@@ -801,32 +801,28 @@ function ParentHome({ currentProfile, profiles, activeAssignments, recentFeed, r
         </div>
       )}
 
-      {/* Header */}
+      {/* Header — compact: title + quick-mission (+) + profile */}
       <div style={{
-        background: HEADER_BG, padding: '24px 18px 28px',
-        borderRadius: '0 0 32px 32px', marginBottom: 18,
+        background: HEADER_BG, padding: '14px 18px 16px',
+        borderRadius: '0 0 28px 28px', marginBottom: 16,
         position: 'relative', overflow: 'hidden'
       }}>
         <div style={{ position: 'absolute', top: -40, left: -40, width: 160, height: 160, borderRadius: '50%', background: 'rgba(255,255,255,0.1)' }} />
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'relative', zIndex: 1 }}>
-          <div>
-            <div style={{ fontSize: 24, fontWeight: 900, color: 'white' }}>משפחת רמז 🏡</div>
-            <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.8)', marginTop: 3, fontWeight: 600 }}>מה עושים היום?</div>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <button onClick={() => setShowQuickMission(true)} style={{
+          <div style={{ fontSize: 22, fontWeight: 900, color: 'white' }}>משפחת רמז</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <button onClick={() => setShowQuickMission(true)} aria-label="משימה מהירה" title="משימה מהירה" style={{
               background: 'white', color: CORAL, border: 'none',
-              borderRadius: 50, padding: '8px 14px', cursor: 'pointer',
-              fontWeight: 900, fontSize: 13,
+              width: 38, height: 38, borderRadius: '50%', cursor: 'pointer',
+              fontWeight: 900, fontSize: 24, lineHeight: 1,
               fontFamily: 'var(--font-heebo), sans-serif',
               boxShadow: '0 3px 10px rgba(255,107,107,0.35)',
-              display: 'flex', alignItems: 'center', gap: 5,
-              whiteSpace: 'nowrap'
-            }}>⚡ משימה מהירה</button>
+              display: 'flex', alignItems: 'center', justifyContent: 'center'
+            }}>+</button>
             <button onClick={() => setShowProfileMenu(true)} aria-label="תפריט פרופיל" style={{
               background: 'none', border: 'none', padding: 0, cursor: 'pointer'
             }}>
-              <Avatar profile={currentProfile} size={40} />
+              <Avatar profile={currentProfile} size={38} />
             </button>
           </div>
         </div>

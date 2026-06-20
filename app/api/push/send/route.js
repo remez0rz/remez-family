@@ -30,11 +30,15 @@ export async function POST(req) {
     const { memberIds, title, body, url = '/', tag = 'remez', image, icon } = await req.json()
     if (!memberIds?.length || !title) return NextResponse.json({ error: 'Missing params' }, { status: 400 })
 
-    // Load subscriptions for the given member IDs
+    // Never notify the person who triggered the action (e.g. a parent acting as a
+    // kid, or claiming/approving). One central rule means no self-pings anywhere.
+    const recipients = [...new Set(memberIds.filter(id => id && id !== caller.id))]
+    if (!recipients.length) return NextResponse.json({ sent: 0 })
+
     const { data: subs } = await supabase
       .from('push_subscriptions')
-      .select('subscription')
-      .in('member_id', memberIds)
+      .select('id, subscription')
+      .in('member_id', recipients)
 
     if (!subs?.length) return NextResponse.json({ sent: 0 })
 
@@ -42,6 +46,14 @@ export async function POST(req) {
     const results = await Promise.allSettled(
       subs.map(s => webpush.sendNotification(s.subscription, payload))
     )
+
+    // Prune subscriptions the push service has expired, so we don't keep retrying
+    // dead endpoints (404 Not Found / 410 Gone).
+    const dead = results
+      .map((r, i) => (r.status === 'rejected' && [404, 410].includes(r.reason?.statusCode)) ? subs[i].id : null)
+      .filter(Boolean)
+    if (dead.length) await supabase.from('push_subscriptions').delete().in('id', dead)
+
     const sent = results.filter(r => r.status === 'fulfilled').length
     return NextResponse.json({ sent })
   } catch (err) {
