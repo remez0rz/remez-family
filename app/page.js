@@ -399,26 +399,19 @@ function KidHome({ currentProfile, missions, dailyMissions, completedTodayIds, r
     <>
       {/* Header */}
       <div style={{
-        background: HEADER_BG, padding: '24px 18px 32px',
-        borderRadius: '0 0 32px 32px', marginBottom: 18,
+        background: HEADER_BG, padding: '16px 18px 22px',
+        borderRadius: '0 0 28px 28px', marginBottom: 16,
         position: 'relative', overflow: 'hidden'
       }}>
         {/* Decorative circles */}
         <div style={{ position: 'absolute', top: -40, left: -40, width: 160, height: 160, borderRadius: '50%', background: 'rgba(255,255,255,0.1)' }} />
-        <div style={{ position: 'absolute', bottom: -20, right: -20, width: 100, height: 100, borderRadius: '50%', background: 'rgba(255,255,255,0.08)' }} />
 
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20, position: 'relative', zIndex: 1 }}>
-          <div>
-            <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.9)', fontWeight: 700, letterSpacing: '0.5px' }}>משפחת רמז</div>
-            <div style={{ fontSize: 26, fontWeight: 900, color: 'white', lineHeight: 1.2, marginTop: 2 }}>
-              היי {currentProfile.name} 👋
-            </div>
-            <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.92)', marginTop: 4, fontWeight: 700 }}>
-              מה בא לך לצבור היום?
-            </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14, position: 'relative', zIndex: 1 }}>
+          <div style={{ fontSize: 22, fontWeight: 900, color: 'white', lineHeight: 1.2 }}>
+            היי {currentProfile.name} 👋
           </div>
           <a href="/profiles" style={{ textDecoration: 'none' }}>
-            <Avatar profile={currentProfile} size={48} />
+            <Avatar profile={currentProfile} size={42} />
           </a>
         </div>
 

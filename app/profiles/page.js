@@ -223,7 +223,7 @@ export default function ProfilesPage() {
 
       {/* Header */}
       <div style={{
-        background: HEADER_BG, padding: '20px 16px 24px',
+        background: HEADER_BG, padding: '14px 16px 14px',
         borderRadius: '0 0 24px 24px', marginBottom: 16,
         position: 'relative', overflow: 'hidden'
       }}>
@@ -232,18 +232,9 @@ export default function ProfilesPage() {
           width: 100, height: 100, borderRadius: '50%',
           background: 'white', opacity: 0.1
         }} />
-        <div style={{
-          position: 'absolute', bottom: -30, right: 40,
-          width: 80, height: 80, borderRadius: '50%',
-          background: 'white', opacity: 0.1
-        }} />
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'relative' }}>
-          <div>
-            <div style={{ fontSize: 22, fontWeight: 900, color: 'white' }}>👨‍👩‍👧 המשפחה</div>
-            <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.88)', marginTop: 2, fontWeight: 600 }}>
-              {profiles.length} בני משפחה
-            </div>
-          </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'relative', zIndex: 1 }}>
+          <div style={{ fontSize: 22, fontWeight: 900, color: 'white' }}>👨‍👩‍👧 המשפחה</div>
+          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.85)', fontWeight: 700 }}>{profiles.length} בני משפחה</div>
         </div>
       </div>
 

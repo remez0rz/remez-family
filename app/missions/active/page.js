@@ -620,15 +620,11 @@ export default function ActiveEarningPage() {
       )}
 
       <div style={{
-        background: HEADER_BG, padding: '20px 16px 24px',
+        background: HEADER_BG, padding: '14px 16px 14px',
         borderRadius: '0 0 24px 24px', marginBottom: 16, position: 'relative', overflow: 'hidden'
       }}>
         <div style={{ position: 'absolute', top: -30, left: -30, width: 120, height: 120, borderRadius: '50%', background: 'rgba(255,255,255,0.1)' }} />
-        <div style={{ position: 'absolute', bottom: -20, right: -20, width: 80, height: 80, borderRadius: '50%', background: 'rgba(255,255,255,0.1)' }} />
         <div style={{ fontSize: 22, fontWeight: 900, color: 'white', position: 'relative', zIndex: 1 }}>🏃 בתהליך</div>
-        <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.85)', marginTop: 2, position: 'relative', zIndex: 1, fontWeight: 600 }}>
-          {(isParent && !isViewingAsKid) ? 'אשר השלמות ותן נקודות' : 'סיימת? קבל את הנקודות שלך'}
-        </div>
       </div>
 
       <div className="app-body" style={{ boxSizing: 'border-box' }}>
