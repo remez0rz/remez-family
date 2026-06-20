@@ -88,7 +88,7 @@ function ExperienceCard({ reward, index, currentPoints, currentLevel, isParent, 
         background: reward.image_url
           ? `url(${reward.image_url}) center/cover`
           : `linear-gradient(135deg, ${gradient[0]}, ${gradient[1]})`,
-        minHeight: 128, position: 'relative',
+        height: 180, position: 'relative',
         display: 'flex', alignItems: 'center', justifyContent: 'center'
       }}>
         {reward.image_url && <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.55), rgba(0,0,0,0.05))' }} />}
@@ -740,42 +740,34 @@ export default function ExperiencesPage() {
         </div>
       )}
 
-      {/* Header */}
-      <div style={{ background: HEADER_BG, padding: '24px 16px 0', borderRadius: '0 0 32px 32px', marginBottom: 18, position: 'relative', overflow: 'hidden' }}>
+      {/* Header — compact: title + actions, member selector, tier filters */}
+      <div style={{ background: HEADER_BG, padding: '14px 16px 12px', borderRadius: '0 0 24px 24px', marginBottom: 16, position: 'relative', overflow: 'hidden' }}>
         <div style={{ position: 'absolute', top: -40, left: -40, width: 180, height: 180, borderRadius: '50%', background: 'rgba(255,255,255,0.1)' }} />
-        <div style={{ position: 'absolute', bottom: -30, right: -30, width: 120, height: 120, borderRadius: '50%', background: 'rgba(255,255,255,0.08)' }} />
 
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, position: 'relative', zIndex: 1 }}>
-          <div>
-            <div style={{ fontSize: 24, fontWeight: 900, color: 'white' }}>✨ נקודות וחוויות</div>
-            <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.8)', marginTop: 3, fontWeight: 600 }}>
-              {isParent ? 'ניהול חוויות ונקודות' : 'הנקודות והחוויות שלי'}
-            </div>
-          </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'relative', zIndex: 1 }}>
+          <div style={{ fontSize: 22, fontWeight: 900, color: 'white' }}>✨ חוויות</div>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
             {isParent && !isViewingAsKid && pendingClaims.length > 0 && (
-              <div style={{
-                background: 'white', color: CORAL, borderRadius: 20,
-                padding: '4px 10px', fontSize: 12, fontWeight: 800
-              }}>⏳ {pendingClaims.length}</div>
+              <div style={{ background: 'white', color: CORAL, borderRadius: 20, padding: '4px 10px', fontSize: 12, fontWeight: 800 }}>⏳ {pendingClaims.length}</div>
             )}
             {isParent && !isViewingAsKid && (
               <button onClick={() => setShowNewForm(true)} style={{
-                background: 'rgba(255,255,255,0.25)', color: 'white', border: 'none', borderRadius: 20,
-                padding: '7px 14px', fontWeight: 700, fontSize: 13, cursor: 'pointer',
-                fontFamily: 'var(--font-heebo), sans-serif'
-              }}>+ חוויה</button>
+                background: 'white', color: CORAL, border: 'none', borderRadius: 50,
+                padding: '8px 14px', fontWeight: 900, fontSize: 13, cursor: 'pointer',
+                fontFamily: 'var(--font-heebo), sans-serif', whiteSpace: 'nowrap',
+                boxShadow: '0 3px 10px rgba(255,107,107,0.35)'
+              }}>＋ חוויה</button>
             )}
           </div>
         </div>
 
-        {/* Member selector */}
-        {!isViewingAsKid && (
-        <div style={{ display: 'flex', gap: 14, paddingBottom: 4, overflowX: 'auto', scrollbarWidth: 'none', position: 'relative', zIndex: 1 }}>
+        {/* Member selector (parents) */}
+        {!isViewingAsKid && (isParent ? children : [currentProfile]).filter(Boolean).length > 1 && (
+        <div style={{ display: 'flex', gap: 14, overflowX: 'auto', scrollbarWidth: 'none', position: 'relative', zIndex: 1, marginTop: 12 }}>
           {(isParent ? children : [currentProfile]).filter(Boolean).map(p => (
             <div key={p.id} onClick={() => setSelectedMember(p)}
               style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, cursor: 'pointer', flexShrink: 0 }}>
-              <Avatar profile={p} size={46} selected={selectedMember?.id === p.id} />
+              <Avatar profile={p} size={40} selected={selectedMember?.id === p.id} />
               <span style={{ fontSize: 11, fontWeight: 700, color: selectedMember?.id === p.id ? 'white' : 'rgba(255,255,255,0.6)' }}>
                 {p.name}
               </span>
@@ -784,15 +776,15 @@ export default function ExperiencesPage() {
         </div>
         )}
 
-        {/* Tier nav */}
-        <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 16, scrollbarWidth: 'none', position: 'relative', zIndex: 1, marginTop: 12 }}>
+        {/* Tier filters */}
+        <div style={{ display: 'flex', gap: 8, overflowX: 'auto', scrollbarWidth: 'none', position: 'relative', zIndex: 1, marginTop: 12 }}>
           {TIER_FILTERS.map(f => (
             <button key={f.id} onClick={() => setActiveTier(f.id)} style={{
               padding: '7px 14px', borderRadius: 20, border: 'none', cursor: 'pointer', flexShrink: 0,
               background: activeTier === f.id ? 'white' : 'rgba(255,255,255,0.18)',
               color: activeTier === f.id ? CORAL : 'white',
               fontWeight: activeTier === f.id ? 800 : 500,
-              fontSize: 12, fontFamily: 'var(--font-heebo), sans-serif',
+              fontSize: 13, fontFamily: 'var(--font-heebo), sans-serif',
               boxShadow: activeTier === f.id ? '0 2px 8px rgba(0,0,0,0.15)' : 'none'
             }}>{f.label}</button>
           ))}
@@ -815,16 +807,16 @@ export default function ExperiencesPage() {
           />
         )}
 
-        {/* Points hero */}
+        {/* Points hero — compact: big avatar, balance + level/XP side by side */}
         {effectiveMember && (
-          <div style={{ background: 'white', borderRadius: 24, padding: '22px', marginBottom: 16, boxShadow: '0 4px 20px rgba(0,0,0,0.07)', textAlign: 'center' }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 14 }}>
-              <div style={{ position: 'relative' }}>
+          <div style={{ background: 'white', borderRadius: 24, padding: '16px', marginBottom: 16, boxShadow: '0 4px 20px rgba(0,0,0,0.07)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+              <div style={{ position: 'relative', flexShrink: 0 }}>
                 <div style={{
-                  width: 60, height: 60, borderRadius: '50%', overflow: 'hidden',
+                  width: 76, height: 76, borderRadius: '50%', overflow: 'hidden',
                   border: `3px solid ${CORAL}`, background: '#FFD5E8',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 24, fontWeight: 700, color: CORAL
+                  fontSize: 30, fontWeight: 700, color: CORAL
                 }}>
                   {effectiveMember.avatar_url
                     ? <img src={effectiveMember.avatar_url} alt={effectiveMember.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -833,57 +825,30 @@ export default function ExperiencesPage() {
                 <div style={{
                   position: 'absolute', bottom: -4, right: -4,
                   background: CORAL, borderRadius: 20, padding: '2px 8px',
-                  fontSize: 10, fontWeight: 800, color: 'white',
-                  border: '2px solid white'
-                }}>רמה {effectiveMember.level || 1}</div>
+                  fontSize: 10, fontWeight: 800, color: 'white', border: '2px solid white'
+                }}>רמה {currentLevel}</div>
               </div>
-            </div>
-            <div style={{ fontSize: 13, color: '#AAAAAA', marginBottom: 4, fontWeight: 600 }}>
-              יתרה — {effectiveMember.name}
-            </div>
-            <div style={{ fontSize: 52, fontWeight: 900, color: CORAL, lineHeight: 1, marginBottom: 4 }}>
-              {currentPoints}
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'center', gap: 12, marginBottom: 4 }}>
-              <div style={{ background: '#FFF0D5', borderRadius: 20, padding: '4px 12px', fontSize: 12, color: '#CC8800', fontWeight: 700 }}>
-                🏅 רמה {currentLevel}
-              </div>
-              <div style={{ background: '#EDE7F6', borderRadius: 20, padding: '4px 12px', fontSize: 12, color: '#9B7FD4', fontWeight: 700 }}>
-                ⭐ {currentXP} XP כולל
-              </div>
-            </div>
-            <div style={{ fontSize: 12, color: '#AAAAAA' }}>
-              {unlockedCount} מתוך {rewards.length} פרסים זמינים
-            </div>
-            {nextReward && (
-              <div style={{ marginTop: 14 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-                  <span style={{ fontSize: 11, color: '#AAAAAA' }}>החוויה הבאה בדרך</span>
-                  <span style={{ fontSize: 11, color: CORAL, fontWeight: 700 }}>עוד {nextReward.points_required - currentPoints} נק׳</span>
+
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 12, color: '#AAAAAA', fontWeight: 600 }}>יתרה — {effectiveMember.name}</div>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, margin: '2px 0 8px' }}>
+                  <span style={{ fontSize: 40, fontWeight: 900, color: CORAL, lineHeight: 1 }}>{currentPoints}</span>
+                  <span style={{ fontSize: 13, color: '#AAAAAA', fontWeight: 700 }}>נק׳</span>
                 </div>
-                <div style={{ background: '#F0EBE0', borderRadius: 8, height: 8 }}>
-                  <div style={{
-                    width: `${Math.min(Math.round((currentPoints / nextReward.points_required) * 100), 100)}%`,
-                    height: '100%', background: CORAL, borderRadius: 8,
-                    boxShadow: `0 2px 6px ${CORAL}55`
-                  }} />
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                  <span style={{ background: '#FFF0D5', borderRadius: 20, padding: '3px 10px', fontSize: 11, color: '#CC8800', fontWeight: 700 }}>🏅 רמה {currentLevel}</span>
+                  <span style={{ background: '#EDE7F6', borderRadius: 20, padding: '3px 10px', fontSize: 11, color: '#9B7FD4', fontWeight: 700 }}>⭐ {currentXP} XP</span>
                 </div>
-                <div style={{ fontSize: 11, color: '#AAAAAA', marginTop: 6 }}>{nextReward.title} ✨</div>
               </div>
-            )}
-            <div style={{ marginTop: 14, borderTop: '1px solid #F0EBE0', paddingTop: 12 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-                <span style={{ fontSize: 11, color: '#AAAAAA' }}>רמה {effectiveMember.level || 1}</span>
-                <span style={{ fontSize: 11, color: '#AAAAAA' }}>רמה {(effectiveMember.level || 1) + 1}</span>
-              </div>
+            </div>
+
+            {/* Compact level progress */}
+            <div style={{ marginTop: 12 }}>
               <div style={{ background: '#F0EBE0', borderRadius: 6, height: 6 }}>
-                <div style={{
-                  width: `${(currentPoints % 500) / 500 * 100}%`,
-                  height: '100%', background: `${CORAL}88`, borderRadius: 6
-                }} />
+                <div style={{ width: `${(currentPoints % 500) / 500 * 100}%`, height: '100%', background: `${CORAL}88`, borderRadius: 6 }} />
               </div>
-              <div style={{ fontSize: 11, color: '#AAAAAA', marginTop: 4 }}>
-                {500 - (currentPoints % 500)} נקודות לרמה הבאה
+              <div style={{ fontSize: 11, color: '#AAAAAA', marginTop: 5, textAlign: 'left' }}>
+                עוד {500 - (currentPoints % 500)} נק׳ לרמה {currentLevel + 1}
               </div>
             </div>
           </div>

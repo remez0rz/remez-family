@@ -7,6 +7,7 @@ import ViewAsBanner from '../components/ViewAsBanner'
 import SpeakButton from '../components/SpeakButton'
 import CommentThread from '../components/CommentThread'
 import GrandparentSuggest from '../components/GrandparentSuggest'
+import HeaderIconButton from '../components/HeaderIconButton'
 
 const CORAL = '#FF6B6B'
 const TEAL = '#4ECDC4'
@@ -341,7 +342,7 @@ export default function FeedPage() {
   const [hasMore, setHasMore]               = useState(true)
   const [page, setPage]                     = useState(0)
   const [typeFilter, setTypeFilter]         = useState('all')
-  const [showTypeMenu, setShowTypeMenu]     = useState(false)
+  const [showFilters, setShowFilters]       = useState(false)
   const [memberFilter, setMemberFilter]     = useState('all')
   const [savedOnly, setSavedOnly]           = useState(false)
   const [storytellers, setStorytellers]     = useState([])  // names that appear in ≥1 moment
@@ -442,6 +443,7 @@ export default function FeedPage() {
   const storytellerProfiles = profiles.filter(p => storytellers.includes(p.name))
   // Grandparents (and a parent previewing as one) can react/comment but not author posts.
   const actingAsGrandparent = currentProfile?.role === 'grandparent' || viewAsProfile?.role === 'grandparent'
+  const anyFilterActive = typeFilter !== 'all' || memberFilter !== 'all' || savedOnly
 
   // Parent-only: add/remove a moment from the Family Memory Book.
   const handleToggleSave = async (post) => {
@@ -476,128 +478,106 @@ export default function FeedPage() {
       <ViewAsBanner viewAsProfile={viewAsProfile} />
 
       <div style={{
-        background: HEADER_BG, padding: '20px 16px 0',
+        background: HEADER_BG, padding: '14px 16px 14px',
         borderRadius: '0 0 24px 24px', marginBottom: 16,
         position: 'relative', overflow: 'hidden'
       }}>
         <div style={{ position: 'absolute', width: 120, height: 120, borderRadius: '50%', background: 'white', opacity: 0.1, top: -40, left: -30 }} />
-        <div style={{ position: 'absolute', width: 80, height: 80, borderRadius: '50%', background: 'white', opacity: 0.1, top: 10, left: 60 }} />
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-          <div>
-            <div style={{ fontSize: 22, fontWeight: 900, color: 'white' }}>📖 זיכרונות</div>
-            <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.88)', marginTop: 2, fontWeight: 600 }}>
-              הסיפור של משפחת רמז
-            </div>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, position: 'relative', zIndex: 2 }}>
-            {/* Type filter — collapsed into a button to save header space */}
-            <div style={{ position: 'relative' }}>
-              <button onClick={() => setShowTypeMenu(v => !v)} title="סינון"
-                aria-pressed={typeFilter !== 'all'} style={{
-                width: 38, height: 38, borderRadius: '50%', border: 'none', cursor: 'pointer',
-                background: typeFilter !== 'all' ? GOLD : 'rgba(255,255,255,0.2)',
-                fontSize: 16, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                boxShadow: typeFilter !== 'all' ? '0 2px 10px rgba(255,184,48,0.55)' : 'none'
-              }}>
-                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                  <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
-                </svg>
-              </button>
-              {showTypeMenu && (
-                <>
-                  <div onClick={() => setShowTypeMenu(false)} style={{ position: 'fixed', inset: 0, zIndex: 20 }} />
-                  <div style={{ position: 'absolute', top: 46, left: 0, zIndex: 30, background: 'white', borderRadius: 14, boxShadow: '0 8px 30px rgba(0,0,0,0.18)', padding: 6, minWidth: 160 }}>
-                    {TYPE_FILTERS.map(f => (
-                      <button key={f.id} onClick={() => { setTypeFilter(f.id); setShowTypeMenu(false) }} style={{
-                        display: 'flex', alignItems: 'center', gap: 8, width: '100%',
-                        padding: '10px 12px', borderRadius: 10, border: 'none', cursor: 'pointer',
-                        background: typeFilter === f.id ? '#FFF0F0' : 'transparent',
-                        color: typeFilter === f.id ? CORAL : NAVY,
-                        fontWeight: typeFilter === f.id ? 800 : 600, fontSize: 14,
-                        fontFamily: 'var(--font-heebo), sans-serif', textAlign: 'right'
-                      }}>{f.emoji} {f.label}</button>
-                    ))}
-                  </div>
-                </>
-              )}
-            </div>
-            <button onClick={() => setSavedOnly(v => !v)} title="הספר המשפחתי"
-              aria-pressed={savedOnly} style={{
-              width: 38, height: 38, borderRadius: '50%', border: 'none', cursor: 'pointer',
-              background: savedOnly ? GOLD : 'rgba(255,255,255,0.2)',
-              fontSize: 17, display: 'flex', alignItems: 'center', justifyContent: 'center',
-              boxShadow: savedOnly ? '0 2px 10px rgba(255,184,48,0.55)' : 'none'
-            }}>🔖</button>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'relative', zIndex: 1 }}>
+          <div style={{ fontSize: 22, fontWeight: 900, color: 'white' }}>📖 זיכרונות</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <HeaderIconButton active={anyFilterActive} onClick={() => setShowFilters(true)} label="סינון">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
+              </svg>
+            </HeaderIconButton>
             {actingAsGrandparent
               ? <GrandparentSuggest currentProfile={currentProfile} />
               : (
-                <button onClick={() => router.push('/tazkir/new')} style={{
+                <button onClick={() => router.push('/tazkir/new')} aria-label="תחקיר חדש" title="תחקיר חדש" style={{
                   background: 'white', color: CORAL, border: 'none',
-                  borderRadius: 50, padding: '7px 16px', cursor: 'pointer',
-                  fontWeight: 700, fontSize: 13,
-                  boxShadow: '0 4px 12px rgba(255,107,107,0.35)',
+                  width: 38, height: 38, borderRadius: '50%', cursor: 'pointer',
+                  fontWeight: 900, fontSize: 24, lineHeight: 1,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  boxShadow: '0 3px 10px rgba(255,107,107,0.35)',
                   fontFamily: 'var(--font-heebo), sans-serif'
-                }}>+ תחקיר</button>
+                }}>+</button>
               )}
           </div>
         </div>
-
-        {/* When the Memory Book is on, make it explicit (the toggle is just an icon) */}
-        {savedOnly && (
-          <div style={{ fontSize: 12, color: 'white', fontWeight: 700, marginBottom: 10 }}>
-            🔖 מציג את הספר המשפחתי
-          </div>
-        )}
-
-        {/* Active type-filter chip (the picker itself lives in the header filter button) */}
-        {typeFilter !== 'all' && (
-          <div style={{ marginBottom: storytellerProfiles.length > 1 ? 12 : 16 }}>
-            <span onClick={() => setTypeFilter('all')} style={{
-              display: 'inline-flex', alignItems: 'center', gap: 6, cursor: 'pointer',
-              background: 'rgba(255,255,255,0.22)', color: 'white', borderRadius: 20,
-              padding: '5px 12px', fontSize: 12, fontWeight: 700
-            }}>
-              {TYPE_FILTERS.find(f => f.id === typeFilter)?.emoji} {TYPE_FILTERS.find(f => f.id === typeFilter)?.label} ✕
-            </span>
-          </div>
-        )}
-
-        {/* Member filter — only people who actually have moments */}
-        {storytellerProfiles.length > 1 && (
-          <div style={{ display: 'flex', gap: 10, paddingBottom: 16, overflowX: 'auto', scrollbarWidth: 'none' }}>
-            <div onClick={() => setMemberFilter('all')} style={{
-              display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, cursor: 'pointer', flexShrink: 0
-            }}>
-              <div style={{
-                width: 38, height: 38, borderRadius: '50%',
-                border: `2.5px solid ${memberFilter === 'all' ? CORAL : 'rgba(255,255,255,0.3)'}`,
-                background: 'rgba(255,255,255,0.2)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18
-              }}>✨</div>
-              <span style={{ fontSize: 10, color: memberFilter === 'all' ? CORAL : 'rgba(255,255,255,0.5)', fontWeight: 600 }}>הכל</span>
-            </div>
-            {storytellerProfiles.map(p => (
-              <div key={p.id} onClick={() => setMemberFilter(memberFilter === p.name ? 'all' : p.name)}
-                style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, cursor: 'pointer', flexShrink: 0 }}>
-                <div style={{
-                  width: 38, height: 38, borderRadius: '50%',
-                  border: `2.5px solid ${memberFilter === p.name ? CORAL : 'rgba(255,255,255,0.3)'}`,
-                  overflow: 'hidden', background: '#e8d5a3',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 15, fontWeight: 700, color: NAVY
-                }}>
-                  {p.avatar_url
-                    ? <img src={p.avatar_url} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={e => e.target.style.display = 'none'} />
-                    : p.name?.charAt(0)}
-                </div>
-                <span style={{ fontSize: 10, color: memberFilter === p.name ? CORAL : 'rgba(255,255,255,0.5)', fontWeight: 600 }}>
-                  {p.name}
-                </span>
-              </div>
-            ))}
-          </div>
-        )}
       </div>
+
+      {/* Filters bottom sheet — outside the header so it's never clipped */}
+      {showFilters && (
+        <div onClick={() => setShowFilters(false)} style={{
+          position: 'fixed', inset: 0, zIndex: 1100, background: 'rgba(10,22,40,0.55)',
+          display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
+          fontFamily: 'var(--font-heebo), sans-serif', direction: 'rtl'
+        }}>
+          <div onClick={e => e.stopPropagation()} style={{
+            background: 'white', borderRadius: '24px 24px 0 0', padding: '20px 18px 30px',
+            width: '100%', maxWidth: 480, maxHeight: '85vh', overflowY: 'auto'
+          }}>
+            <div style={{ width: 40, height: 4, background: '#e0d8c8', borderRadius: 4, margin: '0 auto 18px' }} />
+
+            {/* Type */}
+            <div style={{ fontSize: 12, color: '#a09080', fontWeight: 700, marginBottom: 8 }}>סוג</div>
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 18 }}>
+              {TYPE_FILTERS.map(f => (
+                <button key={f.id} onClick={() => setTypeFilter(f.id)} style={{
+                  padding: '8px 14px', borderRadius: 20, cursor: 'pointer',
+                  border: typeFilter === f.id ? `2px solid ${CORAL}` : '1.5px solid #ede8e0',
+                  background: typeFilter === f.id ? '#FFF0F0' : '#faf8f4',
+                  color: typeFilter === f.id ? CORAL : '#6b5e4e', fontWeight: 700, fontSize: 13,
+                  fontFamily: 'var(--font-heebo), sans-serif'
+                }}>{f.emoji} {f.label}</button>
+              ))}
+            </div>
+
+            {/* Member */}
+            {storytellerProfiles.length > 1 && (
+              <>
+                <div style={{ fontSize: 12, color: '#a09080', fontWeight: 700, marginBottom: 8 }}>לפי מי</div>
+                <div style={{ display: 'flex', gap: 14, overflowX: 'auto', scrollbarWidth: 'none', marginBottom: 18, paddingBottom: 4 }}>
+                  <div onClick={() => setMemberFilter('all')} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, cursor: 'pointer', flexShrink: 0 }}>
+                    <div style={{ width: 46, height: 46, borderRadius: '50%', border: `2.5px solid ${memberFilter === 'all' ? CORAL : '#ede8e0'}`, background: '#FFF0F0', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>✨</div>
+                    <span style={{ fontSize: 11, color: memberFilter === 'all' ? CORAL : '#a09080', fontWeight: 700 }}>הכל</span>
+                  </div>
+                  {storytellerProfiles.map(p => (
+                    <div key={p.id} onClick={() => setMemberFilter(memberFilter === p.name ? 'all' : p.name)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, cursor: 'pointer', flexShrink: 0 }}>
+                      <div style={{ width: 46, height: 46, borderRadius: '50%', border: `2.5px solid ${memberFilter === p.name ? CORAL : '#ede8e0'}`, overflow: 'hidden', background: '#e8d5a3', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17, fontWeight: 700, color: NAVY }}>
+                        {p.avatar_url
+                          ? <img src={p.avatar_url} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={e => e.target.style.display = 'none'} />
+                          : p.name?.charAt(0)}
+                      </div>
+                      <span style={{ fontSize: 11, color: memberFilter === p.name ? CORAL : '#a09080', fontWeight: 700 }}>{p.name}</span>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+
+            {/* Memory book toggle */}
+            <button onClick={() => setSavedOnly(v => !v)} style={{
+              display: 'flex', alignItems: 'center', gap: 10, width: '100%',
+              padding: '12px 14px', borderRadius: 14, cursor: 'pointer',
+              border: savedOnly ? `2px solid ${GOLD}` : '1.5px solid #ede8e0',
+              background: savedOnly ? '#FFF7E6' : '#faf8f4',
+              fontFamily: 'var(--font-heebo), sans-serif', marginBottom: 16
+            }}>
+              <span style={{ fontSize: 20 }}>🔖</span>
+              <span style={{ flex: 1, textAlign: 'right', fontSize: 14, fontWeight: 700, color: NAVY }}>הספר המשפחתי</span>
+              <span style={{ fontSize: 12, fontWeight: 800, color: savedOnly ? '#CC8800' : '#bbb' }}>{savedOnly ? 'מופעל' : 'כבוי'}</span>
+            </button>
+
+            <button onClick={() => setShowFilters(false)} style={{
+              width: '100%', padding: '13px', background: CORAL, color: 'white', border: 'none',
+              borderRadius: 50, cursor: 'pointer', fontWeight: 800, fontSize: 15,
+              fontFamily: 'var(--font-heebo), sans-serif'
+            }}>הצג רגעים</button>
+          </div>
+        </div>
+      )}
 
       <div className="app-body" style={{ boxSizing: 'border-box' }}>
         {posts.length === 0 ? (

@@ -6,6 +6,7 @@ import BottomNav from '../components/BottomNav'
 import ViewAsBanner from '../components/ViewAsBanner'
 import SpeakButton from '../components/SpeakButton'
 import PendingApprovals from '../components/PendingApprovals'
+import HeaderIconButton from '../components/HeaderIconButton'
 
 const NAVY = '#2D2D2D'
 const GOLD = '#FFB830'
@@ -539,6 +540,7 @@ export default function MissionsPage() {
   const [assignedDone, setAssignedDone]     = useState(false)
   const [searchQuery, setSearchQuery]       = useState('')
   const [sortOrder, setSortOrder]           = useState('default')
+  const [showSearch, setShowSearch]         = useState(false)
   const [viewAsId, setViewAsId] = useState(null)
   const router = useRouter()
 
@@ -723,108 +725,76 @@ export default function MissionsPage() {
         </div>
       )}
 
-      {/* Header */}
+      {/* Header — compact: title + actions (search/sort/+), filters below */}
       <div style={{
-        background: HEADER_BG, padding: '20px 16px 0',
+        background: HEADER_BG, padding: '14px 16px 12px',
         borderRadius: '0 0 24px 24px', marginBottom: 16,
         position: 'relative', overflow: 'hidden'
       }}>
         <div style={{ position: 'absolute', top: -20, left: -20, width: 100, height: 100, borderRadius: '50%', background: 'rgba(255,255,255,0.1)', pointerEvents: 'none' }} />
-        <div style={{ position: 'absolute', top: 10, left: 60, width: 60, height: 60, borderRadius: '50%', background: 'rgba(255,255,255,0.07)', pointerEvents: 'none' }} />
-        <div style={{ position: 'absolute', bottom: 20, right: -10, width: 80, height: 80, borderRadius: '50%', background: 'rgba(255,255,255,0.08)', pointerEvents: 'none' }} />
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-          <div>
-            <div style={{ fontSize: 22, fontWeight: 900, color: 'white' }}>⭐ צוברים נקודות</div>
-            <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.88)', marginTop: 2, fontWeight: 600 }}>
-              {isParent ? 'שלח אתגרים לבני המשפחה' : 'בחרו אתגר קטן וצברו נקודות'}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'relative', zIndex: 1 }}>
+          <div style={{ fontSize: 22, fontWeight: 900, color: 'white' }}>⭐ אתגרים</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <HeaderIconButton active={showSearch || !!searchQuery} onClick={() => setShowSearch(s => !s)} label="חיפוש">🔍</HeaderIconButton>
+            <div style={{ position: 'relative', width: 36, height: 36 }}>
+              <HeaderIconButton active={sortOrder !== 'default'} label="מיון">⇅</HeaderIconButton>
+              <select value={sortOrder} onChange={e => setSortOrder(e.target.value)} aria-label="מיון"
+                style={{ position: 'absolute', inset: 0, opacity: 0, cursor: 'pointer', border: 'none', WebkitAppearance: 'none', appearance: 'none' }}>
+                <option value="default"     style={{ color: NAVY }}>מיון רגיל</option>
+                <option value="newest"      style={{ color: NAVY }}>✨ חדש קודם</option>
+                <option value="points_asc"  style={{ color: NAVY }}>⬆ נקודות: מעט</option>
+                <option value="points_desc" style={{ color: NAVY }}>⬇ נקודות: הרבה</option>
+                <option value="alpha"       style={{ color: NAVY }}>א-ב סדר אלפביתי</option>
+              </select>
             </div>
+            {isParent && !isViewingAsKid && (
+              <button onClick={() => setShowForm(true)} style={{
+                background: 'white', color: CORAL, border: 'none', borderRadius: 50,
+                padding: '8px 14px', cursor: 'pointer', fontWeight: 900, fontSize: 13,
+                fontFamily: 'var(--font-heebo), sans-serif', whiteSpace: 'nowrap',
+                boxShadow: '0 3px 10px rgba(255,107,107,0.35)'
+              }}>＋ אתגר</button>
+            )}
           </div>
         </div>
 
-        {/* Points hero for kids */}
-        {(!isParent || isViewingAsKid) && effectiveProfile && (
-          <div style={{ background: 'rgba(255,255,255,0.18)', borderRadius: 14, padding: '12px 14px', marginBottom: 12 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-              <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.9)', fontWeight: 600 }}>יש לך</span>
-              <span style={{ fontSize: 22, fontWeight: 900, color: GOLD }}>{effectiveProfile.total_points} נק׳</span>
-            </div>
-            {next && (
-              <>
-                <div style={{ background: 'rgba(255,255,255,0.3)', borderRadius: 6, height: 8, marginBottom: 5 }}>
-                  <div style={{
-                    width: `${Math.min(Math.round((effectiveProfile.total_points / next.points_required) * 100), 100)}%`,
-                    height: '100%', background: CORAL, borderRadius: 6
-                  }} />
-                </div>
-                <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.8)', fontWeight: 600 }}>
-                  כל אתגר קטן מקרב אותך ל{next.title} ✨
-                </div>
-              </>
+        {/* Collapsible search */}
+        {showSearch && (
+          <div style={{ position: 'relative', marginTop: 12 }}>
+            <span style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', fontSize: 14, pointerEvents: 'none' }}>🔍</span>
+            <input
+              value={searchQuery} onChange={e => setSearchQuery(e.target.value)} autoFocus
+              placeholder="חפש אתגר לפי שם..."
+              style={{
+                width: '100%', padding: '9px 36px 9px 34px',
+                background: 'rgba(255,255,255,0.18)', border: '1px solid rgba(255,255,255,0.25)',
+                borderRadius: 50, color: 'white', fontSize: 14, outline: 'none',
+                fontFamily: 'var(--font-heebo), sans-serif', boxSizing: 'border-box',
+              }}
+            />
+            {searchQuery && (
+              <button onClick={() => setSearchQuery('')} style={{
+                position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)',
+                background: 'rgba(255,255,255,0.25)', border: 'none', borderRadius: '50%',
+                width: 22, height: 22, color: 'white', cursor: 'pointer', fontSize: 11,
+                display: 'flex', alignItems: 'center', justifyContent: 'center'
+              }}>✕</button>
             )}
           </div>
         )}
 
-
-        {/* Search bar */}
-        <div style={{ position: 'relative', marginBottom: 10 }}>
-          <span style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', fontSize: 15, pointerEvents: 'none' }}>🔍</span>
-          <input
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-            placeholder="חפש אתגר לפי שם..."
-            style={{
-              width: '100%', padding: '10px 38px 10px 36px',
-              background: 'rgba(255,255,255,0.18)', border: '1px solid rgba(255,255,255,0.25)',
-              borderRadius: 50, color: 'white', fontSize: 14, outline: 'none',
-              fontFamily: 'var(--font-heebo), sans-serif', boxSizing: 'border-box',
-            }}
-          />
-          {searchQuery && (
-            <button onClick={() => setSearchQuery('')} style={{
-              position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)',
-              background: 'rgba(255,255,255,0.25)', border: 'none', borderRadius: '50%',
-              width: 22, height: 22, color: 'white', cursor: 'pointer',
-              fontSize: 11, display: 'flex', alignItems: 'center', justifyContent: 'center'
-            }}>✕</button>
-          )}
-        </div>
-
-        {/* Filter chips + sort */}
-        <div style={{ display: 'flex', gap: 8, alignItems: 'center', paddingBottom: 14 }}>
-          <div style={{ display: 'flex', gap: 8, overflowX: 'auto', flex: 1, scrollbarWidth: 'none' }}>
-            {FILTERS.filter(f => !f.parentOnly || (isParent && !isViewingAsKid)).map(f => (
-              <button key={f.id} onClick={() => { setActiveFilter(f.id); setSearchQuery('') }} style={{
-                padding: '7px 14px', borderRadius: 20, border: 'none',
-                cursor: 'pointer', flexShrink: 0,
-                background: activeFilter === f.id && !searchQuery ? CORAL : 'rgba(255,255,255,0.1)',
-                color: activeFilter === f.id && !searchQuery ? 'white' : 'rgba(255,255,255,0.8)',
-                fontWeight: activeFilter === f.id && !searchQuery ? 700 : 500,
-                fontSize: 13, fontFamily: 'var(--font-heebo), sans-serif'
-              }}>{f.label}</button>
-            ))}
-          </div>
-          {/* Sort — compact icon button (native select overlaid for the menu) */}
-          <div style={{ position: 'relative', flexShrink: 0, width: 38, height: 34 }}>
-            <div style={{
-              width: 38, height: 34, borderRadius: 20,
-              background: sortOrder !== 'default' ? CORAL : 'rgba(255,255,255,0.12)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 16, color: 'white', pointerEvents: 'none'
-            }}>⇅</div>
-            <select value={sortOrder} onChange={e => setSortOrder(e.target.value)} aria-label="מיון"
-              style={{
-                position: 'absolute', inset: 0, width: '100%', height: '100%',
-                opacity: 0, cursor: 'pointer', border: 'none',
-                WebkitAppearance: 'none', appearance: 'none',
-                fontFamily: 'var(--font-heebo), sans-serif'
-              }}>
-              <option value="default"     style={{ color: NAVY }}>מיון רגיל</option>
-              <option value="newest"      style={{ color: NAVY }}>✨ חדש קודם</option>
-              <option value="points_asc"  style={{ color: NAVY }}>⬆ נקודות: מעט</option>
-              <option value="points_desc" style={{ color: NAVY }}>⬇ נקודות: הרבה</option>
-              <option value="alpha"       style={{ color: NAVY }}>א-ב סדר אלפביתי</option>
-            </select>
-          </div>
+        {/* Filter chips */}
+        <div style={{ display: 'flex', gap: 8, overflowX: 'auto', scrollbarWidth: 'none', marginTop: 12 }}>
+          {FILTERS.filter(f => !f.parentOnly || (isParent && !isViewingAsKid)).map(f => (
+            <button key={f.id} onClick={() => { setActiveFilter(f.id); setSearchQuery('') }} style={{
+              padding: '7px 14px', borderRadius: 20, border: 'none',
+              cursor: 'pointer', flexShrink: 0,
+              background: activeFilter === f.id && !searchQuery ? CORAL : 'rgba(255,255,255,0.12)',
+              color: activeFilter === f.id && !searchQuery ? 'white' : 'rgba(255,255,255,0.85)',
+              fontWeight: activeFilter === f.id && !searchQuery ? 700 : 500,
+              fontSize: 13, fontFamily: 'var(--font-heebo), sans-serif'
+            }}>{f.label}</button>
+          ))}
         </div>
       </div>
 
@@ -984,21 +954,6 @@ export default function MissionsPage() {
           </>
         )}
       </div>
-
-      {/* Sticky "+ אתגר" for parents */}
-      {isParent && !isViewingAsKid && (
-        <div style={{ position: 'fixed', bottom: 72, left: 16, zIndex: 40 }}>
-          <button onClick={() => setShowForm(true)} style={{
-            background: `linear-gradient(135deg, ${CORAL}, #FF8E53)`,
-            color: 'white', border: 'none', borderRadius: 50,
-            padding: '12px 20px', cursor: 'pointer',
-            fontWeight: 900, fontSize: 14,
-            fontFamily: 'var(--font-heebo), sans-serif',
-            boxShadow: '0 4px 16px rgba(255,107,107,0.5)',
-            display: 'flex', alignItems: 'center', gap: 6
-          }}>➕ אתגר חדש</button>
-        </div>
-      )}
 
       <BottomNav />
     </div>
