@@ -17,7 +17,7 @@ const REWARD_EMOJIS = ['🎁', '🍦', '🎬', '🧁', '🎮', '📚', '⚽', '�
 
 // Grandparents can suggest a mission or a reward. It is saved as pending and
 // inactive — a parent must approve it before any child sees it.
-export default function GrandparentSuggest({ currentProfile }) {
+export default function GrandparentSuggest({ currentProfile, buttonStyle, label = '💡 הצעה' }) {
   const [open, setOpen]         = useState(false)
   const [kind, setKind]         = useState('mission') // 'mission' | 'reward'
   const [title, setTitle]       = useState('')
@@ -70,8 +70,9 @@ export default function GrandparentSuggest({ currentProfile }) {
         background: 'white', color: CORAL, border: 'none',
         borderRadius: 50, padding: '7px 16px', cursor: 'pointer',
         fontWeight: 700, fontSize: 13, boxShadow: '0 4px 12px rgba(255,107,107,0.35)',
-        fontFamily: 'var(--font-heebo), sans-serif', whiteSpace: 'nowrap'
-      }}>💡 הצעה</button>
+        fontFamily: 'var(--font-heebo), sans-serif', whiteSpace: 'nowrap',
+        ...buttonStyle
+      }}>{label}</button>
 
       {open && (
         <div onClick={() => !saving && setOpen(false)} style={{
