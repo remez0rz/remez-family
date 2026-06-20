@@ -350,8 +350,11 @@ function TazkirForm() {
     })
 
     if (feedError) {
-      // Tazkir was saved but feed post failed — not critical, continue
-      console.warn('Feed post error (non-fatal):', feedError.message)
+      // The tahkir itself is saved, but it won't appear in the feed — make that
+      // visible instead of swallowing it, so we never silently lose a memory.
+      setSaveError('התחקיר נשמר, אך לא הצלחנו להוסיף אותו ליומן: ' + feedError.message)
+      setSaving(false)
+      return
     }
 
     setSaved(true)
