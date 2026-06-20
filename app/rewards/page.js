@@ -288,7 +288,7 @@ function UnlockModal({ reward, profile, onClose, onClaimed }) {
       const { data: parents } = await supabase.from('profiles').select('id').eq('role', 'parent').eq('active', true)
       if (parents?.length) {
         fetch('/api/push/send', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ memberIds: parents.map(p => p.id), title: '✨ בקשת פרס חדשה', body: `${profile.name} רוצה: ${reward.emoji || ''} ${reward.title}`, url: '/rewards', tag: 'rewardclaim' })
+          body: JSON.stringify({ memberIds: parents.map(p => p.id), title: '✨ בקשת פרס חדשה', body: `${profile.name} רוצה: ${reward.emoji || ''} ${reward.title}`, url: '/rewards', tag: 'rewardclaim', category: 'rewards' })
         }).catch(() => {})
       }
       onClaimed()
@@ -590,7 +590,7 @@ export default function ExperiencesPage() {
     // Push notification to kid
     if (reward) {
       fetch('/api/push/send', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ memberIds: [claim.member_id], title: '🎉 הפרס אושר!', body: `${reward.emoji || '✨'} ${reward.title} — אפשר לממש!`, url: '/rewards', tag: 'rewardapproved' })
+        body: JSON.stringify({ memberIds: [claim.member_id], title: '🎉 הפרס אושר!', body: `${reward.emoji || '✨'} ${reward.title} — אפשר לממש!`, url: '/rewards', tag: 'rewardapproved', category: 'rewards' })
       }).catch(() => {})
     }
 
@@ -657,7 +657,7 @@ export default function ExperiencesPage() {
       if (ids.length) {
         const photo = (file && file.type.startsWith('image/')) ? mediaUrl : null
         fetch('/api/push/send', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ memberIds: ids, title: '💜 רגע חדש מהמשפחה', body: `${member.name} ${phrases.shared(member.gender)} רגע חדש`, url: '/feed', tag: 'share', image: photo, icon: member.avatar_url || undefined })
+          body: JSON.stringify({ memberIds: ids, title: '💜 רגע חדש מהמשפחה', body: `${member.name} ${phrases.shared(member.gender)} רגע חדש`, url: '/feed', tag: 'share', category: 'rewards', image: photo, icon: member.avatar_url || undefined })
         }).catch(() => {})
       }
     }

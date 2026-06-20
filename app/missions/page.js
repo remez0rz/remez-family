@@ -146,7 +146,7 @@ function MissionFormModal({ mission, profiles = [], onClose, onSaved }) {
           assignTo.map(id => ({ mission_id: created.id, assigned_to: id, status: 'active' }))
         )
         fetch('/api/push/send', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ memberIds: assignTo, title: '⭐ אתגר חדש!', body: `${form.title.trim()} — בא לצבור נקודות!`, url: '/missions/active', tag: 'newmission' })
+          body: JSON.stringify({ memberIds: assignTo, title: '⭐ אתגר חדש!', body: `${form.title.trim()} — בא לצבור נקודות!`, url: '/missions/active', tag: 'newmission', category: 'achievements' })
         }).catch(() => {})
       }
     } else {
@@ -369,7 +369,7 @@ function ParentAssignModal({ mission, profiles, onClose, onAssigned }) {
 
       if (notify) {
         fetch('/api/push/send', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ memberIds: toAssign, title: '⭐ אתגר חדש!', body: `${mission.title} — בא לצבור נקודות!`, url: '/missions/active', tag: 'newmission' })
+          body: JSON.stringify({ memberIds: toAssign, title: '⭐ אתגר חדש!', body: `${mission.title} — בא לצבור נקודות!`, url: '/missions/active', tag: 'newmission', category: 'achievements' })
         }).catch(() => {})
       }
     }

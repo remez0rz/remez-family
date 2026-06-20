@@ -74,7 +74,7 @@ export default function CommentThread({ postId, currentProfile, profiles = [], p
     fetch('/api/push/send', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        memberIds: ids, title: `💌 ${who} ${phrases.commented(currentProfile?.gender)} לך`, body: preview, url: '/feed', tag: 'comment'
+        memberIds: ids, title: `💌 ${who} ${phrases.commented(currentProfile?.gender)} לך`, body: preview, url: '/feed', tag: 'comment', category: 'moments'
       })
     }).catch(() => {})
   }

@@ -27,13 +27,22 @@ export async function POST(req) {
     (process.env.VAPID_PRIVATE_KEY || '').trim()
   )
   try {
-    const { memberIds, title, body, url = '/', tag = 'remez', image, icon } = await req.json()
+    const { memberIds, title, body, url = '/', tag = 'remez', image, icon, category } = await req.json()
     if (!memberIds?.length || !title) return NextResponse.json({ error: 'Missing params' }, { status: 400 })
 
     // Never notify the person who triggered the action (e.g. a parent acting as a
     // kid, or claiming/approving). One central rule means no self-pings anywhere.
-    const recipients = [...new Set(memberIds.filter(id => id && id !== caller.id))]
+    let recipients = [...new Set(memberIds.filter(id => id && id !== caller.id))]
     if (!recipients.length) return NextResponse.json({ sent: 0 })
+
+    // Respect each recipient's category preferences (default on; off only when
+    // notif_prefs[category] === false).
+    if (category) {
+      const { data: profs } = await supabase.from('profiles').select('id, notif_prefs').in('id', recipients)
+      const optedOut = new Set((profs || []).filter(p => p.notif_prefs?.[category] === false).map(p => p.id))
+      recipients = recipients.filter(id => !optedOut.has(id))
+      if (!recipients.length) return NextResponse.json({ sent: 0 })
+    }
 
     const { data: subs } = await supabase
       .from('push_subscriptions')

@@ -4,6 +4,8 @@ import { supabase, getCurrentProfile } from '../lib/supabase'
 import { useRouter } from 'next/navigation'
 import BottomNav from '../components/BottomNav'
 import ViewAsBanner from '../components/ViewAsBanner'
+import { EnableNotificationsButton } from '../components/PushRegister'
+import NotificationSettings from '../components/NotificationSettings'
 
 const NAVY = '#2D2D2D'
 const CORAL = '#FF6B6B'
@@ -239,6 +241,15 @@ export default function ProfilesPage() {
       </div>
 
       <div className="app-body" style={{ boxSizing: 'border-box' }}>
+
+        {/* My notifications */}
+        {currentProfile && (
+          <div style={{ background: 'white', borderRadius: 20, padding: '16px', marginBottom: 16, boxShadow: '0 4px 20px rgba(0,0,0,0.06)' }}>
+            <div style={{ fontSize: 14, fontWeight: 900, color: NAVY, marginBottom: 12 }}>🔔 ההתראות שלי</div>
+            <EnableNotificationsButton profileId={currentProfile.id} forceShow />
+            <NotificationSettings profileId={currentProfile.id} role={currentProfile.role} />
+          </div>
+        )}
 
         {/* Children */}
         {children.length > 0 && (

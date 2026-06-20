@@ -55,7 +55,7 @@ export default function GrandparentSuggest({ currentProfile }) {
           memberIds: ids,
           title: '💡 הצעה חדשה מסבא/סבתא',
           body: `${currentProfile?.name || ''}: ${title.trim()}`,
-          url: kind === 'mission' ? '/missions' : '/rewards', tag: 'suggestion'
+          url: kind === 'mission' ? '/missions' : '/rewards', tag: 'suggestion', category: 'suggestions'
         })
       }).catch(() => {})
     }

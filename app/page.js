@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import dynamic from 'next/dynamic'
 import BottomNav from './components/BottomNav'
 import { EnableNotificationsButton } from './components/PushRegister'
+import NotificationSettings from './components/NotificationSettings'
 import SpeakButton from './components/SpeakButton'
 import { flagFor, isWorldCupActive, WC_TEAMS, teamByCode } from './lib/worldcup'
 
@@ -125,7 +126,7 @@ function QuickMissionModal({ profiles, onClose, onCreated }) {
       // Push notify assigned kids
       const names = assignTo.map(id => profiles.find(p => p.id === id)?.name).filter(Boolean).join(' ו')
       fetch('/api/push/send', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ memberIds: assignTo, title: '⭐ אתגר חדש!', body: `${title.trim()} — בא לצבור נקודות!`, url: '/missions/active', tag: 'newmission' })
+        body: JSON.stringify({ memberIds: assignTo, title: '⭐ אתגר חדש!', body: `${title.trim()} — בא לצבור נקודות!`, url: '/missions/active', tag: 'newmission', category: 'achievements' })
       }).catch(() => {})
     }
 
@@ -736,6 +737,8 @@ function ProfileMenu({ currentProfile, members, onViewAs, onSignOut, onClose }) 
         )}
 
         <EnableNotificationsButton profileId={currentProfile?.id} forceShow />
+        <div style={{ fontSize: 12, color: '#a09080', fontWeight: 700, margin: '4px 2px 8px' }}>אילו התראות לקבל</div>
+        <NotificationSettings profileId={currentProfile?.id} role={currentProfile?.role} />
 
         <a href="/profiles" style={{ textDecoration: 'none' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px', borderRadius: 14, background: '#FAF8F4', marginBottom: 8, color: NAVY, fontSize: 14, fontWeight: 700 }}>

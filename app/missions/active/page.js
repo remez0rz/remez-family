@@ -471,7 +471,7 @@ export default function ActiveEarningPage() {
       const { data: parents } = await supabase.from('profiles').select('id').eq('role', 'parent').eq('active', true)
       const parentIds = (parents || []).map(p => p.id)
       fetch('/api/push/send', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ memberIds: [...parentIds, memberId], title: '🚀 עלית רמה!', body: `${assignment.member.name} ${phrases.reachedLevel(assignment.member.gender)} לרמה ${newLevel}!`, url: '/profiles', tag: 'levelup' })
+        body: JSON.stringify({ memberIds: [...parentIds, memberId], title: '🚀 עלית רמה!', body: `${assignment.member.name} ${phrases.reachedLevel(assignment.member.gender)} לרמה ${newLevel}!`, url: '/profiles', tag: 'levelup', category: 'achievements' })
       }).catch(() => {})
     }
 
@@ -500,7 +500,7 @@ export default function ActiveEarningPage() {
     const ids = (gps || []).map(g => g.id)
     if (ids.length) {
       fetch('/api/push/send', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ memberIds: ids, title: '💜 רגע חדש מהמשפחה', body: `${assignment.member.name} ${phrases.shared(assignment.member.gender)} רגע חדש`, url: '/feed', tag: 'share' })
+        body: JSON.stringify({ memberIds: ids, title: '💜 רגע חדש מהמשפחה', body: `${assignment.member.name} ${phrases.shared(assignment.member.gender)} רגע חדש`, url: '/feed', tag: 'share', category: 'moments' })
       }).catch(() => {})
     }
   }

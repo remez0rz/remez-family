@@ -1,14 +1,15 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { supabase, getCurrentProfile } from '../lib/supabase'
+import NotificationSettings from './NotificationSettings'
 
 // Helper called from anywhere after login to send a push notification to member(s)
-export async function sendPush(memberIds, title, body, url = '/', tag = 'remez') {
+export async function sendPush(memberIds, title, body, url = '/', tag = 'remez', category) {
   try {
     await fetch('/api/push/send', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ memberIds, title, body, url, tag })
+      body: JSON.stringify({ memberIds, title, body, url, tag, category })
     })
   } catch {}
 }
@@ -55,9 +56,10 @@ export async function registerPush(profileId) {
 const PROMPT_FLAG = 'notifPromptSeen'
 
 export default function PushRegister() {
-  const [show, setShow]           = useState(false)
-  const [profileId, setProfileId] = useState(null)
-  const [busy, setBusy]           = useState(false)
+  const [show, setShow]       = useState(false)
+  const [profile, setProfile] = useState(null) // { id, role }
+  const [busy, setBusy]       = useState(false)
+  const [step, setStep]       = useState('ask') // 'ask' | 'choose'
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -76,7 +78,7 @@ export default function PushRegister() {
     // Only prompt a logged-in user, and only once.
     getCurrentProfile().then(p => {
       if (!p) return
-      setProfileId(p.id)
+      setProfile(p)
       setTimeout(() => setShow(true), 1200)
     })
   }, [])
@@ -88,9 +90,10 @@ export default function PushRegister() {
   const approve = async () => {
     if (busy) return
     setBusy(true)
-    await registerPush(profileId) // opens the OS permission prompt (user gesture)
+    const r = await registerPush(profile?.id) // opens the OS permission prompt (user gesture)
     setBusy(false)
-    dismiss()
+    if (r?.ok) setStep('choose') // let them pick categories before closing
+    else dismiss()
   }
 
   if (!show) return null
@@ -102,31 +105,52 @@ export default function PushRegister() {
       fontFamily: 'var(--font-heebo), sans-serif', direction: 'rtl'
     }}>
       <div style={{
-        background: 'white', borderRadius: '24px 24px 0 0', padding: '26px 22px 32px',
-        width: '100%', maxWidth: 480, textAlign: 'center'
+        background: 'white', borderRadius: '24px 24px 0 0', padding: '24px 22px 32px',
+        width: '100%', maxWidth: 480, maxHeight: '85vh', overflowY: 'auto'
       }}>
-        <div style={{ fontSize: 46, marginBottom: 10 }}>🔔</div>
-        <div style={{ fontSize: 20, fontWeight: 900, color: '#2D2D2D', marginBottom: 8 }}>
-          רוצים לקבל עדכונים?
-        </div>
-        <div style={{ fontSize: 14, color: '#6b5e4e', lineHeight: 1.6, marginBottom: 22 }}>
-          נשלח התראה על משימות חדשות, אישור פרסים ורגעים משפחתיים.
-          אפשר לכבות בכל רגע.
-        </div>
-        <button onClick={approve} disabled={busy} style={{
-          width: '100%', padding: '15px', background: '#FF6B6B', color: 'white',
-          border: 'none', borderRadius: 50, cursor: 'pointer', fontWeight: 800, fontSize: 16,
-          fontFamily: 'var(--font-heebo), sans-serif', marginBottom: 10
-        }}>
-          {busy ? 'מפעיל...' : 'אשר התראות'}
-        </button>
-        <button onClick={dismiss} disabled={busy} style={{
-          width: '100%', padding: '10px', background: 'transparent', border: 'none',
-          cursor: 'pointer', fontSize: 13, color: '#a09080', fontWeight: 600,
-          fontFamily: 'var(--font-heebo), sans-serif'
-        }}>
-          לא עכשיו
-        </button>
+        {step === 'ask' ? (
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: 46, marginBottom: 10 }}>🔔</div>
+            <div style={{ fontSize: 20, fontWeight: 900, color: '#2D2D2D', marginBottom: 8 }}>
+              רוצים לקבל עדכונים?
+            </div>
+            <div style={{ fontSize: 14, color: '#6b5e4e', lineHeight: 1.6, marginBottom: 22 }}>
+              נשלח התראה על משימות, פרסים ורגעים משפחתיים. תוכלו לבחור בדיוק מה לקבל.
+            </div>
+            <button onClick={approve} disabled={busy} style={{
+              width: '100%', padding: '15px', background: '#FF6B6B', color: 'white',
+              border: 'none', borderRadius: 50, cursor: 'pointer', fontWeight: 800, fontSize: 16,
+              fontFamily: 'var(--font-heebo), sans-serif', marginBottom: 10
+            }}>
+              {busy ? 'מפעיל...' : 'אשר התראות'}
+            </button>
+            <button onClick={dismiss} disabled={busy} style={{
+              width: '100%', padding: '10px', background: 'transparent', border: 'none',
+              cursor: 'pointer', fontSize: 13, color: '#a09080', fontWeight: 600,
+              fontFamily: 'var(--font-heebo), sans-serif'
+            }}>
+              לא עכשיו
+            </button>
+          </div>
+        ) : (
+          <>
+            <div style={{ width: 40, height: 4, background: '#e0d8c8', borderRadius: 4, margin: '0 auto 16px' }} />
+            <div style={{ fontSize: 18, fontWeight: 900, color: '#2D2D2D', marginBottom: 4, textAlign: 'center' }}>
+              ✅ ההתראות פעילות
+            </div>
+            <div style={{ fontSize: 13, color: '#6b5e4e', marginBottom: 16, textAlign: 'center' }}>
+              מה תרצו לקבל?
+            </div>
+            <NotificationSettings profileId={profile?.id} role={profile?.role} />
+            <button onClick={dismiss} style={{
+              width: '100%', padding: '13px', background: '#FF6B6B', color: 'white', border: 'none',
+              borderRadius: 50, cursor: 'pointer', fontWeight: 800, fontSize: 15, marginTop: 8,
+              fontFamily: 'var(--font-heebo), sans-serif'
+            }}>
+              סיום
+            </button>
+          </>
+        )}
       </div>
     </div>
   )
