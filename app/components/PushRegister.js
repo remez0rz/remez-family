@@ -48,15 +48,88 @@ export async function registerPush(profileId) {
   }
 }
 
-// Silent auto-register on app load (best-effort, only if already permitted)
+// App-load behaviour:
+//  • permission already granted → register silently (keeps the subscription fresh).
+//  • not granted, not blocked, never asked → show a friendly one-time prompt.
+// The "asked once" flag is persisted, so we never nag again on later visits.
+const PROMPT_FLAG = 'notifPromptSeen'
+
 export default function PushRegister() {
+  const [show, setShow]           = useState(false)
+  const [profileId, setProfileId] = useState(null)
+  const [busy, setBusy]           = useState(false)
+
   useEffect(() => {
+    if (typeof window === 'undefined') return
     if (!('serviceWorker' in navigator) || !('PushManager' in window)) return
-    // Only auto-register if the user already granted permission before — never prompt on load.
-    if (Notification.permission !== 'granted') return
-    getCurrentProfile().then(p => { if (p) registerPush(p.id) })
+
+    if (Notification.permission === 'granted') {
+      getCurrentProfile().then(p => { if (p) registerPush(p.id) })
+      return
+    }
+    // Blocked at the OS/browser level, or we've already shown the prompt once.
+    if (Notification.permission === 'denied') return
+    let seen = false
+    try { seen = !!localStorage.getItem(PROMPT_FLAG) } catch {}
+    if (seen) return
+
+    // Only prompt a logged-in user, and only once.
+    getCurrentProfile().then(p => {
+      if (!p) return
+      setProfileId(p.id)
+      setTimeout(() => setShow(true), 1200)
+    })
   }, [])
-  return null
+
+  const dismiss = () => {
+    try { localStorage.setItem(PROMPT_FLAG, '1') } catch {}
+    setShow(false)
+  }
+  const approve = async () => {
+    if (busy) return
+    setBusy(true)
+    await registerPush(profileId) // opens the OS permission prompt (user gesture)
+    setBusy(false)
+    dismiss()
+  }
+
+  if (!show) return null
+
+  return (
+    <div style={{
+      position: 'fixed', inset: 0, zIndex: 1200, background: 'rgba(10,22,40,0.6)',
+      display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
+      fontFamily: 'var(--font-heebo), sans-serif', direction: 'rtl'
+    }}>
+      <div style={{
+        background: 'white', borderRadius: '24px 24px 0 0', padding: '26px 22px 32px',
+        width: '100%', maxWidth: 480, textAlign: 'center'
+      }}>
+        <div style={{ fontSize: 46, marginBottom: 10 }}>🔔</div>
+        <div style={{ fontSize: 20, fontWeight: 900, color: '#2D2D2D', marginBottom: 8 }}>
+          רוצים לקבל עדכונים?
+        </div>
+        <div style={{ fontSize: 14, color: '#6b5e4e', lineHeight: 1.6, marginBottom: 22 }}>
+          נשלח התראה על משימות חדשות, אישור פרסים ורגעים משפחתיים.
+          אפשר לכבות בכל רגע.
+        </div>
+        <button onClick={approve} disabled={busy} style={{
+          width: '100%', padding: '15px', background: '#FF6B6B', color: 'white',
+          border: 'none', borderRadius: 50, cursor: 'pointer', fontWeight: 800, fontSize: 16,
+          fontFamily: 'var(--font-heebo), sans-serif', marginBottom: 10
+        }}>
+          {busy ? 'מפעיל...' : 'אשר התראות'}
+        </button>
+        <button onClick={dismiss} disabled={busy} style={{
+          width: '100%', padding: '10px', background: 'transparent', border: 'none',
+          cursor: 'pointer', fontSize: 13, color: '#a09080', fontWeight: 600,
+          fontFamily: 'var(--font-heebo), sans-serif'
+        }}>
+          לא עכשיו
+        </button>
+      </div>
+    </div>
+  )
 }
 
 // Visible button so users can deliberately turn notifications on (with feedback).
@@ -74,7 +147,14 @@ export function EnableNotificationsButton({ profileId, style = {}, forceShow = f
   useEffect(() => {
     const ok = typeof window !== 'undefined' && 'serviceWorker' in navigator && 'PushManager' in window
     setSupported(ok)
-    if (ok && Notification.permission === 'granted') setAlready(true)
+    if (!ok) return
+    if (Notification.permission === 'granted') setAlready(true)
+    // Reflect the real saved state: if a push subscription already exists, show
+    // "active" instead of asking to approve again on every visit.
+    navigator.serviceWorker.getRegistration()
+      .then(reg => reg?.pushManager.getSubscription())
+      .then(sub => { if (sub) setState('done') })
+      .catch(() => {})
   }, [])
 
   if (!supported) return null

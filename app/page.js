@@ -475,7 +475,6 @@ function KidHome({ currentProfile, missions, dailyMissions, completedTodayIds, r
 
       <div className="app-body">
 
-        <EnableNotificationsButton profileId={currentProfile?.id} />
         <MondialBanner profile={currentProfile} />
 
         {/* All done for today */}
@@ -845,7 +844,6 @@ function ParentHome({ currentProfile, profiles, activeAssignments, recentFeed, r
 
       <div className="app-body">
 
-        <EnableNotificationsButton profileId={currentProfile?.id} />
         <MondialBanner profile={currentProfile} />
 
         {/* Pending approvals banner */}
