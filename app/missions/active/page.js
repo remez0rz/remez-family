@@ -458,7 +458,9 @@ export default function ActiveEarningPage() {
         type: 'mission_completed',
         title: `${assignment.member.name} ${phrases.earnedPoints(assignment.member.gender)} נקודות! ${assignment.mission.title}`,
         content: doc?.text || `+${points} נקודות 🎉`,
-        media_urls: doc?.photoUrl ? [doc.photoUrl] : [],
+        // No proof photo? fall back to the mission's own image so the memory
+        // card isn't empty.
+        media_urls: doc?.photoUrl ? [doc.photoUrl] : (assignment.mission.image_url ? [assignment.mission.image_url] : []),
         participants: [assignment.member.name],
         linked_type: 'assignment',
         linked_id: assignment.id,

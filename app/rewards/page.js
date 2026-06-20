@@ -775,20 +775,6 @@ export default function ExperiencesPage() {
           ))}
         </div>
         )}
-
-        {/* Tier filters */}
-        <div style={{ display: 'flex', gap: 8, overflowX: 'auto', scrollbarWidth: 'none', position: 'relative', zIndex: 1, marginTop: 12 }}>
-          {TIER_FILTERS.map(f => (
-            <button key={f.id} onClick={() => setActiveTier(f.id)} style={{
-              padding: '7px 14px', borderRadius: 20, border: 'none', cursor: 'pointer', flexShrink: 0,
-              background: activeTier === f.id ? 'white' : 'rgba(255,255,255,0.18)',
-              color: activeTier === f.id ? CORAL : 'white',
-              fontWeight: activeTier === f.id ? 800 : 500,
-              fontSize: 13, fontFamily: 'var(--font-heebo), sans-serif',
-              boxShadow: activeTier === f.id ? '0 2px 8px rgba(0,0,0,0.15)' : 'none'
-            }}>{f.label}</button>
-          ))}
-        </div>
       </div>
 
       <div className="app-body" style={{ boxSizing: 'border-box' }}>
@@ -858,6 +844,20 @@ export default function ExperiencesPage() {
         {(!isParent || isViewingAsKid) && (
           <KidClaimsSection claims={myClaims} onRedeem={handleMarkRedeemed} />
         )}
+
+        {/* Tier filters — right above the cards they filter */}
+        <div style={{ display: 'flex', gap: 8, overflowX: 'auto', scrollbarWidth: 'none', marginBottom: 14 }}>
+          {TIER_FILTERS.map(f => (
+            <button key={f.id} onClick={() => setActiveTier(f.id)} style={{
+              padding: '7px 14px', borderRadius: 20, border: 'none', cursor: 'pointer', flexShrink: 0,
+              background: activeTier === f.id ? CORAL : 'white',
+              color: activeTier === f.id ? 'white' : '#8a7a60',
+              fontWeight: activeTier === f.id ? 800 : 600,
+              fontSize: 13, fontFamily: 'var(--font-heebo), sans-serif',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.06)'
+            }}>{f.label}</button>
+          ))}
+        </div>
 
         {activeTier === 'all' ? (
           // Sectioned view — scroll through all tiers
