@@ -16,6 +16,7 @@ export default function GrandparentAddMoment({ currentProfile, onPosted, buttonS
   const [isVideo, setIsVideo] = useState(false)
   const [saving, setSaving]   = useState(false)
   const [done, setDone]       = useState(false)
+  const [err, setErr]         = useState('')
 
   const handleSelect = (e) => {
     const f = e.target.files[0]
@@ -23,30 +24,38 @@ export default function GrandparentAddMoment({ currentProfile, onPosted, buttonS
     setFile(f); setIsVideo(f.type.startsWith('video/')); setPreview(URL.createObjectURL(f))
     e.target.value = ''
   }
-  const reset = () => { setText(''); setFile(null); setPreview(null); setIsVideo(false) }
+  const reset = () => { setText(''); setFile(null); setPreview(null); setIsVideo(false); setErr('') }
 
   const submit = async () => {
     if (saving) return
-    setSaving(true)
-    let mediaUrl = null
-    if (file) {
-      const ext = file.name.split('.').pop()
-      const filename = `moments/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
-      const { error } = await supabase.storage.from('family-media').upload(filename, file, { contentType: file.type })
-      if (!error) mediaUrl = supabase.storage.from('family-media').getPublicUrl(filename).data.publicUrl
+    if (!currentProfile?.id) { setErr('שגיאת חיבור — נסו לרענן'); return }
+    setSaving(true); setErr('')
+    try {
+      let mediaUrl = null
+      if (file) {
+        const ext = file.name.split('.').pop()
+        const filename = `moments/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
+        const { error: upErr } = await supabase.storage.from('family-media').upload(filename, file, { contentType: file.type })
+        if (upErr) throw new Error('העלאת המדיה נכשלה: ' + upErr.message)
+        mediaUrl = supabase.storage.from('family-media').getPublicUrl(filename).data.publicUrl
+      }
+
+      const { error } = await supabase.from('feed_posts').insert({
+        type: 'moment',
+        title: `${currentProfile.name} ${phrases.shared(currentProfile.gender)} רגע 💜`,
+        content: text?.trim() || null,
+        media_urls: mediaUrl ? [mediaUrl] : [],
+        participants: [],
+        created_by: currentProfile.id,
+      })
+      if (error) throw new Error(error.message)
+
+      setSaving(false); setDone(true); onPosted?.()
+      setTimeout(() => { setDone(false); setOpen(false); reset() }, 1600)
+    } catch (e) {
+      setSaving(false)
+      setErr(e?.message || 'שמירה נכשלה')
     }
-
-    await supabase.from('feed_posts').insert({
-      type: 'moment',
-      title: `${currentProfile?.name} ${phrases.shared(currentProfile?.gender)} רגע 💜`,
-      content: text?.trim() || null,
-      media_urls: mediaUrl ? [mediaUrl] : [],
-      participants: [],
-      created_by: currentProfile?.id,
-    })
-
-    setSaving(false); setDone(true); onPosted?.()
-    setTimeout(() => { setDone(false); setOpen(false); reset() }, 1600)
   }
 
   return (
@@ -104,6 +113,9 @@ export default function GrandparentAddMoment({ currentProfile, onPosted, buttonS
                   placeholder="כמה מילים לילדים... (לא חובה)"
                   style={{ width: '100%', padding: '10px 12px', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 10, fontSize: 13, color: 'white', background: 'rgba(255,255,255,0.08)', fontFamily: 'var(--font-heebo), sans-serif', boxSizing: 'border-box', resize: 'none', minHeight: 60, lineHeight: 1.5, marginBottom: 12, outline: 'none' }} />
 
+                {err && (
+                  <div style={{ background: 'rgba(255,107,107,0.15)', color: '#FFB3B3', borderRadius: 10, padding: '8px 12px', fontSize: 12, fontWeight: 600, marginBottom: 10, textAlign: 'center' }}>⚠️ {err}</div>
+                )}
                 <button onClick={submit} disabled={saving || (!text.trim() && !file)} style={{
                   width: '100%', padding: '13px', background: (text.trim() || file) ? CORAL : 'rgba(255,255,255,0.15)',
                   border: 'none', borderRadius: 50, cursor: (text.trim() || file) ? 'pointer' : 'default',
