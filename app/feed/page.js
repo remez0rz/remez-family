@@ -174,11 +174,28 @@ function ContentWithLinks({ text }) {
   )
 }
 
-function FeedCard({ post, profiles, currentProfile, reactionData, onNavigate, onToggleSave }) {
+function FeedCard({ post, profiles, currentProfile, reactionData, onNavigate, onToggleSave, onDeleted }) {
   const isTazkir  = post.type === 'tahkir'
   const isMission = post.type === 'mission_completed'
   const hasMedia  = post.media_urls?.length > 0
   const isParent  = currentProfile?.role === 'parent'
+  const isCreator = currentProfile?.id === post.created_by
+  const [confirmDel, setConfirmDel] = useState(false)
+  const [deleting, setDeleting]     = useState(false)
+
+  // Remove a feed entry (errors/tests). Parents can remove anything; the creator
+  // can remove their own. For a tahkir we also delete the underlying record so the
+  // two tables don't drift.
+  const handleDelete = async () => {
+    setDeleting(true)
+    if (post.linked_type === 'tahkir' && post.linked_id) {
+      await supabase.from('tahkirim').delete().eq('id', post.linked_id)
+    }
+    const { error } = await supabase.from('feed_posts').delete().eq('id', post.id)
+    setDeleting(false)
+    if (error) { alert('מחיקה נכשלה: ' + error.message); return }
+    onDeleted?.(post.id)
+  }
 
   const participantProfiles = (post.participants || [])
     .map(name => profiles.find(p => p.name === name))
@@ -312,19 +329,41 @@ function FeedCard({ post, profiles, currentProfile, reactionData, onNavigate, on
           profiles={profiles}
           participants={post.participants || []}
         />
-        {/* Edit button — shown for the post creator only */}
-        {currentProfile?.id === post.created_by && (
-          <div style={{ marginTop: 8, display: 'flex', justifyContent: 'flex-end' }}>
-            <button
-              onClick={() => isMission
-                ? onNavigate && onNavigate(`/missions/doc/${post.id}/edit`)
-                : onNavigate && onNavigate(`/tazkir/${post.linked_id || post.id}/edit`)
-              }
-              style={{
-                background: 'none', border: '1px solid #e0d8c8', borderRadius: 20,
-                padding: '4px 12px', fontSize: 11, color: '#a09080', cursor: 'pointer',
+        {/* Edit (creator) + Delete (parents or creator) controls */}
+        {(isParent || isCreator) && (
+          <div style={{ marginTop: 8, display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+            {isCreator && (
+              <button
+                onClick={() => isMission
+                  ? onNavigate && onNavigate(`/missions/doc/${post.id}/edit`)
+                  : onNavigate && onNavigate(`/tazkir/${post.linked_id || post.id}/edit`)
+                }
+                style={{
+                  background: 'none', border: '1px solid #e0d8c8', borderRadius: 20,
+                  padding: '4px 12px', fontSize: 11, color: '#a09080', cursor: 'pointer',
+                  fontFamily: 'var(--font-heebo), sans-serif', fontWeight: 600
+                }}>✏️ ערוך</button>
+            )}
+            {confirmDel ? (
+              <>
+                <button onClick={handleDelete} disabled={deleting} style={{
+                  background: '#FF6B6B', border: 'none', borderRadius: 20,
+                  padding: '4px 12px', fontSize: 11, color: 'white', cursor: 'pointer',
+                  fontFamily: 'var(--font-heebo), sans-serif', fontWeight: 700
+                }}>{deleting ? 'מוחק...' : 'בטוח? מחק'}</button>
+                <button onClick={() => setConfirmDel(false)} disabled={deleting} style={{
+                  background: 'none', border: '1px solid #e0d8c8', borderRadius: 20,
+                  padding: '4px 12px', fontSize: 11, color: '#a09080', cursor: 'pointer',
+                  fontFamily: 'var(--font-heebo), sans-serif', fontWeight: 600
+                }}>ביטול</button>
+              </>
+            ) : (
+              <button onClick={() => setConfirmDel(true)} style={{
+                background: 'none', border: '1px solid #f0d8d8', borderRadius: 20,
+                padding: '4px 12px', fontSize: 11, color: '#D0463B', cursor: 'pointer',
                 fontFamily: 'var(--font-heebo), sans-serif', fontWeight: 600
-              }}>✏️ ערוך</button>
+              }}>🗑 מחק</button>
+            )}
           </div>
         )}
       </div>
@@ -608,6 +647,7 @@ export default function FeedPage() {
                 reactionData={reactionData}
                 onNavigate={(path) => router.push(path.startsWith('/') ? path : `/tazkir/${path}`)}
                 onToggleSave={handleToggleSave}
+                onDeleted={(id) => setPosts(prev => prev.filter(p => p.id !== id))}
               />
             ))}
 
