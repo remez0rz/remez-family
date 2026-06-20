@@ -89,6 +89,8 @@ export default function EditTazkirPage() {
   const [saving, setSaving]             = useState(false)
   const [saved, setSaved]               = useState(false)
   const [saveError, setSaveError]       = useState('')
+  const [confirmDel, setConfirmDel]     = useState(false)
+  const [deleting, setDeleting]         = useState(false)
   const [loading, setLoading]           = useState(true)
   const [form, setForm] = useState({
     title: '', what_happened: '', best_moment: '',
@@ -240,6 +242,16 @@ export default function EditTazkirPage() {
     setSaved(true)
     setTimeout(() => router.push(`/tazkir/${id}`), 1400)
     setSaving(false)
+  }
+
+  // Delete the tahkir and its feed entry (for errors/tests).
+  const handleDelete = async () => {
+    setDeleting(true)
+    await supabase.from('feed_posts').delete().eq('linked_type', 'tahkir').eq('linked_id', id)
+    const { error } = await supabase.from('tahkirim').delete().eq('id', id)
+    setDeleting(false)
+    if (error) { setSaveError('מחיקה נכשלה: ' + error.message); return }
+    router.push('/feed')
   }
 
   if (loading) return (
@@ -452,6 +464,28 @@ export default function EditTazkirPage() {
         }}>
           {saving ? '⏳ שומר...' : '✅ שמור שינויים'}
         </button>
+
+        {/* Delete — for removing errors/tests */}
+        {confirmDel ? (
+          <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+            <button onClick={handleDelete} disabled={deleting} style={{
+              flex: 1, padding: '12px', background: '#FF6B6B', color: 'white', border: 'none',
+              borderRadius: 50, cursor: 'pointer', fontWeight: 800, fontSize: 14,
+              fontFamily: 'var(--font-heebo), sans-serif'
+            }}>{deleting ? 'מוחק...' : 'בטוח? מחק לצמיתות'}</button>
+            <button onClick={() => setConfirmDel(false)} disabled={deleting} style={{
+              padding: '12px 18px', background: 'transparent', color: '#a09080',
+              border: '1px solid #e0d8c8', borderRadius: 50, cursor: 'pointer', fontWeight: 600, fontSize: 14,
+              fontFamily: 'var(--font-heebo), sans-serif'
+            }}>ביטול</button>
+          </div>
+        ) : (
+          <button onClick={() => setConfirmDel(true)} style={{
+            width: '100%', padding: '12px', marginTop: 12, background: 'transparent',
+            color: '#D0463B', border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: 13,
+            fontFamily: 'var(--font-heebo), sans-serif'
+          }}>🗑 מחק תחקיר</button>
+        )}
       </div>
 
       <BottomNav />

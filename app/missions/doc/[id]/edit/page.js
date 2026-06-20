@@ -19,6 +19,8 @@ export default function EditMissionDocPage() {
   const [saving, setSaving]             = useState(false)
   const [saved, setSaved]               = useState(false)
   const [saveError, setSaveError]       = useState('')
+  const [confirmDel, setConfirmDel]     = useState(false)
+  const [deleting, setDeleting]         = useState(false)
   const [loading, setLoading]           = useState(true)
   const router   = useRouter()
   const { id }   = useParams()
@@ -86,6 +88,16 @@ export default function EditMissionDocPage() {
     setSaved(true)
     setTimeout(() => router.back(), 1200)
     setSaving(false)
+  }
+
+  // Delete this moment from the feed (for errors/tests). Removes only the feed
+  // post — the mission completion and points are untouched.
+  const handleDelete = async () => {
+    setDeleting(true)
+    const { error } = await supabase.from('feed_posts').delete().eq('id', id)
+    setDeleting(false)
+    if (error) { setSaveError('מחיקה נכשלה: ' + error.message); return }
+    router.push('/feed')
   }
 
   if (loading) return (
@@ -207,6 +219,26 @@ export default function EditMissionDocPage() {
         }}>
           {saving ? '⏳ שומר...' : '✅ שמור שינויים'}
         </button>
+        {confirmDel ? (
+          <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+            <button onClick={handleDelete} disabled={deleting} style={{
+              flex: 1, padding: '10px', background: '#FF6B6B', color: 'white', border: 'none',
+              borderRadius: 50, cursor: 'pointer', fontWeight: 800, fontSize: 13,
+              fontFamily: 'var(--font-heebo), sans-serif'
+            }}>{deleting ? 'מוחק...' : 'בטוח? מחק מהיומן'}</button>
+            <button onClick={() => setConfirmDel(false)} disabled={deleting} style={{
+              padding: '10px 16px', background: 'white', color: '#a09080', border: '1px solid #e0d8c8',
+              borderRadius: 50, cursor: 'pointer', fontWeight: 600, fontSize: 13,
+              fontFamily: 'var(--font-heebo), sans-serif'
+            }}>ביטול</button>
+          </div>
+        ) : (
+          <button onClick={() => setConfirmDel(true)} style={{
+            width: '100%', padding: '8px', marginTop: 6, background: 'transparent',
+            color: '#D0463B', border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: 12,
+            fontFamily: 'var(--font-heebo), sans-serif'
+          }}>🗑 מחק מהיומן</button>
+        )}
       </div>
 
       <BottomNav />
